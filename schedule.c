@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -5,6 +6,10 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <unistd.h>
+#include <sched.h>
+#include <mctop.h>
+#include <mctop_alloc.h>
 
 int* get_thread_ids(pid_t pid, int *number_of_threads) {
 
@@ -17,8 +22,6 @@ int* get_thread_ids(pid_t pid, int *number_of_threads) {
     strcat(directory, "/proc/");
     strcat(directory, str_pid);
     strcat(directory, "/task/");
-
-    printf("FINAL PATH: %s\n", directory); 
 
     
     DIR *d = opendir(directory);
@@ -67,18 +70,68 @@ int* get_thread_ids(pid_t pid, int *number_of_threads) {
 
 int main(int argc, char* argv[]) {
 
-    int number_of_threads = 0;
-    int* threads = get_thread_ids(atoi(argv[1]), &number_of_threads);
+    printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
 
-    int i;
-    for (i = 0; i < number_of_threads; ++i) {
-        printf("i>>> %d\n", threads[i]);
+    mctop_t* topo = mctop_load(NULL);
+    if (topo)   {
+        mctop_print(topo);
     }
 
-    char* read_policy = argv[1];
-    char* read_program = argv[2];
+    size_t num_nodes = mctop_get_num_nodes(topo);
+    size_t num_cores = mctop_get_num_cores(topo);
+    size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
+    size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
+    size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
+               
+    printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
 
-    printf("%s %s\n", read_policy, read_program);
+
+    mctop_alloc_policy x;
+
+    while (1) {
+        char policy[100];
+        char program[200];
+        scanf("%s %s", policy, program);
+        printf("--[%s] .. [%s]\n", policy, program);
+
+        if (strcmp(policy, "MCTOP_ALLOC_NONE") == 0) {
+            ;
+        }
+        else if (strcmp(policy, "MCTOP_ALLOC_SEQUENTIAL") == 0) {
+
+        }
+        else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_HWCS") == 0) {
+            ;
+        }
+
+
+        pid_t pid = fork();
+        if (pid == 0) {
+            execv(program, (char *[]) {&program[0], NULL});
+            perror("execv didn't work!\n"); 
+        }
+
+        usleep(1000);
+
+        int number_of_threads = 0;
+        int* threads = get_thread_ids(pid, &number_of_threads);
+
+        int i;
+        for (i = 0; i < number_of_threads; ++i) {
+            printf("i>>> %d\n", threads[i]);
+            /*cpu_set_t set;
+
+            CPU_ZERO(&set);
+            CPU_SET(atoi(argv[2]), &set );
+            if (sched_setaffinity(threads[i], sizeof( cpu_set_t ), &set ))   {
+                perror( "sched_setaffinity" );
+                return NULL;
+            }*/
+        }
+    }
+                  
+    
+    mctop_free(topo);
 
     return 0;
 }
