@@ -12,6 +12,50 @@
 #include <mctop_alloc.h>
 #include <string.h>
 
+int* get_children_thread_ids(pid_t pid, int* number_of_threads) {
+  //pstree -p 31796 | grep -P -o '\([0-9]+\)'
+  FILE *fp;
+  char path[1035];
+
+  char command[500];
+  strcat(command, "pstree -p ");
+
+  char str_pid[10];
+  sprintf(str_pid, "%ld", (long) pid);
+  strcat(command, str_pid);
+  strcat(command, " | grep -P -o '\\([0-9]+\\)'");
+
+  fp = popen(command, "r");
+  if (fp == NULL) {
+    printf("Failed to run command\n" );
+    exit(1);
+  }
+  
+  int cnt = 0;
+  while (fgets(path, sizeof(path)-1, fp) != NULL) {
+        printf("[[[%s\n)))", path);
+	cnt++;
+  }
+  *number_of_threads = cnt;
+  cnt = 0;
+  int* thread_ids = malloc(sizeof(int) * *number_of_threads);
+
+  fp = popen(command, "r");
+  while (fgets(path, sizeof(path) -1, fp) != NULL) {
+    char id[10];
+    strncpy(id, path + 1, strlen(path) - 3);
+    id[strlen(path) - 3] = '\0';
+    //printf("The id is: [[%s]]\\n", id);
+    thread_ids[cnt++] = atol(id);
+  }
+
+  *number_of_threads = cnt;
+  
+  pclose(fp);
+
+  return thread_ids;
+}
+
 int* get_thread_ids(pid_t pid, int *number_of_threads) {
 
     char str_pid[100];
@@ -116,7 +160,7 @@ int main(int argc, char* argv[]) {
 
     printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
 
-    mctop_t* topo = mctop_load(NULL);
+    mctop_t* topo = mctop_load("lpd48core.mct");
     if (topo)   {
         mctop_print(topo);
     }
@@ -146,6 +190,7 @@ int main(int argc, char* argv[]) {
 
 	fgets(line, 300, stdin);
 	line[strlen(line) - 1 ] = '\0'; // remove new line character
+	printf("line to be written: [[%s]]\n", line);
 	strcpy(tmp_line, line);
 	int first_time = 1;
 	char* word = strtok(line, " ");
@@ -178,21 +223,32 @@ int main(int argc, char* argv[]) {
 	}
 
 	program[program_cnt] = NULL;
-	
-        pid_t pid = fork();
+
+	printf("verify the forking with Y: \n");
+	char c = getchar();
+	getchar(); // read new line
+	pid_t pid;
+	if (c == 'Y') {
+	  pid = fork();
+	}
         if (pid == 0) {
             execv(program[0], program);
             perror("execv didn't work!\n"); 
         }
 
-        usleep(1000);
+	printf("PID IS: %d\n", pid);
+        sleep(1);
 
         int number_of_threads = 0;
-        get_thread_ids(pid, &number_of_threads);
+        //get_thread_ids(pid, &number_of_threads);
+	get_children_thread_ids(pid, &number_of_threads);
+
+	printf("Number of threads: %d\n", number_of_threads);
+
 	
         mctop_alloc_policy pol = get_policy(policy);
         /* TODO not sure about the third parameter */
-        mctop_alloc_t* alloc = mctop_alloc_create(topo, number_of_threads, num_hwc_per_processor, pol);
+        mctop_alloc_t* alloc = mctop_alloc_create(topo, number_of_threads, num_hwc_per_socket, pol);
 
 
 	cpu_set_t set;
