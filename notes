@@ -1,0 +1,6 @@
+
+
+The "Assymatry Matters" papers uses 2 programs from PARSEC: swaptions and streamcluster. They can be executed as follows:
+/extra/parsec-3.0/bin/parsecmgmt -a run -p streamcluster -i simlarge -n A (with n = 5 takes about 22seconds)
+/extra/parsec-3.0/bin/parsecmgmt -a run -p swaptions -i simlarge -n B (with n = 4 takes about 10 secons)
+where A and B is the minimum amount of threads. Increasing them will increase the total execution time.
