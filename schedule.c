@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
 
     mctop_t* topo = mctop_load("lpd48core.mct");
     if (topo)   {
-        mctop_print(topo);
+      //mctop_print(topo);
     }
 
     size_t num_nodes = mctop_get_num_nodes(topo);
@@ -172,9 +172,9 @@ int main(int argc, char* argv[]) {
     size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
 
     size_t num_hwc_per_processor = num_nodes * num_cores_per_socket * num_hwc_per_core;
-    printf("TOTAL number of hardware contexts: %zu\n", num_hwc_per_processor);
+    // printf("TOTAL number of hardware contexts: %zu\n", num_hwc_per_processor);
 
-    printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
+    // printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
     const uint8_t NUMBER_OF_POLICIES = 11;
     //list threads[NUMBER_OF_POLICIES];
 
@@ -190,7 +190,7 @@ int main(int argc, char* argv[]) {
 
 	fgets(line, 300, stdin);
 	line[strlen(line) - 1 ] = '\0'; // remove new line character
-	printf("line to be written: [[%s]]\n", line);
+	//	printf("line to be written: [[%s]]\n", line);
 	strcpy(tmp_line, line);
 	int first_time = 1;
 	char* word = strtok(line, " ");
@@ -236,7 +236,7 @@ int main(int argc, char* argv[]) {
             perror("execv didn't work!\n"); 
         }
 
-	printf("PID IS: %d\n", pid);
+	//printf("PID IS: %d\n", pid);
         sleep(1);
 
         int number_of_threads = 0;
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
 	  CPU_SET(alloc->hwcs[hwc_i], &set);
 	  printf("hwc : %d\n", alloc->hwcs[hwc_i]);
 	}
-        printf("Where those threads should be pinned!: %d and %d\n", set, CPU_COUNT(&set));
+        printf("Where those threads should be pinned!: (cpu set %d) and (count set %d)\n", set, CPU_COUNT(&set));
 
 	if (sched_setaffinity(pid, sizeof(cpu_set_t), &set)) {
 	  perror("sched_setaffinity!\n");
