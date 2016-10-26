@@ -130,7 +130,6 @@ int main(int argc, char* argv[]) {
     printf("TOTAL number of hardware contexts: %zu\n", num_hwc_per_processor);
 
     printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
-
     const uint8_t NUMBER_OF_POLICIES = 11;
     //list threads[NUMBER_OF_POLICIES];
 
@@ -155,53 +154,28 @@ int main(int argc, char* argv[]) {
         usleep(1000);
 
         int number_of_threads = 0;
-        int* threads = get_thread_ids(pid, &number_of_threads);
-       
-        if (number_of_threads > num_hwc_per_processor) {
-            perror("This program has more threads than hw ctxs\n");
-            continue;
-        }
-
-        printf("The number of threads is: %d\n", number_of_threads);
-
+        get_thread_ids(pid, &number_of_threads);
+	
         mctop_alloc_policy pol = get_policy(policy);
         /* TODO not sure about the third parameter */
         mctop_alloc_t* alloc = mctop_alloc_create(topo, number_of_threads, num_hwc_per_processor, pol);
 
-        printf("Where to pin those threads!\n");
 
-
+	cpu_set_t set;
+	CPU_ZERO(&set);
         for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
         {
-            printf("ALLOC: %d to %d\n", hwc_i, alloc->hwcs[hwc_i]);
-        }
-        printf("Where those threads should be pinned!\n");
+	  CPU_SET(alloc->hwcs[hwc_i], &set);
+	  printf("hwc : %d\n", alloc->hwcs[hwc_i]);
+	}
+        printf("Where those threads should be pinned!: %d and %d\n", set, CPU_COUNT(&set));
 
-
-        mctop_alloc_print(alloc);
-        
-
-        int i;
-        for (i = 0; i < number_of_threads; ++i) {
-            int hwc_id = alloc->hwcs[i];
-            printf("About to pin thread %d to hwc %d.\n", threads[i], hwc_id);
-
-            cpu_set_t set;
-
-            CPU_ZERO(&set);
-            CPU_SET(hwc_id, &set );
-            if (sched_setaffinity(threads[i], sizeof( cpu_set_t ), &set ))   {
-                perror( "sched_setaffinity" );
-                return NULL;
-            }
-        }
+	if (sched_setaffinity(pid, sizeof(cpu_set_t), &set)) {
+	  perror("sched_setaffinity!\n");
+	  return -1;
+	}
     }
-                  
-    for (j = 0; j < NUMBER_OF_POLICIES; ++j) {
-        //remove_list(threads[j]); 
-        //TODO 
-    }
-    
+	
     mctop_free(topo);
 
     return 0;
