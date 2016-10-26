@@ -10,6 +10,7 @@
 #include <sched.h>
 #include <mctop.h>
 #include <mctop_alloc.h>
+#include <string.h>
 
 int* get_thread_ids(pid_t pid, int *number_of_threads) {
 
@@ -140,14 +141,47 @@ int main(int argc, char* argv[]) {
 
     while (1) {
         char policy[100];
-        char program[200];
-        scanf("%s %s", policy, program);
-        printf("--[%s] .. [%s]\n", policy, program);
+	int program_cnt = 0;
+	char line[300], tmp_line[300];
 
+	fgets(line, 300, stdin);
+	line[strlen(line) - 1 ] = '\0'; // remove new line character
+	strcpy(tmp_line, line);
+	int first_time = 1;
+	char* word = strtok(line, " ");
+	while (word != NULL)  {
+	  if (first_time) {
+	    first_time = 0;
+	    strcpy(policy, word);
+	  }
+	  else {
+	    program_cnt++;
+	  }
+	  word = strtok(NULL, " ");
+	}
 
+	char** program = malloc(sizeof(char *) * (program_cnt + 1));
+	first_time = 1;
+	program_cnt = 0;
+	word = strtok(tmp_line, " ");
+	while (word != NULL)  {
+
+	  if (first_time) {
+	    first_time = 0;
+     	  }
+	  else {
+	    program[program_cnt] = malloc(sizeof(char) * 200);
+	    strcpy(program[program_cnt], word);
+	    program_cnt++;
+	  }
+	  word = strtok(NULL, " ");
+	}
+
+	program[program_cnt] = NULL;
+	
         pid_t pid = fork();
         if (pid == 0) {
-            execv(program, (char *[]) {&program[0], NULL});
+            execv(program[0], program);
             perror("execv didn't work!\n"); 
         }
 
