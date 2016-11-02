@@ -18,6 +18,7 @@ int* get_children_thread_ids(pid_t pid, int* number_of_threads) {
   char path[1035];
 
   char command[500];
+  command[0] = '\0';
   strcat(command, "pstree -p ");
 
   char str_pid[10];
@@ -162,7 +163,7 @@ int main(int argc, char* argv[]) {
 
     mctop_t* topo = mctop_load("lpd48core.mct");
     if (topo)   {
-      //mctop_print(topo);
+      mctop_print(topo);
     }
 
     size_t num_nodes = mctop_get_num_nodes(topo);
@@ -237,11 +238,12 @@ int main(int argc, char* argv[]) {
         }
 
 	//printf("PID IS: %d\n", pid);
-        sleep(1);
+        usleep(100);
 
         int number_of_threads = 0;
         //get_thread_ids(pid, &number_of_threads);
 	get_children_thread_ids(pid, &number_of_threads);
+
 
 	printf("Number of threads: %d\n", number_of_threads);
 
