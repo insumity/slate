@@ -5,12 +5,13 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sched.h>
 #include <mctop.h>
 #include <mctop_alloc.h>
-#include <string.h>
+#include <sys/wait.h>
 
 int* get_children_thread_ids(pid_t pid, int* number_of_threads) {
   //pstree -p 31796 | grep -P -o '\([0-9]+\)'
@@ -157,8 +158,36 @@ mctop_alloc_policy get_policy(char* policy) {
     return pol;
 }
 
-int main(int argc, char* argv[]) {
+typedef struct {
+  pid_t child;
 
+  int* used_hwc;
+  int length;
+
+  bool* used_hwc_to_change;
+} forked_data;
+
+void* wait_for_process(void* dt) {
+  forked_data fdt = *((forked_data *) dt);
+
+  pid_t pid = fdt.child;
+  printf("I'm here with pid: %ld\n", pid);
+
+  int return_status = -1;
+  waitpid(pid, &return_status, 0);
+  if (return_status == 0) {
+    printf("process finished fine!\n");
+  }
+
+  for (int i = 0; i < fdt.length; ++i) {
+    printf("Used one: %d\n", (fdt.used_hwc)[i]);
+    (fdt.used_hwc_to_change)[(fdt.used_hwc)[i]] = false;
+  }
+
+  return NULL;
+}
+
+int main(int argc, char* argv[]) {
     printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
 
     mctop_t* topo = mctop_load("lpd48core.mct");
@@ -172,7 +201,9 @@ int main(int argc, char* argv[]) {
     size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
     size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
 
-    size_t num_hwc_per_processor = num_nodes * num_cores_per_socket * num_hwc_per_core;
+    size_t total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
+    bool used_hwc[total_hwcs];
+    memset(used_hwc, false, total_hwcs);
     // printf("TOTAL number of hardware contexts: %zu\n", num_hwc_per_processor);
 
     // printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
@@ -242,7 +273,7 @@ int main(int argc, char* argv[]) {
 
         int number_of_threads = 0;
         //get_thread_ids(pid, &number_of_threads);
-	get_children_thread_ids(pid, &number_of_threads);
+	int* thread_pids = get_children_thread_ids(pid, &number_of_threads);
 
 
 	printf("Number of threads: %d\n", number_of_threads);
@@ -250,21 +281,51 @@ int main(int argc, char* argv[]) {
 	
         mctop_alloc_policy pol = get_policy(policy);
         /* TODO not sure about the third parameter */
-        mctop_alloc_t* alloc = mctop_alloc_create(topo, number_of_threads, num_hwc_per_socket, pol);
+        mctop_alloc_t* alloc = mctop_alloc_create(topo, number_of_threads, num_nodes, pol);
 
+        forked_data* fdt = malloc(sizeof(forked_data));
+        fdt->child = pid;
+        fdt->length = number_of_threads;
+	fdt->used_hwc = malloc(sizeof(int) * fdt->length);
+	fdt->used_hwc_to_change = used_hwc;
 
+	int k = 0;
 	cpu_set_t set;
 	CPU_ZERO(&set);
         for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
         {
-	  CPU_SET(alloc->hwcs[hwc_i], &set);
-	  printf("hwc : %d\n", alloc->hwcs[hwc_i]);
-	}
-        printf("Where those threads should be pinned!: (cpu set %d) and (count set %d)\n", set, CPU_COUNT(&set));
+	  uint hwc = alloc->hwcs[hwc_i];;
+	  if (used_hwc[hwc]) {
+	    continue;
+	  }
+	  CPU_SET(hwc, &set);
+	  used_hwc[hwc] = true;
+	  fdt->used_hwc[k++] = hwc;
 
-	if (sched_setaffinity(pid, sizeof(cpu_set_t), &set)) {
-	  perror("sched_setaffinity!\n");
-	  return -1;
+	  printf("hwc : %d\n", hwc);
+	  if (k == number_of_threads) {
+	    break;
+	  }
+	}
+
+	for (long i = 0; i < 48; i++) {
+	  if (CPU_ISSET(i, &set)) {
+	    printf("Core %d is in cputset\n", i);
+	  }
+	}
+
+	pthread_t* pt = malloc(sizeof(pthread_t));
+	pthread_create(pt, NULL, wait_for_process, fdt);
+
+	// clean used hardware contexts when process finishes
+
+        printf("Where those threads should be pinned!: (cpu set %d) and (count set %d)\n", set, CPU_COUNT(&set));
+	
+	for (int i = 0; i < number_of_threads; ++i) {
+	  if (sched_setaffinity(thread_pids[i], sizeof(cpu_set_t), &set)) {
+	    perror("sched_setaffinity!\n");
+	    return -1;
+	  }
 	}
     }
 	
