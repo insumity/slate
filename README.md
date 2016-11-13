@@ -6,7 +6,9 @@ When MCTOP was introduced in the `wc` application of METIS, the `set_mempolicy` 
 We do not know of any way to call `set_mempolicy` for another process. To solve this problem, we change the pthread libary (nptl) of glibc and then run applications by linking them to our own library. By doing so, we can inject code in the `pthread_create` function that the application calls without its knowledge. To be exact, when an application calls `pthread_create(..., function, ...)`, we call `injected_function` that runs some extra code before the actual `function` gets executed. This extra code calls `set_mempolicy` and `set_schedaffinity` for the corresponding thread.
 
 **How does the pthread library communicate with the scheduler?**
-The idea is the following. Both the pthread and the scheduler issue read and writes to the same file (`/tmp/scheduler`) that is memory mapped by both. This files contain some slots (`communication_slot`) and their access is controlled by semaphores.
+
+The idea is the following. Both the pthread and the scheduler issue read and writes to the same file (`/tmp/scheduler`) that is memory mapped by both. I couldn't use shared memory (`shm_open`) because it seems that `lrt`(the shared memory component of glibc) was using threads, so there was a cycle I couldn't kill.
+This files contain some slots (`communication_slot`) and their access is controlled by semaphores.
 The protocol is the following:
 
 1. The scheduler initializes its slots to `NONE` (meaning noone is using them)
