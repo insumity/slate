@@ -1,0 +1,17 @@
+MCTOP_ALLOC_BW_ROUND_ROBIN_CORES /home/kantonia/Metis/obj/wc /home/kantonia/Metis/300MB_1M_Keys.txt -p 6  
+
+
+MCTOP_ALLOC_BW_ROUND_ROBIN_CORES /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6  
+
+
+
+MCTOP_ALLOC_BW_ROUND_ROBIN_CORES /localhome/kantonia/glibc-build2/testapp.sh
+
+
+MCTOP_ALLOC_BW_ROUND_ROBIN_CORES /localhome/kantonia/glibc-build2/testrun.sh /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
+
+LD_PRELOAD="/lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libattr.so.1 /lib/x86_64-linux-gnu/libpcre.so.3" ./testrun.sh /bin/ls
+
+LD_PRELOAD="/lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libattr.so.1 /lib/x86_64-linux-gnu/libpcre.so.3 /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libgcc_s.so.1" ./testrun.sh /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
+
+
