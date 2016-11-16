@@ -19,6 +19,8 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
+#include "list.h"
+
 #define SHARED_MEM_ID "/tmp/scheduler"
 #define NUM_SLOTS 10
 
@@ -26,7 +28,7 @@ typedef enum {NONE, SCHEDULER, PTHREADS} used_by;
 typedef struct {
   int core, node;
   sem_t lock;
-  pid_t tid;
+  pid_t tid, pid;
   used_by used;
 } communication_slot;
 
@@ -216,8 +218,8 @@ typedef struct {
   int node;
 } pin_data;
 
-pin_data pin[48];
-int pin_cnt;
+pin_data pin[MCTOP_ALLOC_NUM][48];
+int pin_cnt[MCTOP_ALLOC_NUM];
 
 pin_data create_pin_data(int core, int node) {
   pin_data tmp;
@@ -226,22 +228,69 @@ pin_data create_pin_data(int core, int node) {
   return tmp;
 }
 
+void initialize_pin_data(mctop_t* topo) {
+
+  size_t num_nodes = mctop_get_num_nodes(topo);
+  size_t num_cores = mctop_get_num_cores(topo);
+  size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
+  size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
+  size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
+
+  size_t total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
+
+  for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
+
+    /* this policy does not contain any hardware contexts */
+    if (i == MCTOP_ALLOC_NONE) {
+      continue;
+    }
+
+    mctop_alloc_policy pol = i;
+    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
+
+    pin_cnt[i] = 0;
+    for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
+      {
+	uint hwc = alloc->hwcs[hwc_i];
+	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
+      }
+  }
+}
+
+list* policy_per_process;
+
+int compare_pids(void* p1, void* p2) {
+  return *((unsigned int *) p1) == *((unsigned int *) p2);
+}
+
 void* check_slots(void* dt) {
 
   printf("I'm checking the slots thread\n");
   communication_slot* slots = dt;
 
   while (true) {
-    usleep(500);
+    usleep(50 * 1000);
     for (int i = 0; i < NUM_SLOTS; ++i) {
       communication_slot* slot = slots + i;
       sem_wait(&(slot->lock));
 
       if (slot->used == PTHREADS) {
-	pin_data pd = pin[pin_cnt];
+	pid_t pid = slot->pid;
+
+	printf("process pid is: %ld\n", pid);
+	pid_t* pt_pid = malloc(sizeof(pid_t));
+	*pt_pid = pid;
+	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
+	// TODO ... check result
+
+	int pol = *((int *) policy);
+	printf("=========policy is : %d\n", pol);
+	
+	pin_data pd = pin[pol][pin_cnt[pol]];
 	int core = pd.core;
 	int node = pd.node;
-	pin_cnt++;
+
+	pin_cnt[pol]++;
 	slot->node = node;
 	slot->core = core;
 	slot->used = SCHEDULER;
@@ -261,21 +310,8 @@ off_t fsize(char *file) {
 }
 
 int main(int argc, char* argv[]) {
-  pin_cnt = 0;
-  pin[0] = create_pin_data(0, 0);
-  pin[1] = create_pin_data(6, 1);
-  pin[2] = create_pin_data(12, 2);
-  pin[3] = create_pin_data(18, 3);
-  pin[4] = create_pin_data(24, 4);
-  pin[5] = create_pin_data(30, 5);
 
-  pin[6] = create_pin_data(36, 6);
-  pin[7] = create_pin_data(42, 7);
-  pin[8] = create_pin_data(1, 0);
-  pin[9] = create_pin_data(7, 1);
-  pin[10] = create_pin_data(13, 2);
-  pin[11] = create_pin_data(19, 3);
-
+  policy_per_process = create_list();
 
   int fd = open(SHARED_MEM_ID, O_RDWR | O_CREAT, 0777);
   if (fd == -1) {
@@ -301,6 +337,7 @@ int main(int argc, char* argv[]) {
     a->node = 0;
     a->core = 0;
     a->tid = 0;
+    a->pid = 0;
     a->used = NONE;
     int ret = sem_init(&(a->lock), 1, 1);
     int v;
@@ -311,16 +348,18 @@ int main(int argc, char* argv[]) {
   }
 
 
-  // create a thread to check for new slots
-  pthread_t check_slots_threads;
-  pthread_create(&check_slots_threads, NULL, check_slots, addr);
-
   printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
 
   mctop_t* topo = mctop_load("lpd48core.mct");
   if (topo)   {
     mctop_print(topo);
   }
+
+  initialize_pin_data(topo);
+
+  // create a thread to check for new slots
+  pthread_t check_slots_threads;
+  pthread_create(&check_slots_threads, NULL, check_slots, addr);
 
   size_t num_nodes = mctop_get_num_nodes(topo);
   size_t num_cores = mctop_get_num_cores(topo);
@@ -335,12 +374,8 @@ int main(int argc, char* argv[]) {
 
   // printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
   const uint8_t NUMBER_OF_POLICIES = 11;
-  //list threads[NUMBER_OF_POLICIES];
 
-  int j;
-  for (j = 0; j < NUMBER_OF_POLICIES; ++j) {
-    // threads[j] = create_list(); 
-  }
+
 
   while (1) {
     char policy[100];
@@ -387,6 +422,7 @@ int main(int argc, char* argv[]) {
     char c = getchar();
     getchar(); // read new line
 
+    /*
     unsigned long num = pin[pin_cnt].node;
     cpu_set_t foobarisios;
     CPU_ZERO(&foobarisios);
@@ -397,7 +433,8 @@ int main(int argc, char* argv[]) {
     if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
       perror("mempolicy didn't work\n");
     }
-    pin_cnt++;
+    ///pin_cnt[
+    */
 
     pid_t pid;
     if (c == 'Y') {
@@ -412,6 +449,18 @@ int main(int argc, char* argv[]) {
     }
 
 
+    mctop_alloc_policy pol = get_policy(policy);
+    /* TODO not sure about the third parameter */
+    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
+
+    pid_t *pt_pid = malloc(sizeof(pid_t));
+    *pt_pid = pid;
+
+    int* pt_pol = malloc(sizeof(int));
+    *pt_pol = pol;
+    printf("Added with policy: %d\n", *pt_pol);
+    list_add(policy_per_process, pt_pid, pt_pol);
+
     /*
       int number_of_threads = 0;
       //get_thread_ids(pid, &number_of_threads);
@@ -422,9 +471,6 @@ int main(int argc, char* argv[]) {
 
       printf("Number of threads: %d\n", number_of_threads);
     */
-    mctop_alloc_policy pol = get_policy(policy);
-    /* TODO not sure about the third parameter */
-    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
 
     /*
       forked_data* fdt = malloc(sizeof(forked_data));

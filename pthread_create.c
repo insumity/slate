@@ -58,7 +58,7 @@ typedef enum {NONE, SCHEDULER, PTHREADS} used_by;
 typedef struct {
   int core, node;
   sem_t lock;
-  pid_t tid;
+  pid_t tid, pid;
   used_by used;
 } communication_slot;
 
@@ -538,27 +538,37 @@ long set_mempolicy(int mode, const unsigned long *nmask,
 void *injected_start_routine(void *injected_arg)
 {
   printf("The thread is is: %ld\n", syscall(__NR_gettid));
-  printf("FIRST tid: %ld\n", syscall(__NR_gettid));
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
-  int fd;
-  communication_slot *addr;
-
-  fd = open("/tmp/scheduler", O_RDWR);
+  int fd = open("/tmp/scheduler", O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Open failed : %s\n", strerror(errno));
     return NULL;
   }
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+    fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+    return NULL;
+  }
 
   /* Map the memory object */
-  addr = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, PROT_READ | PROT_WRITE,
+  communication_slot* addr = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, PROT_READ | PROT_WRITE,
               MAP_SHARED, fd, 0);
   if (addr == MAP_FAILED) {
     fprintf(stderr, "mmap failed:%s\n", strerror(errno));
   }
 
   printf("Starting, about to find slot.\n");
+  int ll = 0;
+  for ( ; ll < NUM_SLOTS; ++ll) {
+    communication_slot* foo = addr + ll;
+    sem_t *lock = &(foo->lock);
+    int vv;
+    sem_getvalue(lock, &vv);
+    printf("used: %d, tid: %ld, sem value: %d, core: %d, node: %d\n", foo->used,
+	   (long) (foo->tid), vv, foo->core, foo->node);
+  }
+  
   int found_slot = 0, index = -1;
   while(found_slot != 1) {
     int k;
@@ -568,6 +578,7 @@ void *injected_start_routine(void *injected_arg)
       if (b->used == NONE) {
 	b->used = PTHREADS;
 	b->tid = tid;
+	b->pid = getppid();
 	found_slot = 1;
 	index = k;
       }
@@ -580,13 +591,19 @@ void *injected_start_routine(void *injected_arg)
 
   printf("Went through the first while.\n");
   while (1) {
-    usleep(5000);
+    usleep(200 * 1000);
     communication_slot *b = addr + index;
+
+    int lll = 0;
+    for (; lll < 10; ++lll) {
+      int v;
+      sem_getvalue(&(b->lock), &v);
+    }
     sem_wait(&(b->lock));
     if (b->used == SCHEDULER) {
       b->used = NONE;
       b->tid = tid;
-      printf("Scheduler gave back node: %d and core: %d\n", b->node, b->core);
+      printf("(by thread id: %ld) Scheduler gave back node: %d and core: %d\n", tid, b->node, b->core);
 
       cpu_set_t set;
       CPU_ZERO(&set);
@@ -601,10 +618,6 @@ void *injected_start_routine(void *injected_arg)
     }
     sem_post(&(b->lock));
   }
-  printf("Found slot. Waiting till the slot is satisfied by the scheduler.\n");
-  
-
-  printf("---- finished ----\n");
   close(fd);
 
 
