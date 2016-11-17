@@ -49,15 +49,14 @@
 #include <numaif.h>
 #include <sched.h>
 
-
+#define SHARED_MEM_ID "scheduler"
 #define NUM_SLOTS 10
 
 /* Corresponds to who used the slot latest.
  NONE corresponds to the empty slot. */
-typedef enum {NONE, SCHEDULER, PTHREADS} used_by;
+typedef enum {NONE, SCHEDULER, START_PTHREADS, END_PTHREADS} used_by;
 typedef struct {
   int core, node;
-  sem_t lock;
   pid_t tid, pid;
   used_by used;
 } communication_slot;
@@ -537,52 +536,65 @@ long set_mempolicy(int mode, const unsigned long *nmask,
 
 void *injected_start_routine(void *injected_arg)
 {
+  int rety;
   printf("The thread is is: %ld\n", syscall(__NR_gettid));
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
-  int fd = open("/tmp/scheduler", O_RDWR);
-  if (fd == -1) {
-    fprintf(stderr, "Open failed : %s\n", strerror(errno));
-    return NULL;
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-    fprintf(stderr, "ftruncate : %s\n", strerror(errno));
-    return NULL;
-  }
-
-  /* Map the memory object */
-  communication_slot* addr = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, PROT_READ | PROT_WRITE,
-              MAP_SHARED, fd, 0);
-  if (addr == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
-  }
 
   printf("Starting, about to find slot.\n");
-  int ll = 0;
-  for ( ; ll < NUM_SLOTS; ++ll) {
-    communication_slot* foo = addr + ll;
-    sem_t *lock = &(foo->lock);
-    int vv;
-    sem_getvalue(lock, &vv);
-    printf("used: %d, tid: %ld, sem value: %d, core: %d, node: %d\n", foo->used,
-	   (long) (foo->tid), vv, foo->core, foo->node);
-  }
   
   int found_slot = 0, index = -1;
   while(found_slot != 1) {
     int k;
+
     for (k = 0; k < NUM_SLOTS; ++k) {
-      communication_slot *b = addr + k;
-      sem_wait(&(b->lock));
-      if (b->used == NONE) {
-	b->used = PTHREADS;
-	b->tid = tid;
-	b->pid = getppid();
+      sleep(1);
+      char semaphore_name[50];
+      semaphore_name[0] = '\0';
+      int semaphore_number = k;
+      char semaphore_number_str[20];
+      sprintf(semaphore_number_str, "%d", semaphore_number);
+      strcat(semaphore_name, SHARED_MEM_ID);
+      strcat(semaphore_name, semaphore_number_str);
+      sem_t* sem = sem_open(semaphore_name, 0);
+
+      rety = sem_wait(sem);
+      if (rety != 0) {
+	printf("Something went wrong with sem_wait\n");
+      }
+
+      char slot_file_name[50];
+      slot_file_name[0] = '\0';
+      strcat(slot_file_name, "/tmp/");
+      strcat(slot_file_name, semaphore_name);
+
+      FILE* fp = fopen(slot_file_name, "r+");
+
+      communication_slot slot, ar[1];
+      fread(ar, sizeof(communication_slot), 1, fp);
+      slot = ar[0];
+
+      if (slot.used == NONE) {
+	slot.used = START_PTHREADS;
+	slot.tid = tid;
+	slot.pid = getppid();
 	found_slot = 1;
 	index = k;
       }
-      sem_post(&(b->lock));
+
+      ar[0] = slot;
+      fseek(fp, 0, SEEK_SET); 
+      fwrite(ar, sizeof(communication_slot), 1, fp);
+      fflush(fp);
+      fsync(fileno(fp));
+
+      fclose(fp);
+      rety = sem_post(sem);
+      if (rety != 0) {
+	printf("Something went wrong with sem_post\n");
+      }
+
       if (found_slot == 1) {
 	break;
       }
@@ -591,40 +603,106 @@ void *injected_start_routine(void *injected_arg)
 
   printf("Went through the first while.\n");
   while (1) {
-    usleep(200 * 1000);
-    communication_slot *b = addr + index;
+    sleep(20);
+      char semaphore_name[50];
+      semaphore_name[0] = '\0';
+      int semaphore_number = index;
+      char semaphore_number_str[20];
+      sprintf(semaphore_number_str, "%d", semaphore_number);
+      strcat(semaphore_name, SHARED_MEM_ID);
+      strcat(semaphore_name, semaphore_number_str);
+      sem_t* sem = sem_open(semaphore_name, 0);
+      
+      rety = sem_wait(sem);
+      if (rety != 0) {
+	printf("Something went wrong with sem_wait\n");
+      }
 
-    int lll = 0;
-    for (; lll < 10; ++lll) {
-      int v;
-      sem_getvalue(&(b->lock), &v);
-    }
-    sem_wait(&(b->lock));
-    if (b->used == SCHEDULER) {
-      b->used = NONE;
-      b->tid = tid;
-      printf("(by thread id: %ld) Scheduler gave back node: %d and core: %d\n", tid, b->node, b->core);
+      char slot_file_name[50];
+      slot_file_name[0] = '\0';
+      strcat(slot_file_name, "/tmp/");
+      strcat(slot_file_name, semaphore_name);
 
-      cpu_set_t set;
-      CPU_ZERO(&set);
-      CPU_SET(b->core, &set);
-      sched_setaffinity(tid, sizeof(cpu_set_t), &set);
+      FILE* fp = fopen(slot_file_name, "r+");
 
-      const unsigned long int f = 1 << b->node;
-      set_mempolicy(MPOL_PREFERRED, &f, 63);
+      communication_slot slot, ar[1];
+      fread(ar, sizeof(communication_slot), 1, fp);
+      slot = ar[0];
 
-      sem_post(&(b->lock));
-      break;
-    }
-    sem_post(&(b->lock));
+      if (slot.used == SCHEDULER) {
+	slot.used = NONE;
+	slot.tid = tid;
+	//      printf("(by thread id: %ld) Scheduler gave back node: %d and core: %d\n", tid, b->node, b->core);
+
+	cpu_set_t set;
+	CPU_ZERO(&set);
+	CPU_SET(slot.core, &set);
+	sched_setaffinity(tid, sizeof(cpu_set_t), &set);
+
+	const unsigned long int f = 1 << slot.node;
+	set_mempolicy(MPOL_PREFERRED, &f, 63);
+
+	ar[0] = slot;
+	fwrite(ar, sizeof(communication_slot), 1, fp);
+	fclose(fp);
+	rety = sem_post(sem);
+	if (rety != 0) {
+	  printf("Something went wrong with sem_post\n");
+	}
+	break;
+      }
+
+      ar[0] = slot;
+      fseek(fp, 0, SEEK_SET);
+      fwrite(ar, sizeof(communication_slot), 1, fp);
+      fflush(fp);
+      fsync(fileno(fp));
+      fclose(fp);
+
+      rety = sem_post(sem);
+      if (rety != 0) {
+	printf("Something went wrong with sem_post\n");
+      }
   }
-  close(fd);
-
 
   void** tmp = injected_arg;
   void *(*f) (void*) = tmp[0];
+  printf("Befoe running result here: %p\n", f);
   void* result = f(tmp[1]);
-  free(tmp);
+
+  // inform the scheduler that this thread has finished
+  /*  found_slot = 0;
+  while(found_slot != 1) {
+    int k;
+    for (k = 0; k < NUM_SLOTS; ++k) {
+      printf("I'm here before closing a thread:%d ...\n", k);
+      communication_slot *b = addr + k;
+
+      rety = sem_wait(&(b->lock));
+      if (rety != 0) {
+	printf("rety is different 0\n");
+      }
+      if (b->used == NONE) {
+	printf("A thread is closing ... kill it\n");
+	b->used = END_PTHREADS;
+	b->tid = tid;
+	b->pid = getppid();
+	found_slot = 1;
+      }
+      rety = sem_post(&(b->lock));
+      if (rety != 0) {
+	printf("Something went wrong with sem_post\n");
+      }
+
+      if (found_slot == 1) {
+	break;
+      }
+    }
+  }
+
+  close(fd);*/
+  free(tmp); 
+  
   return result;
 }
 
