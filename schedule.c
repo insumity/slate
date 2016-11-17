@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
-
+#include "ticket.h"
 #include "list.h"
 
 #define SHARED_MEM_ID "scheduler"
@@ -257,6 +257,93 @@ void initialize_pin_data(mctop_t* topo) {
   }
 }
 
+void lock_initialize(int i)
+{
+  char tmp[100];
+  tmp[0] = '\0';
+  strcat(tmp, "/tmp/schedulery");
+  int f = strlen(tmp);
+  tmp[f] = '0' + i;
+  tmp[f + 1] = '\0';
+
+  printf("filename for lock is: %s\n", tmp);
+  int fd = open(tmp, O_CREAT | O_RDWR, 0777);
+  if (fd == -1) {
+   fprintf(stderr, "Open2 failed : %s\n", strerror(errno));
+   return NULL;
+  }
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+      return;
+   }
+ 
+  ticketlock_t* locks = init_ticketlocks(1);
+  ticketlock_t* lock = &locks[0];
+
+  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (l == MAP_FAILED) {
+    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
+  }
+  *l = *lock;
+ 
+  close(fd);
+}
+
+void lock_acquire(int i)
+{
+  char tmp[100];
+  tmp[0] = '\0';
+  strcat(tmp, "/tmp/schedulery");
+  int f = strlen(tmp);
+  tmp[f] = '0' + i;
+  tmp[f + 1] = '\0';
+
+  int fd = open(tmp, O_RDWR);
+  if (fd == -1) {
+   fprintf(stderr, "Open faiedo!!! acquire led : %s\n", strerror(errno));
+   return NULL;
+  }
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+      return;
+   }
+ 
+  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (l == MAP_FAILED) {
+    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
+  }
+
+  ticket_acquire(l);
+  close(fd);
+}
+
+void lock_release(int i)
+{
+  char tmp[100];
+  tmp[0] = '\0';
+  strcat(tmp, "/tmp/schedulery");
+  int f = strlen(tmp);
+  tmp[f] = '0' + i;
+  tmp[f + 1] = '\0';
+
+  int fd = open(tmp, O_RDWR);
+  if (fd == -1) {
+   fprintf(stderr, "Open failed edo release : %s\n", strerror(errno));
+   return NULL;
+  }
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+      return;
+   }
+ 
+  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (l == MAP_FAILED) {
+    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
+  }
+
+  ticket_release(l);
+  close(fd);
+}
 list* policy_per_process;
 
 int compare_pids(void* p1, void* p2) {
@@ -268,9 +355,7 @@ void* check_slots(void* dt) {
   printf("I'm checking the slots thread\n");
 
   while (true) {
-    //usleep(50 * 1000);
     for (int i = 0; i < NUM_SLOTS; ++i) {
-      sleep(1);
       char semaphore_name[50];
       semaphore_name[0] = '\0';
       int semaphore_number = i;
@@ -278,13 +363,14 @@ void* check_slots(void* dt) {
       sprintf(semaphore_number_str, "%d", semaphore_number);
       strcat(semaphore_name, SHARED_MEM_ID);
       strcat(semaphore_name, semaphore_number_str);
-      sem_t* sem = sem_open(semaphore_name, 0);
+      //sem_t* sem = sem_open(semaphore_name, 0);
 
-      int res = sem_wait(sem);
-      if (res != 0)  {
-	printf("Sem_wait was lovely: %d\n", res);
-	return NULL;
-      }
+      lock_acquire(i);
+      //      int res = sem_wait(sem);
+      //      if (res != 0)  {
+      //	printf("Sem_wait was lovely: %d\n", res);
+      //	return NULL;
+      //      }
 
       char slot_file_name[50];
       slot_file_name[0] = '\0';
@@ -331,14 +417,16 @@ void* check_slots(void* dt) {
       fflush(fp);
       fsync(fileno(fp));
       fclose(fp);
-      res = sem_post(sem);
+      lock_release(i);
+      /*res = sem_post(sem);
       if (res != 0) {
 	printf("... sem_post was lovely edo!!!: %d : %d\n", res, i);
 	perror("What happened? \n");
-      }
+	}*/
     }
   }
 }
+
 
 off_t fsize(char *file) {
   struct stat filestat;
@@ -362,8 +450,9 @@ int main(int argc, char* argv[]) {
     strcat(semaphore_name, SHARED_MEM_ID);
     strcat(semaphore_name, semaphore_number_str);
     printf("[[%s]]\n", semaphore_name);
-    sem_t *sem = sem_open(semaphore_name, O_CREAT, 0777, 1);
-    printf("Sem is ... %d %p\n", sem == SEM_FAILED, sem);
+    //    sem_t *sem = sem_open(semaphore_name, O_CREAT, 0777, 1);
+    lock_initialize(j);
+    //printf("Sem is ... %d %p\n", sem == SEM_FAILED, sem);
 
     char slot_file_name[50];
     slot_file_name[0] = '\0';
@@ -371,8 +460,10 @@ int main(int argc, char* argv[]) {
     strcat(slot_file_name, semaphore_name);
 
 
-
     FILE* fp = fopen(slot_file_name, "w+");
+    if (fp == NULL)  {
+      printf("file is empty you piece of shit\n");
+    }
     communication_slot slot;
     slot.node = -1;
     slot.core = -1;

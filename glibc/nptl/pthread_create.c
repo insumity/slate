@@ -49,6 +49,7 @@
 #include <numaif.h>
 #include <sched.h>
 
+#include "ticket_lock.h"
 #define SHARED_MEM_ID "scheduler"
 #define NUM_SLOTS 10
 
@@ -61,6 +62,62 @@ typedef struct {
   used_by used;
 } communication_slot;
 
+
+void lock_acquire(int i)
+{
+  char tmp[100];
+  tmp[0] = '\0';
+  strcat(tmp, "/tmp/schedulery");
+  int f = strlen(tmp);
+  tmp[f] = '0' + i;
+  tmp[f + 1] = '\0';
+
+  int fd = open(tmp, O_RDWR);
+  if (fd == -1) {
+   fprintf(stderr, "Open faiedo!!! acquire led : %s\n", strerror(errno));
+   return;
+  }
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+      return;
+   }
+ 
+  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (l == MAP_FAILED) {
+    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
+  }
+
+  ticket_acquire(l);
+  close(fd);
+}
+
+void lock_release(int i)
+{
+  char tmp[100];
+  tmp[0] = '\0';
+  strcat(tmp, "/tmp/schedulery");
+  int f = strlen(tmp);
+  tmp[f] = '0' + i;
+  tmp[f + 1] = '\0';
+
+  int fd = open(tmp, O_RDWR);
+  if (fd == -1) {
+   fprintf(stderr, "Open failed edo release : %s\n", strerror(errno));
+   return;
+  }
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+      return;
+   }
+ 
+  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (l == MAP_FAILED) {
+    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
+  }
+
+  ticket_release(l);
+  close(fd);
+}
 
 
 /* Nozero if debugging mode is enabled.  */
@@ -536,7 +593,6 @@ long set_mempolicy(int mode, const unsigned long *nmask,
 
 void *injected_start_routine(void *injected_arg)
 {
-  int rety;
   printf("The thread is is: %ld\n", syscall(__NR_gettid));
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
@@ -549,7 +605,7 @@ void *injected_start_routine(void *injected_arg)
     int k;
 
     for (k = 0; k < NUM_SLOTS; ++k) {
-      sleep(1);
+      lock_acquire(k);
       char semaphore_name[50];
       semaphore_name[0] = '\0';
       int semaphore_number = k;
@@ -557,12 +613,7 @@ void *injected_start_routine(void *injected_arg)
       sprintf(semaphore_number_str, "%d", semaphore_number);
       strcat(semaphore_name, SHARED_MEM_ID);
       strcat(semaphore_name, semaphore_number_str);
-      sem_t* sem = sem_open(semaphore_name, 0);
 
-      rety = sem_wait(sem);
-      if (rety != 0) {
-	printf("Something went wrong with sem_wait\n");
-      }
 
       char slot_file_name[50];
       slot_file_name[0] = '\0';
@@ -590,10 +641,7 @@ void *injected_start_routine(void *injected_arg)
       fsync(fileno(fp));
 
       fclose(fp);
-      rety = sem_post(sem);
-      if (rety != 0) {
-	printf("Something went wrong with sem_post\n");
-      }
+      lock_release(k);
 
       if (found_slot == 1) {
 	break;
@@ -603,7 +651,7 @@ void *injected_start_routine(void *injected_arg)
 
   printf("Went through the first while.\n");
   while (1) {
-    sleep(20);
+    lock_acquire(index);
       char semaphore_name[50];
       semaphore_name[0] = '\0';
       int semaphore_number = index;
@@ -611,12 +659,6 @@ void *injected_start_routine(void *injected_arg)
       sprintf(semaphore_number_str, "%d", semaphore_number);
       strcat(semaphore_name, SHARED_MEM_ID);
       strcat(semaphore_name, semaphore_number_str);
-      sem_t* sem = sem_open(semaphore_name, 0);
-      
-      rety = sem_wait(sem);
-      if (rety != 0) {
-	printf("Something went wrong with sem_wait\n");
-      }
 
       char slot_file_name[50];
       slot_file_name[0] = '\0';
@@ -645,10 +687,8 @@ void *injected_start_routine(void *injected_arg)
 	ar[0] = slot;
 	fwrite(ar, sizeof(communication_slot), 1, fp);
 	fclose(fp);
-	rety = sem_post(sem);
-	if (rety != 0) {
-	  printf("Something went wrong with sem_post\n");
-	}
+
+	lock_release(index);
 	break;
       }
 
@@ -659,10 +699,7 @@ void *injected_start_routine(void *injected_arg)
       fsync(fileno(fp));
       fclose(fp);
 
-      rety = sem_post(sem);
-      if (rety != 0) {
-	printf("Something went wrong with sem_post\n");
-      }
+      lock_release(index);
   }
 
   void** tmp = injected_arg;
