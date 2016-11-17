@@ -22,12 +22,14 @@
 #include "ticket.h"
 #include "list.h"
 
+#define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define SHARED_MEM_ID "scheduler"
 #define NUM_SLOTS 10
 
 typedef enum {NONE, SCHEDULER, START_PTHREADS, END_PTHREADS} used_by;
 typedef struct {
   int core, node;
+  ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
 } communication_slot;
@@ -257,93 +259,25 @@ void initialize_pin_data(mctop_t* topo) {
   }
 }
 
-void lock_initialize(int i)
+void initialize_lock(int i, communication_slot* slots)
 {
-  char tmp[100];
-  tmp[0] = '\0';
-  strcat(tmp, "/tmp/schedulery");
-  int f = strlen(tmp);
-  tmp[f] = '0' + i;
-  tmp[f + 1] = '\0';
-
-  printf("filename for lock is: %s\n", tmp);
-  int fd = open(tmp, O_CREAT | O_RDWR, 0777);
-  if (fd == -1) {
-   fprintf(stderr, "Open2 failed : %s\n", strerror(errno));
-   return NULL;
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
-      return;
-   }
- 
   ticketlock_t* locks = init_ticketlocks(1);
-  ticketlock_t* lock = &locks[0];
-
-  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (l == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
-  }
-  *l = *lock;
- 
-  close(fd);
+  slots[i].lock = locks[0];
 }
 
-void lock_acquire(int i)
+void acquire_lock(int i, communication_slot* slots)
 {
-  char tmp[100];
-  tmp[0] = '\0';
-  strcat(tmp, "/tmp/schedulery");
-  int f = strlen(tmp);
-  tmp[f] = '0' + i;
-  tmp[f + 1] = '\0';
-
-  int fd = open(tmp, O_RDWR);
-  if (fd == -1) {
-   fprintf(stderr, "Open faiedo!!! acquire led : %s\n", strerror(errno));
-   return NULL;
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
-      return;
-   }
- 
-  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (l == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
-  }
-
-  ticket_acquire(l);
-  close(fd);
+  ticketlock_t *lock = &(slots[i].lock);
+  ticket_acquire(lock);
 }
 
-void lock_release(int i)
+void release_lock(int i, communication_slot* slots)
 {
-  char tmp[100];
-  tmp[0] = '\0';
-  strcat(tmp, "/tmp/schedulery");
-  int f = strlen(tmp);
-  tmp[f] = '0' + i;
-  tmp[f + 1] = '\0';
-
-  int fd = open(tmp, O_RDWR);
-  if (fd == -1) {
-   fprintf(stderr, "Open failed edo release : %s\n", strerror(errno));
-   return NULL;
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
-      return;
-   }
- 
-  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (l == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
-  }
-
-  ticket_release(l);
-  close(fd);
+  ticketlock_t *lock = &(slots[i].lock);
+  ticket_release(lock);
 }
+
+
 list* policy_per_process;
 
 int compare_pids(void* p1, void* p2) {
@@ -353,39 +287,18 @@ int compare_pids(void* p1, void* p2) {
 void* check_slots(void* dt) {
 
   printf("I'm checking the slots thread\n");
+  communication_slot* slots = dt;
 
   while (true) {
     for (int i = 0; i < NUM_SLOTS; ++i) {
-      char semaphore_name[50];
-      semaphore_name[0] = '\0';
-      int semaphore_number = i;
-      char semaphore_number_str[20];
-      sprintf(semaphore_number_str, "%d", semaphore_number);
-      strcat(semaphore_name, SHARED_MEM_ID);
-      strcat(semaphore_name, semaphore_number_str);
-      //sem_t* sem = sem_open(semaphore_name, 0);
+      acquire_lock(i, slots);
 
-      lock_acquire(i);
-      //      int res = sem_wait(sem);
-      //      if (res != 0)  {
-      //	printf("Sem_wait was lovely: %d\n", res);
-      //	return NULL;
-      //      }
+      int fd;
+      communication_slot* slot = slots + i;
 
-      char slot_file_name[50];
-      slot_file_name[0] = '\0';
-      strcat(slot_file_name, "/tmp/");
-      strcat(slot_file_name, semaphore_name);
-
-
-      FILE* fp = fopen(slot_file_name, "r+");
-
-      communication_slot slot, ar[1];
-      fread(&ar[0], sizeof(communication_slot), 1, fp);
-      slot = ar[0];
-
-      if (slot.used == START_PTHREADS) {
-	pid_t pid = slot.pid;
+      if (slot->used == START_PTHREADS) {
+	printf("A ptherad stared\n, awesome time to be alive\n");
+	pid_t pid = slot->pid;
 
 	printf("process pid is: %ld\n", pid);
 	pid_t* pt_pid = malloc(sizeof(pid_t));
@@ -401,28 +314,17 @@ void* check_slots(void* dt) {
 	int node = pd.node;
 
 	pin_cnt[pol]++;
-	slot.node = node;
-	slot.core = core;
-	slot.used = SCHEDULER;
-	printf("GOT A NEW SLOT with node: %d and core: %d\n", slot.node, slot.core);
+	slot->node = node;
+	slot->core = core;
+	slot->used = SCHEDULER;
+	printf("GOT A NEW SLOT with node: %d and core: %d\n", slot->node, slot->core);
       }
-      else if (slot.used == END_PTHREADS) {
+      else if (slot->used == END_PTHREADS) {
 	printf("The thread has finished. FFFFF\n");
-	slot.used = NONE;
+	slot->used = NONE;
       }
 
-      ar[0] = slot;
-      fseek(fp, 0, SEEK_SET);
-      fwrite(ar, sizeof(communication_slot), 1, fp);
-      fflush(fp);
-      fsync(fileno(fp));
-      fclose(fp);
-      lock_release(i);
-      /*res = sem_post(sem);
-      if (res != 0) {
-	printf("... sem_post was lovely edo!!!: %d : %d\n", res, i);
-	perror("What happened? \n");
-	}*/
+      release_lock(i, slots);
     }
   }
 }
@@ -440,41 +342,34 @@ int main(int argc, char* argv[]) {
 
   policy_per_process = create_list();
 
+  int fd = open(SLOTS_FILE_NAME, O_CREAT | O_RDWR, 0777);
+  if (fd == -1) {
+    fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    return NULL;
+  }
+
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+    fprintf(stderr, "Couldn't ftruncate file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    return NULL;
+  }
+  communication_slot *slots = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, 
+				  PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (slots == MAP_FAILED) {
+    fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+  }
+
+
   /* initialize semaphores */
   for (int j = 0; j < NUM_SLOTS; ++j) {
-    char semaphore_name[50];
-    semaphore_name[0] = '\0';
-    int semaphore_number = j;
-    char semaphore_number_str[20];
-    sprintf(semaphore_number_str, "%d", semaphore_number);
-    strcat(semaphore_name, SHARED_MEM_ID);
-    strcat(semaphore_name, semaphore_number_str);
-    printf("[[%s]]\n", semaphore_name);
-    //    sem_t *sem = sem_open(semaphore_name, O_CREAT, 0777, 1);
-    lock_initialize(j);
-    //printf("Sem is ... %d %p\n", sem == SEM_FAILED, sem);
 
-    char slot_file_name[50];
-    slot_file_name[0] = '\0';
-    strcat(slot_file_name, "/tmp/");
-    strcat(slot_file_name, semaphore_name);
-
-
-    FILE* fp = fopen(slot_file_name, "w+");
-    if (fp == NULL)  {
-      printf("file is empty you piece of shit\n");
-    }
-    communication_slot slot;
-    slot.node = -1;
-    slot.core = -1;
-    slot.tid = 0;
-    slot.pid = 0;
-    slot.used = NONE;
-    communication_slot ar[1] = {slot};
-    fwrite(ar, sizeof(communication_slot), 1, fp);
-    fflush(fp);
-    fsync(fileno(fp));
-    fclose(fp);
+    initialize_lock(j, slots);
+    
+    communication_slot* slot = &slots[j];
+    slot->node = -1;
+    slot->core = -1;
+    slot->tid = 0;
+    slot->pid = 0;
+    slot->used = NONE;
   }
 
 
@@ -489,7 +384,7 @@ int main(int argc, char* argv[]) {
 
   // create a thread to check for new slots
   pthread_t check_slots_threads;
-  pthread_create(&check_slots_threads, NULL, check_slots, NULL);
+  pthread_create(&check_slots_threads, NULL, check_slots, slots);
 
   size_t num_nodes = mctop_get_num_nodes(topo);
   size_t num_cores = mctop_get_num_cores(topo);
@@ -581,7 +476,6 @@ int main(int argc, char* argv[]) {
 
     mctop_alloc_policy pol = get_policy(policy);
     /* TODO not sure about the third parameter */
-    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
 
     pid_t *pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;

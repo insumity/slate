@@ -50,6 +50,8 @@
 #include <sched.h>
 
 #include "ticket_lock.h"
+
+#define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define SHARED_MEM_ID "scheduler"
 #define NUM_SLOTS 10
 
@@ -58,67 +60,22 @@
 typedef enum {NONE, SCHEDULER, START_PTHREADS, END_PTHREADS} used_by;
 typedef struct {
   int core, node;
+  ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
 } communication_slot;
 
-
-void lock_acquire(int i)
+void acquire_lock(int i, communication_slot* slots)
 {
-  char tmp[100];
-  tmp[0] = '\0';
-  strcat(tmp, "/tmp/schedulery");
-  int f = strlen(tmp);
-  tmp[f] = '0' + i;
-  tmp[f + 1] = '\0';
-
-  int fd = open(tmp, O_RDWR);
-  if (fd == -1) {
-   fprintf(stderr, "Open faiedo!!! acquire led : %s\n", strerror(errno));
-   return;
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
-      return;
-   }
- 
-  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (l == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
-  }
-
-  ticket_acquire(l);
-  close(fd);
+  ticketlock_t *lock = &((slots + i)->lock);
+  ticket_acquire(lock);
 }
 
-void lock_release(int i)
+void release_lock(int i, communication_slot* slots)
 {
-  char tmp[100];
-  tmp[0] = '\0';
-  strcat(tmp, "/tmp/schedulery");
-  int f = strlen(tmp);
-  tmp[f] = '0' + i;
-  tmp[f + 1] = '\0';
-
-  int fd = open(tmp, O_RDWR);
-  if (fd == -1) {
-   fprintf(stderr, "Open failed edo release : %s\n", strerror(errno));
-   return;
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-      fprintf(stderr, "ftruncate : %s\n", strerror(errno));
-      return;
-   }
- 
-  ticketlock_t *l = mmap(NULL, sizeof(ticketlock_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (l == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
-  }
-
-  ticket_release(l);
-  close(fd);
+  ticketlock_t *lock = &((slots + i)->lock);
+  ticket_release(lock);
 }
-
 
 /* Nozero if debugging mode is enabled.  */
 int __pthread_debug;
@@ -597,6 +554,21 @@ void *injected_start_routine(void *injected_arg)
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
+  int fd = open(SLOTS_FILE_NAME, O_RDWR);
+  if (fd == -1) {
+    fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    return NULL;
+  }
+
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+    fprintf(stderr, "Couldn't ftruncate file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    return NULL;
+  }
+  communication_slot *slots = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, 
+				  PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (slots == MAP_FAILED) {
+    fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+  }
 
   printf("Starting, about to find slot.\n");
   
@@ -605,43 +577,18 @@ void *injected_start_routine(void *injected_arg)
     int k;
 
     for (k = 0; k < NUM_SLOTS; ++k) {
-      lock_acquire(k);
-      char semaphore_name[50];
-      semaphore_name[0] = '\0';
-      int semaphore_number = k;
-      char semaphore_number_str[20];
-      sprintf(semaphore_number_str, "%d", semaphore_number);
-      strcat(semaphore_name, SHARED_MEM_ID);
-      strcat(semaphore_name, semaphore_number_str);
+      acquire_lock(k, slots);
+      communication_slot* slot = &slots[k];
 
-
-      char slot_file_name[50];
-      slot_file_name[0] = '\0';
-      strcat(slot_file_name, "/tmp/");
-      strcat(slot_file_name, semaphore_name);
-
-      FILE* fp = fopen(slot_file_name, "r+");
-
-      communication_slot slot, ar[1];
-      fread(ar, sizeof(communication_slot), 1, fp);
-      slot = ar[0];
-
-      if (slot.used == NONE) {
-	slot.used = START_PTHREADS;
-	slot.tid = tid;
-	slot.pid = getppid();
+      if (slot->used == NONE) {
+	slot->used = START_PTHREADS;
+	slot->tid = tid;
+	slot->pid = getppid();
 	found_slot = 1;
 	index = k;
       }
 
-      ar[0] = slot;
-      fseek(fp, 0, SEEK_SET); 
-      fwrite(ar, sizeof(communication_slot), 1, fp);
-      fflush(fp);
-      fsync(fileno(fp));
-
-      fclose(fp);
-      lock_release(k);
+      release_lock(k, slots);
 
       if (found_slot == 1) {
 	break;
@@ -649,62 +596,30 @@ void *injected_start_routine(void *injected_arg)
     }
   }
 
-  printf("Went through the first while.\n");
   while (1) {
-    lock_acquire(index);
-      char semaphore_name[50];
-      semaphore_name[0] = '\0';
-      int semaphore_number = index;
-      char semaphore_number_str[20];
-      sprintf(semaphore_number_str, "%d", semaphore_number);
-      strcat(semaphore_name, SHARED_MEM_ID);
-      strcat(semaphore_name, semaphore_number_str);
+    acquire_lock(index, slots);
+    communication_slot* slot = &slots[index];
+    if (slot->used == SCHEDULER) {
+      slot->used = NONE;
+      slot->tid = tid;
 
-      char slot_file_name[50];
-      slot_file_name[0] = '\0';
-      strcat(slot_file_name, "/tmp/");
-      strcat(slot_file_name, semaphore_name);
+      cpu_set_t set;
+      CPU_ZERO(&set);
+      CPU_SET(slot->core, &set);
+      sched_setaffinity(tid, sizeof(cpu_set_t), &set);
 
-      FILE* fp = fopen(slot_file_name, "r+");
+      const unsigned long int f = 1 << slot->node;
+      set_mempolicy(MPOL_PREFERRED, &f, 63);
 
-      communication_slot slot, ar[1];
-      fread(ar, sizeof(communication_slot), 1, fp);
-      slot = ar[0];
-
-      if (slot.used == SCHEDULER) {
-	slot.used = NONE;
-	slot.tid = tid;
-	//      printf("(by thread id: %ld) Scheduler gave back node: %d and core: %d\n", tid, b->node, b->core);
-
-	cpu_set_t set;
-	CPU_ZERO(&set);
-	CPU_SET(slot.core, &set);
-	sched_setaffinity(tid, sizeof(cpu_set_t), &set);
-
-	const unsigned long int f = 1 << slot.node;
-	set_mempolicy(MPOL_PREFERRED, &f, 63);
-
-	ar[0] = slot;
-	fwrite(ar, sizeof(communication_slot), 1, fp);
-	fclose(fp);
-
-	lock_release(index);
-	break;
-      }
-
-      ar[0] = slot;
-      fseek(fp, 0, SEEK_SET);
-      fwrite(ar, sizeof(communication_slot), 1, fp);
-      fflush(fp);
-      fsync(fileno(fp));
-      fclose(fp);
-
-      lock_release(index);
+      release_lock(index, slots);
+      break;
+    }
+    release_lock(index, slots);
   }
 
+  close(fd);
   void** tmp = injected_arg;
   void *(*f) (void*) = tmp[0];
-  printf("Befoe running result here: %p\n", f);
   void* result = f(tmp[1]);
 
   // inform the scheduler that this thread has finished
