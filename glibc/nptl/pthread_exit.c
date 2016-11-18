@@ -27,6 +27,24 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+typedef struct ticketlock_t 
+{
+    volatile uint32_t head;
+    uint8_t padding2[4];
+} ticketlock_t;
+
+
+int ticket_trylock(ticketlock_t* lock);
+void ticket_acquire(ticketlock_t* lock);
+void ticket_release(ticketlock_t* lock);
+int is_free_ticket(ticketlock_t* t);
+
+int create_ticketlock(ticketlock_t* the_lock);
+ticketlock_t* init_ticketlocks(uint32_t num_locks);
+//void init_thread_ticketlocks(uint32_t thread_num);
+void free_ticketlocks(ticketlock_t* the_locks);
+
+#define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define NUM_SLOTS 10
 
 /* Corresponds to who used the slot latest.
@@ -34,62 +52,60 @@
 typedef enum {NONE, SCHEDULER, START_PTHREADS, END_PTHREADS} used_by;
 typedef struct {
   int core, node;
+  ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
 } communication_slot;
 
 
+void acquire_lock(int i, communication_slot* slots);
+
+void release_lock(int i, communication_slot* slots);
+
+
 void
 __pthread_exit (void *value)
 {
-  THREAD_SETMEM (THREAD_SELF, result, value);
-
-  /*  int fd = open("/tmp/scheduler", O_RDWR);
+  int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
-    fprintf(stderr, "Open failed : %s\n", strerror(errno));
-  }
-  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
-    fprintf(stderr, "ftruncate : %s\n", strerror(errno));
+    fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
   }
 
-  communication_slot* addr = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, PROT_READ | PROT_WRITE,
-              MAP_SHARED, fd, 0);
-  if (addr == MAP_FAILED) {
-    fprintf(stderr, "mmap failed:%s\n", strerror(errno));
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+    fprintf(stderr, "Couldn't ftruncate file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+  }
+  communication_slot* slots = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, 
+	       PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (slots == MAP_FAILED) {
+    fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
   }
 
   // inform the scheduler that this thread has finished
   int found_slot = 0;
-
   while(found_slot != 1) {
     int k;
-    usleep(5000);
     for (k = 0; k < NUM_SLOTS; ++k) {
-      printf("ERROR: %s\n", strerror(errno));
-      communication_slot *b = addr + k;
-      int res = sem_wait(&(b->lock));
-      if (res != 0) {
-	printf("resutl was WONG %d\n", res);
-      }
+      acquire_lock(k, slots);
+      printf("I'm here in pthread_exit() before closing a thread:%d ...\n", k);
+      communication_slot *b = &slots[k];
+
       if (b->used == NONE) {
-	printf("A thread is closing from pthread_exit with tid: %ld\n", syscall(__NR_gettid));
 	b->used = END_PTHREADS;
 	b->tid = syscall(__NR_gettid);
-	b->pid = getppid();
+	b->pid = getpid();
+	printf("A thread with tid %ld and ppid %ld is closing in pthread_exit() ... kill it\n", (long) b->tid, (long) getpid());
 	found_slot = 1;
       }
-      res = sem_post(&(b->lock));
-      if (res != 0) {
-	printf("resutl was WRONG %d\n", res);
-      }
 
+      release_lock(k, slots);
       if (found_slot == 1) {
 	break;
       }
     }
   }
+  close(fd);
 
-*/
+  THREAD_SETMEM (THREAD_SELF, result, value);
   __do_cancel ();
 }
 strong_alias (__pthread_exit, pthread_exit)

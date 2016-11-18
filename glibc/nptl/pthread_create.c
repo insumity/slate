@@ -52,7 +52,6 @@
 #include "ticket_lock.h"
 
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
-#define SHARED_MEM_ID "scheduler"
 #define NUM_SLOTS 10
 
 /* Corresponds to who used the slot latest.
@@ -65,6 +64,9 @@ typedef struct {
   used_by used;
 } communication_slot;
 
+void acquire_lock(int i, communication_slot* slots);
+void release_lock(int i, communication_slot* slots);
+
 void acquire_lock(int i, communication_slot* slots)
 {
   ticketlock_t *lock = &((slots + i)->lock);
@@ -76,6 +78,7 @@ void release_lock(int i, communication_slot* slots)
   ticketlock_t *lock = &((slots + i)->lock);
   ticket_release(lock);
 }
+
 
 /* Nozero if debugging mode is enabled.  */
 int __pthread_debug;
@@ -550,7 +553,7 @@ long set_mempolicy(int mode, const unsigned long *nmask,
 
 void *injected_start_routine(void *injected_arg)
 {
-  printf("The thread is is: %ld\n", syscall(__NR_gettid));
+  //printf("The thread is is: %ld\n", syscall(__NR_gettid));
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
@@ -570,7 +573,6 @@ void *injected_start_routine(void *injected_arg)
     fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
   }
 
-  printf("Starting, about to find slot.\n");
   
   int found_slot = 0, index = -1;
   while(found_slot != 1) {
@@ -584,6 +586,7 @@ void *injected_start_routine(void *injected_arg)
 	slot->used = START_PTHREADS;
 	slot->tid = tid;
 	slot->pid = getppid();
+	printf("I'm starting a thread with : tid %ld, pid %ld\n", (long) tid, (long) getppid());
 	found_slot = 1;
 	index = k;
       }
@@ -622,37 +625,45 @@ void *injected_start_routine(void *injected_arg)
   void *(*f) (void*) = tmp[0];
   void* result = f(tmp[1]);
 
+  fd = open(SLOTS_FILE_NAME, O_RDWR);
+  if (fd == -1) {
+    fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    return NULL;
+  }
+
+  if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
+    fprintf(stderr, "Couldn't ftruncate file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    return NULL;
+  }
+  slots = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, 
+				  PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (slots == MAP_FAILED) {
+    fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+  }
+
   // inform the scheduler that this thread has finished
-  /*  found_slot = 0;
+  found_slot = 0;
   while(found_slot != 1) {
     int k;
     for (k = 0; k < NUM_SLOTS; ++k) {
-      printf("I'm here before closing a thread:%d ...\n", k);
-      communication_slot *b = addr + k;
+      acquire_lock(index, slots);
+      communication_slot *b = &slots[k];
 
-      rety = sem_wait(&(b->lock));
-      if (rety != 0) {
-	printf("rety is different 0\n");
-      }
       if (b->used == NONE) {
-	printf("A thread is closing ... kill it\n");
 	b->used = END_PTHREADS;
 	b->tid = tid;
 	b->pid = getppid();
 	found_slot = 1;
       }
-      rety = sem_post(&(b->lock));
-      if (rety != 0) {
-	printf("Something went wrong with sem_post\n");
-      }
 
+      release_lock(index, slots);
       if (found_slot == 1) {
 	break;
       }
     }
   }
 
-  close(fd);*/
+  close(fd);
   free(tmp); 
   
   return result;
@@ -889,9 +900,6 @@ __pthread_create_2_1 (pthread_t *newthread, const pthread_attr_t *attr,
   if (__glibc_unlikely (free_cpuset))
     free (default_attr.cpuset);
 
-  long foo1 = (long) (pd->tid);
-  long foo2 = (long) (pd->pid);
-  printf("%ld %ld\n", foo1, foo2);
   return retval;
 }
 versioned_symbol (libpthread, __pthread_create_2_1, pthread_create, GLIBC_2_1);

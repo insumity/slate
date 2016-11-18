@@ -112,7 +112,7 @@ typedef struct {
 } pin_data;
 
 pin_data pin[MCTOP_ALLOC_NUM][48];
-int pin_cnt[MCTOP_ALLOC_NUM];
+//int pin_cnt[MCTOP_ALLOC_NUM];
 
 pin_data create_pin_data(int core, int node) {
   pin_data tmp;
@@ -139,9 +139,10 @@ void initialize_pin_data(mctop_t* topo) {
     }
 
     mctop_alloc_policy pol = i;
+    // TODO ... n_config should be different depending on the policy
     mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
 
-    pin_cnt[i] = 0;
+    //pin_cnt[i] = 0;
     for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
       {
 	uint hwc = alloc->hwcs[hwc_i];
@@ -168,50 +169,75 @@ void release_lock(int i, communication_slot* slots)
   ticket_release(lock);
 }
 
-
-list* policy_per_process;
+// hwcs_per_id stores (pid, hwcs) meaning thread or process with pid is using hwcs
+list* policy_per_process, *hwcs_per_pid;
+bool* used_hwcs;
 
 int compare_pids(void* p1, void* p2) {
   return *((unsigned int *) p1) == *((unsigned int *) p2);
 }
 
+size_t total_hwcs;
 void* check_slots(void* dt) {
 
-  printf("I'm checking the slots thread\n");
   communication_slot* slots = dt;
 
   while (true) {
+    usleep(5000);
     for (int i = 0; i < NUM_SLOTS; ++i) {
       acquire_lock(i, slots);
 
-      int fd;
       communication_slot* slot = slots + i;
 
       if (slot->used == START_PTHREADS) {
-	printf("A ptherad stared\n, awesome time to be alive\n");
 	pid_t pid = slot->pid;
 
-	printf("process pid is: %ld\n", pid);
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
 	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
 	// TODO ... check result
 
 	int pol = *((int *) policy);
-	printf("=========policy is : %d\n", pol);
-	
-	pin_data pd = pin[pol][pin_cnt[pol]];
+
+	int cnt = 0;
+	pin_data pd = pin[pol][cnt];
 	int core = pd.core;
 	int node = pd.node;
+	//pin_cnt[pol]++;
+	cnt++;
+	while (used_hwcs[core]) {
+	  if (cnt == total_hwcs) {
+	    perror("We ran out of cores\n");
+	    return NULL;
+	  }
 
-	pin_cnt[pol]++;
+	  pd = pin[pol][cnt];
+	  core = pd.core;
+	  node = pd.node;
+	  cnt++;
+	}
+
 	slot->node = node;
 	slot->core = core;
+	used_hwcs[core] = true;
+
+	pid_t* pt_tid = malloc(sizeof(pid_t));
+	*pt_tid = slot->tid;
+
+	int* pt_core = malloc(sizeof(int));
+	*pt_core = core;
+	list_add(hwcs_per_pid, (void *) pt_tid, (void *) pt_core);
+
 	slot->used = SCHEDULER;
-	printf("GOT A NEW SLOT with node: %d and core: %d\n", slot->node, slot->core);
+	printf("GOT A NEW SLOT with node: %d and core: %d for thread with pid %d\n", slot->node, slot->core, slot->tid);
       }
       else if (slot->used == END_PTHREADS) {
-	printf("The thread has finished. FFFFF\n");
+	printf("The thread with pid %d and ppid %d has finished.", slot->tid, slot->pid);
+	// find the hwc this thread was using ...
+	int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) &slot->tid, compare_pids));
+	printf("Hwc that was used is: %d\n", hwc);
+	used_hwcs[hwc] = false;
+
 	slot->used = NONE;
       }
 
@@ -221,20 +247,33 @@ void* check_slots(void* dt) {
 }
 
 
+void* wait_for_process_async(void* dt)
+{
+  pid_t* pid = (pid_t *) dt;
+  int status;
+  waitpid(*pid, &status, 0);
+
+  int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) pid, compare_pids));
+  used_hwcs[hwc] = false;
+
+  return NULL;
+}
+
 
 int main(int argc, char* argv[]) {
 
   policy_per_process = create_list();
+  hwcs_per_pid = create_list();
 
   int fd = open(SLOTS_FILE_NAME, O_CREAT | O_RDWR, 0777);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
-    return NULL;
+    return EXIT_FAILURE;
   }
 
   if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
     fprintf(stderr, "Couldn't ftruncate file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
-    return NULL;
+    return EXIT_FAILURE;
   }
   communication_slot *slots = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, 
 				  PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
@@ -256,15 +295,15 @@ int main(int argc, char* argv[]) {
     slot->used = NONE;
   }
 
-
-  printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
-
   mctop_t* topo = mctop_load("lpd48core.mct");
-  if (topo)   {
-    mctop_print(topo);
+  if (!topo)   {
+    fprintf(stderr, "Couldn't load topology file.\n");
+    return EXIT_FAILURE;
   }
 
   initialize_pin_data(topo);
+
+  printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
 
   // create a thread to check for new slots
   pthread_t check_slots_threads;
@@ -276,15 +315,9 @@ int main(int argc, char* argv[]) {
   size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
   size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
 
-  size_t total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
-  bool used_hwc[total_hwcs];
-  memset(used_hwc, false, total_hwcs);
-  // printf("TOTAL number of hardware contexts: %zu\n", num_hwc_per_processor);
-
-  // printf("%zu %zu %zu %zu %zu\n", num_nodes, num_cores, num_cores_per_socket, num_hwc_per_socket, num_hwc_per_core);
-  const uint8_t NUMBER_OF_POLICIES = 11;
-
-
+  total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
+  used_hwcs = malloc(sizeof(bool) * total_hwcs);
+  memset(used_hwcs, false, total_hwcs);
 
   while (1) {
     char policy[100];
@@ -293,7 +326,6 @@ int main(int argc, char* argv[]) {
 
     fgets(line, 300, stdin);
     line[strlen(line) - 1 ] = '\0'; // remove new line character
-    //	printf("line to be written: [[%s]]\n", line);
     strcpy(tmp_line, line);
     int first_time = 1;
     char* word = strtok(line, " ");
@@ -331,6 +363,7 @@ int main(int argc, char* argv[]) {
     char c = getchar();
     getchar(); // read new line
 
+
     /*
     unsigned long num = pin[pin_cnt].node;
     cpu_set_t foobarisios;
@@ -345,40 +378,55 @@ int main(int argc, char* argv[]) {
     ///pin_cnt[
     */
 
+
+    /* TODO not sure about the third parameter */
+    mctop_alloc_policy pol = get_policy(policy);
+    cpu_set_t st;
+    CPU_ZERO(&st);
+    int cnt = 0;
+    while (used_hwcs[pin[pol][cnt].core]) {
+      cnt++;
+    }
+    int process_core = pin[pol][cnt].core;
+    used_hwcs[pin[pol][cnt].core] = true;
+    CPU_SET(pin[pol][cnt].core, &st);
+
+    if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &st)) {
+      perror("sched_setaffinity!\n");
+    }
+      
+    long num = 1 << pin[pol][cnt].node;
+    if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
+      perror("mempolicy didn't work\n");
+    }
+
+
     pid_t pid;
     if (c == 'Y') {
-      pid = fork();
+      pid = fork();      
     }
 
     if (pid == 0) {
       char* envp[1] = {NULL};
-      printf("About to run execve\n");
+      printf("About to run execve.\n");
       execve(program[0], program, envp);
       perror("execve didn't work!\n"); 
     }
-
-
-    mctop_alloc_policy pol = get_policy(policy);
-    /* TODO not sure about the third parameter */
-
-    pid_t *pt_pid = malloc(sizeof(pid_t));
+    pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
+    printf("Added process: %ld\n", (long) *pt_pid);
+    int *pt_core = malloc(sizeof(int));
+    *pt_core = process_core;
+    list_add(hwcs_per_pid, (void *) pt_pid, (void *) pt_core);
+    pthread_t* pt = malloc(sizeof(pthread_t));
+    pthread_create(pt, NULL, wait_for_process_async, pt_pid);
+
+
 
     int* pt_pol = malloc(sizeof(int));
     *pt_pol = pol;
     printf("Added with policy: %d\n", *pt_pol);
     list_add(policy_per_process, pt_pid, pt_pol);
-
-    /*
-      int number_of_threads = 0;
-      //get_thread_ids(pid, &number_of_threads);
-      int* thread_pids = get_children_thread_ids(pid, &number_of_threads);
-      if (number_of_threads != 6) {
-
-      }
-
-      printf("Number of threads: %d\n", number_of_threads);
-    */
 
     /*
       forked_data* fdt = malloc(sizeof(forked_data));
@@ -432,8 +480,6 @@ int main(int argc, char* argv[]) {
 
     //sched_setaffinity(pid, sizeof(cpu_set_t), &set);
 
-    //pthread_t* pt = malloc(sizeof(pthread_t));
-    //pthread_create(pt, NULL, wait_for_process, fdt);
   }
 	
   mctop_free(topo);

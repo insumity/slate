@@ -31,6 +31,8 @@
  */
 
 
+#ifndef _TICKET_LOCK_H_INCLUDED_
+#define _TICKET_LOCK_H_INCLUDED_ 1
 
 
 #ifndef _PLATFORM_DEFS_H_INCLUDED_
@@ -735,6 +737,12 @@ typedef struct ticketlock_t
 } ticketlock_t;
 
 
+#if defined(MEASURE_CONTENTION)
+extern void ticket_print_contention_stats(void);
+double ticket_avg_queue(void);
+#endif	/* MEASURE_CONTENTION */
+
+#endif
 
 int ticket_trylock(ticketlock_t* lock);
 void ticket_acquire(ticketlock_t* lock);
@@ -745,13 +753,6 @@ int create_ticketlock(ticketlock_t* the_lock);
 ticketlock_t* init_ticketlocks(uint32_t num_locks);
 //void init_thread_ticketlocks(uint32_t thread_num);
 void free_ticketlocks(ticketlock_t* the_locks);
-
-#if defined(MEASURE_CONTENTION)
-extern void ticket_print_contention_stats(void);
-double ticket_avg_queue(void);
-#endif	/* MEASURE_CONTENTION */
-
-#endif
 
 
 /* enable measure contantion to collect statistics about the 
@@ -929,4 +930,5 @@ free_ticketlocks(ticketlock_t* the_locks)
   free(the_locks);
 }
 
+#endif
 
