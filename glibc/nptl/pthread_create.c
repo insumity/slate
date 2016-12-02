@@ -48,6 +48,7 @@
 #include <sys/syscall.h>
 #include <numaif.h>
 #include <sched.h>
+#include <time.h>
 
 #include "ticket_lock.h"
 
@@ -557,6 +558,7 @@ void *injected_start_routine(void *injected_arg)
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
+  clock_t start = clock();
   int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -585,8 +587,8 @@ void *injected_start_routine(void *injected_arg)
       if (slot->used == NONE) {
 	slot->used = START_PTHREADS;
 	slot->tid = tid;
-	slot->pid = getppid();
-	printf("I'm starting a thread with : tid %ld, pid %ld\n", (long) tid, (long) getppid());
+	slot->pid = getpid();
+	printf("I'm starting a thread with : tid %ld, pid %ld\n", (long) tid, (long) getpid());
 	found_slot = 1;
 	index = k;
       }
@@ -614,6 +616,8 @@ void *injected_start_routine(void *injected_arg)
       const unsigned long int f = 1 << slot->node;
       set_mempolicy(MPOL_PREFERRED, &f, 63);
 
+      printf("I got scheduled where I always wanted at core: %d and at node: %d\n", slot->core, slot->node);
+
       release_lock(index, slots);
       break;
     }
@@ -621,6 +625,10 @@ void *injected_start_routine(void *injected_arg)
   }
 
   close(fd);
+
+  clock_t end = clock();
+  double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
+  printf("Time spent: %lf\n", time_spent);
   void** tmp = injected_arg;
   void *(*f) (void*) = tmp[0];
   void* result = f(tmp[1]);
@@ -652,7 +660,7 @@ void *injected_start_routine(void *injected_arg)
       if (b->used == NONE) {
 	b->used = END_PTHREADS;
 	b->tid = tid;
-	b->pid = getppid();
+	b->pid = getpid();
 	found_slot = 1;
       }
 

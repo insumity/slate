@@ -245,6 +245,7 @@ void* check_slots(void* dt) {
 }
 
 typedef struct {
+  int num_id; // the numerical value in front of every file
   pid_t* pid;
   struct timespec *start;
   char* policy;
@@ -269,14 +270,14 @@ void* wait_for_process_async(void* dt)
   
   double elapsed = (finish->tv_sec - start->tv_sec);
   elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
-  fprintf(results_fp, "%ld\t%lf\t%s\t%s\n", *pid, elapsed, p->policy, p->program);
+  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\n", p->num_id, *pid, elapsed, p->policy, p->program);
   processes_finished++;
   return NULL;
 }
 
 // Given "line" that is of a format "POLICY program parameters" returns the program
 // as a 2D char array and the policy
-char** read_line(char* line, char* policy)
+char** read_line(char* line, char* policy, int* num_id)
 {
     int program_cnt = 0;
     char tmp_line[300];
@@ -287,6 +288,9 @@ char** read_line(char* line, char* policy)
     strcpy(tmp_line, line);
     int first_time = 1;
     char* word = strtok(line, " ");
+    *num_id = atoi(word);
+    printf("The num id is: %d\n", *num_id);
+    word = strtok(NULL, " ");
     while (word != NULL)  {
       if (first_time) {
 	first_time = 0;
@@ -302,6 +306,7 @@ char** read_line(char* line, char* policy)
     first_time = 1;
     program_cnt = 0;
     word = strtok(tmp_line, " ");
+    strtok(NULL, " "); // skip the number
     while (word != NULL)  {
 
       if (first_time) {
@@ -391,7 +396,8 @@ int main(int argc, char* argv[]) {
 
     processes++;
     char policy[100];
-    char** program = read_line(line, policy);
+    int num_id;
+    char** program = read_line(line, policy, &num_id);
     line[0] = '\0';
 
     printf("policy: (%s), program: (%s) program1: (%p)\n", policy, program[0], program[1]);
@@ -425,9 +431,15 @@ int main(int argc, char* argv[]) {
     strcpy(p->policy, policy);
     p->program = malloc(sizeof(char) * 300);
     p->program[0] = '\0';
+    p->num_id = num_id;
+
     int z = 0;
     while (program[z] != NULL) {
-      strcpy(p->program, program[z]);
+      strcat(p->program, program[z]);
+
+      if (program[z + 1] != NULL) {
+	strcat(p->program, " ");
+      }
       z++;
     }
 
@@ -436,14 +448,14 @@ int main(int argc, char* argv[]) {
 
     if (pid == 0) {
       char* envp[1] = {NULL};
-      printf("About to run execve.\n");
+      printf("About to run execve. (%s) (%s) (%s) (%s)\n", program[0], program[1], program[2], program[3]);
       execve(program[0], program, envp);
       perror("execve didn't work!\n"); 
     }
+    printf("The child has pid: %ld\n", (long) pid);
 
     pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
-    printf("Added process: %ld\n", (long) *pt_pid);
     int *pt_core = malloc(sizeof(int));
     *pt_core = process_core;
     list_add(hwcs_per_pid, (void *) pt_pid, (void *) pt_core);
@@ -454,7 +466,6 @@ int main(int argc, char* argv[]) {
 
     int* pt_pol = malloc(sizeof(int));
     *pt_pol = pol;
-    printf("Added with policy: %d\n", *pt_pol);
     list_add(policy_per_process, pt_pid, pt_pol);
   }
 

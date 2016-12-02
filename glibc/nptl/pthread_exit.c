@@ -26,6 +26,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <time.h>
 
 typedef struct ticketlock_t 
 {
@@ -66,6 +67,7 @@ void release_lock(int i, communication_slot* slots);
 void
 __pthread_exit (void *value)
 {
+  clock_t start = clock();
   int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -104,6 +106,10 @@ __pthread_exit (void *value)
     }
   }
   close(fd);
+
+  clock_t end = clock();
+  double time = (double) (end - start) / CLOCKS_PER_SEC;
+  printf("Time spent in exit: %lf\n", time);
 
   THREAD_SETMEM (THREAD_SELF, result, value);
   __do_cancel ();
