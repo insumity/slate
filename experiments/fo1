@@ -1,0 +1,2 @@
+MCTOP_ALLOC_NONE /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6
+MCTOP_ALLOC_NONE /home/kantonia/Metis/obj/wc /home/kantonia/Metis/300MB_1M_Keys.txt -p 6
