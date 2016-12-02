@@ -414,13 +414,15 @@ int main(int argc, char* argv[]) {
     used_hwcs[pin[pol][cnt].core] = true;
     CPU_SET(pin[pol][cnt].core, &st);
 
-    if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &st)) {
-      perror("sched_setaffinity!\n");
-    }
+    if (pol != MCTOP_ALLOC_NONE) {
+      if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &st)) {
+	perror("sched_setaffinity!\n");
+      }
       
-    unsigned long num = 1 << pin[pol][cnt].node;
-    if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
-      perror("mempolicy didn't work\n");
+      unsigned long num = 1 << pin[pol][cnt].node;
+      if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
+	perror("mempolicy didn't work\n");
+      }
     }
 
     process* p = malloc(sizeof(process));
