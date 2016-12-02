@@ -179,14 +179,12 @@ int compare_pids(void* p1, void* p2) {
 
 size_t total_hwcs;
 void* check_slots(void* dt) {
-
   communication_slot* slots = dt;
 
   while (true) {
     usleep(5000);
     for (int i = 0; i < NUM_SLOTS; ++i) {
       acquire_lock(i, slots);
-
       communication_slot* slot = slots + i;
 
       if (slot->used == START_PTHREADS) {
@@ -246,22 +244,85 @@ void* check_slots(void* dt) {
   }
 }
 
+typedef struct {
+  pid_t* pid;
+  struct timespec *start;
+  char* policy;
+  char* program;
+} process;
 
+FILE* results_fp;
+volatile int processes_finished = 0;
 void* wait_for_process_async(void* dt)
 {
-  pid_t* pid = (pid_t *) dt;
+  process* p = (process *) dt;
+  struct timespec *start = p->start;
+  pid_t* pid = p->pid;
   int status;
   waitpid(*pid, &status, 0);
 
   int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) pid, compare_pids));
   used_hwcs[hwc] = false;
 
+  struct timespec *finish = malloc(sizeof(struct timespec));
+  clock_gettime(CLOCK_MONOTONIC, finish);
+  
+  double elapsed = (finish->tv_sec - start->tv_sec);
+  elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
+  fprintf(results_fp, "%ld\t%lf\t%s\t%s\n", *pid, elapsed, p->policy, p->program);
+  processes_finished++;
   return NULL;
 }
 
+// Given "line" that is of a format "POLICY program parameters" returns the program
+// as a 2D char array and the policy
+char** read_line(char* line, char* policy)
+{
+    int program_cnt = 0;
+    char tmp_line[300];
+
+    if (line[strlen(line) - 1] == '\n') {
+      line[strlen(line) - 1 ] = '\0'; // remove new line character
+    }
+    strcpy(tmp_line, line);
+    int first_time = 1;
+    char* word = strtok(line, " ");
+    while (word != NULL)  {
+      if (first_time) {
+	first_time = 0;
+	strcpy(policy, word);
+      }
+      else {
+	program_cnt++;
+      }
+      word = strtok(NULL, " ");
+    }
+
+    char** program = malloc(sizeof(char *) * (program_cnt + 1));
+    first_time = 1;
+    program_cnt = 0;
+    word = strtok(tmp_line, " ");
+    while (word != NULL)  {
+
+      if (first_time) {
+	first_time = 0;
+      }
+      else {
+	program[program_cnt] = malloc(sizeof(char) * 200);
+	strcpy(program[program_cnt], word);
+	program_cnt++;
+      }
+      word = strtok(NULL, " ");
+    }
+
+    program[program_cnt] = NULL;
+
+    return program;
+}
 
 int main(int argc, char* argv[]) {
 
+  results_fp = fopen(argv[2], "w");
   policy_per_process = create_list();
   hwcs_per_pid = create_list();
 
@@ -306,6 +367,7 @@ int main(int argc, char* argv[]) {
   printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
 
   // create a thread to check for new slots
+
   pthread_t check_slots_threads;
   pthread_create(&check_slots_threads, NULL, check_slots, slots);
 
@@ -319,65 +381,20 @@ int main(int argc, char* argv[]) {
   used_hwcs = malloc(sizeof(bool) * total_hwcs);
   memset(used_hwcs, false, total_hwcs);
 
-  while (1) {
+  char line[300];
+  FILE* fp = fopen(argv[1], "r");
+  volatile int processes = 0;
+  while (fgets(line, 300, fp)) {
+    if (line[0] == '#') {
+      continue; // the line is commented
+    }
+
+    processes++;
     char policy[100];
-    int program_cnt = 0;
-    char line[300], tmp_line[300];
+    char** program = read_line(line, policy);
+    line[0] = '\0';
 
-    fgets(line, 300, stdin);
-    line[strlen(line) - 1 ] = '\0'; // remove new line character
-    strcpy(tmp_line, line);
-    int first_time = 1;
-    char* word = strtok(line, " ");
-    while (word != NULL)  {
-      if (first_time) {
-	first_time = 0;
-	strcpy(policy, word);
-      }
-      else {
-	program_cnt++;
-      }
-      word = strtok(NULL, " ");
-    }
-
-    char** program = malloc(sizeof(char *) * (program_cnt + 1));
-    first_time = 1;
-    program_cnt = 0;
-    word = strtok(tmp_line, " ");
-    while (word != NULL)  {
-
-      if (first_time) {
-	first_time = 0;
-      }
-      else {
-	program[program_cnt] = malloc(sizeof(char) * 200);
-	strcpy(program[program_cnt], word);
-	program_cnt++;
-      }
-      word = strtok(NULL, " ");
-    }
-
-    program[program_cnt] = NULL;
-
-    printf("verify the forking with Y: \n");
-    char c = getchar();
-    getchar(); // read new line
-
-
-    /*
-    unsigned long num = pin[pin_cnt].node;
-    cpu_set_t foobarisios;
-    CPU_ZERO(&foobarisios);
-    CPU_SET(pin[pin_cnt].core, &foobarisios);
-    if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &foobarisios) == -1) {
-      perror("setaffinity didn't work");
-    }
-    if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
-      perror("mempolicy didn't work\n");
-    }
-    ///pin_cnt[
-    */
-
+    printf("policy: (%s), program: (%s) program1: (%p)\n", policy, program[0], program[1]);
 
     /* TODO not sure about the third parameter */
     mctop_alloc_policy pol = get_policy(policy);
@@ -395,16 +412,27 @@ int main(int argc, char* argv[]) {
       perror("sched_setaffinity!\n");
     }
       
-    long num = 1 << pin[pol][cnt].node;
+    unsigned long num = 1 << pin[pol][cnt].node;
     if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
       perror("mempolicy didn't work\n");
     }
 
-
-    pid_t pid;
-    if (c == 'Y') {
-      pid = fork();      
+    process* p = malloc(sizeof(process));
+    p->pid = malloc(sizeof(pid_t));
+    p->start = malloc(sizeof(struct timespec));
+    p->policy = malloc(sizeof(char) * 100);
+    p->policy[0] = '\0';
+    strcpy(p->policy, policy);
+    p->program = malloc(sizeof(char) * 300);
+    p->program[0] = '\0';
+    int z = 0;
+    while (program[z] != NULL) {
+      strcpy(p->program, program[z]);
+      z++;
     }
+
+    clock_gettime(CLOCK_MONOTONIC, p->start);
+    pid_t pid = fork();      
 
     if (pid == 0) {
       char* envp[1] = {NULL};
@@ -412,76 +440,29 @@ int main(int argc, char* argv[]) {
       execve(program[0], program, envp);
       perror("execve didn't work!\n"); 
     }
+
     pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
     printf("Added process: %ld\n", (long) *pt_pid);
     int *pt_core = malloc(sizeof(int));
     *pt_core = process_core;
     list_add(hwcs_per_pid, (void *) pt_pid, (void *) pt_core);
+
     pthread_t* pt = malloc(sizeof(pthread_t));
-    pthread_create(pt, NULL, wait_for_process_async, pt_pid);
-
-
+    p->pid = pt_pid;
+    pthread_create(pt, NULL, wait_for_process_async, p);
 
     int* pt_pol = malloc(sizeof(int));
     *pt_pol = pol;
     printf("Added with policy: %d\n", *pt_pol);
     list_add(policy_per_process, pt_pid, pt_pol);
-
-    /*
-      forked_data* fdt = malloc(sizeof(forked_data));
-      fdt->child = pid;
-      fdt->length = 6; // TODO 
-      fdt->used_hwc = malloc(sizeof(int) * fdt->length);
-      fdt->used_hwc_to_change = used_hwc;
-
-      int k = 0;
-      cpu_set_t set;
-
-      CPU_ZERO(&set);
-      for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
-      {
-      uint hwc = alloc->hwcs[hwc_i];
-      if (used_hwc[hwc]) {
-      continue;
-      }
-
-      CPU_SET(hwc, &set);
-      used_hwc[hwc] = true;
-      fdt->used_hwc[k++] = hwc;
-
-
-      printf("hwc : %d\n", hwc);
-      if (k == number_of_threads) {
-      break;
-      }
-      }
-
-      for (long i = 0; i < 48; i++) {
-      if (CPU_ISSET(i, &set)) {
-      printf("Core %d is in cputset\n", i);
-      }
-      }
-    */
-    // clean used hardware contexts when process finishes
-
-    //        printf("Where those threads should be pinned!: (cpu set %d) and (count set %d)\n", set, CPU_COUNT(&set));
-    /*
-      for (int i = 0; i < number_of_threads; ++i) {
-      printf("%ld is the thread: %d\n", thread_pids[i], i);
-      cpu_set_t st;
-      CPU_ZERO(&st);
-      CPU_SET(alloc->hwcs[i], &st);
-      if (sched_setaffinity(thread_pids[i], sizeof(cpu_set_t), &st)) {
-      perror("sched_setaffinity!\n");
-      return -1;
-      }
-      }*/
-
-    //sched_setaffinity(pid, sizeof(cpu_set_t), &set);
-
   }
-	
+
+
+  while (processes != processes_finished) {
+    sleep(1);
+  }
+
   mctop_free(topo);
   
   return 0;
