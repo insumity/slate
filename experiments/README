@@ -1,4 +1,6 @@
 
+experiment.py
+runs with 4 arguments ./experiment.py input_programs_file (the input that contains one policy and a full path program per line) glibc_build_directory (the changed glibc) none_policy_scheduler_file (output file for MCTOP_ALLOC_NONE) slate_scheduerler_file (output file)
 
 merge
 should be called like this:
