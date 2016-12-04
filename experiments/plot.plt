@@ -13,6 +13,6 @@ set boxwidth 1 relative
 set ylabel "Time (s)"
 set xlabel "Applications"
 set yrange [0:]
+set terminal pngcairo
+set output result_file
 plot for [COL=from:to] filename using COL:xticlabels(1) title columnheader
-
-pause -1

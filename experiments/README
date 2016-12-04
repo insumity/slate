@@ -7,7 +7,7 @@ where name1 corresponds to the id (0, 1, ...) of the application executed and co
 execute it
 
 the plotter runs like this
-gnuplot -e "filename='final'; from='3'; to='4'" foo.plt
+gnuplot -e "filename='final'; from='3'; to='4'; result_file='foobar.png'" foo.plt
 the input is a file like this
 
 id slate_scheduler linux_scheduler
