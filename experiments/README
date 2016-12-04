@@ -1,0 +1,17 @@
+
+
+merge
+should be called like this:
+merge filename1 name1 column1 column2 filename2 name2 column1 column2 ...
+where name1 corresponds to the id (0, 1, ...) of the application executed and column2 to the time it took to
+execute it
+
+the plotter runs like this
+gnuplot -e "filename='final'; from='3'; to='4'" foo.plt
+the input is a file like this
+
+id slate_scheduler linux_scheduler
+wc_app 13.4	      15.7
+firefox 190.0	      230.45
+
+and from='4' to in the arguments means which file to take form where to where
