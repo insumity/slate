@@ -5,4 +5,4 @@ all:
 	gcc list.o schedule.o ticket.o -L/home/kantonia/scheduler/ -g -o schedule -lmctop -lpthread -lnuma -lrt
 
 clean:
-	rm -f schedule
+	rm -f schedule *.o
