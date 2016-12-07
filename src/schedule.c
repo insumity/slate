@@ -373,7 +373,7 @@ int main(int argc, char* argv[]) {
     slot->policy = MCTOP_ALLOC_NONE;
   }
 
-  mctop_t* topo = mctop_load("/usr/share/mctop/lpdxeon2680.mct");
+  mctop_t* topo = mctop_load(NULL);
   if (!topo)   {
     fprintf(stderr, "Couldn't load topology file.\n");
     return EXIT_FAILURE;
