@@ -32,6 +32,7 @@ typedef struct {
   ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
+  int policy;
 } communication_slot;
 
 mctop_alloc_policy get_policy(char* policy) {
@@ -133,19 +134,26 @@ void initialize_pin_data(mctop_t* topo) {
 
   for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
 
+    mctop_alloc_policy pol = i;
     /* this policy does not contain any hardware contexts */
     if (i == MCTOP_ALLOC_NONE) {
-      continue;
+      pol = i + 1; // the hardware contexts are always skipped actually
+      // only done so we can measure cost of communicating with glibc
     }
 
-    mctop_alloc_policy pol = i;
     // TODO ... n_config should be different depending on the policy
+    printf("total num of hw contexes: %d : %d, %d\n", total_hwcs, num_nodes, pol);
     mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
-
+    printf("Alloc hwcs: %p: :%p\n", alloc, (uint*) (alloc->hwcs));
+    printf("current policy: %d, %d\n", pol, i);
     //pin_cnt[i] = 0;
     for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
       {
+	printf("Before reading hwcs ... number of hwcws: %d: %p\n", alloc->n_hwcs, alloc->hwcs);
 	uint hwc = alloc->hwcs[hwc_i];
+	printf("about to write the local node: %d\n", hwc);
+	mctop_hwcid_get_local_node(topo, hwc);
+	printf("foo barisisos\n");
 	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
       }
   }
@@ -192,7 +200,9 @@ void* check_slots(void* dt) {
 
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
+	printf("About to get the policy\n");
 	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
+	printf("I'm here: %d\n", *(int *) policy);
 	// TODO ... check result
 
 	int pol = *((int *) policy);
@@ -217,6 +227,7 @@ void* check_slots(void* dt) {
 
 	slot->node = node;
 	slot->core = core;
+	slot->policy = pol;
 	used_hwcs[core] = true;
 
 	pid_t* pt_tid = malloc(sizeof(pid_t));
@@ -359,9 +370,10 @@ int main(int argc, char* argv[]) {
     slot->tid = 0;
     slot->pid = 0;
     slot->used = NONE;
+    slot->policy = MCTOP_ALLOC_NONE;
   }
 
-  mctop_t* topo = mctop_load("lpd48core.mct");
+  mctop_t* topo = mctop_load("/usr/share/mctop/lpdxeon2680.mct");
   if (!topo)   {
     fprintf(stderr, "Couldn't load topology file.\n");
     return EXIT_FAILURE;
