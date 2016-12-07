@@ -1,11 +1,11 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 import sys
 import string
 import os
 import time
 import tempfile
 
-run_programs_concurrently = False
+run_programs_concurrently = True
 GLIBC_BUILD_DIRECTORY = "/localhome/kantonia/glibc-build2/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"

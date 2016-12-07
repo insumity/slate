@@ -142,18 +142,11 @@ void initialize_pin_data(mctop_t* topo) {
     }
 
     // TODO ... n_config should be different depending on the policy
-    printf("total num of hw contexes: %d : %d, %d\n", total_hwcs, num_nodes, pol);
     mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
-    printf("Alloc hwcs: %p: :%p\n", alloc, (uint*) (alloc->hwcs));
-    printf("current policy: %d, %d\n", pol, i);
-    //pin_cnt[i] = 0;
     for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
       {
-	printf("Before reading hwcs ... number of hwcws: %d: %p\n", alloc->n_hwcs, alloc->hwcs);
 	uint hwc = alloc->hwcs[hwc_i];
-	printf("about to write the local node: %d\n", hwc);
 	mctop_hwcid_get_local_node(topo, hwc);
-	printf("foo barisisos\n");
 	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
       }
   }
@@ -200,9 +193,7 @@ void* check_slots(void* dt) {
 
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
-	printf("About to get the policy\n");
 	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
-	printf("I'm here: %d\n", *(int *) policy);
 	// TODO ... check result
 
 	int pol = *((int *) policy);
@@ -238,13 +229,13 @@ void* check_slots(void* dt) {
 	list_add(hwcs_per_pid, (void *) pt_tid, (void *) pt_core);
 
 	slot->used = SCHEDULER;
-	printf("GOT A NEW SLOT with node: %d and core: %d for thread with pid %d\n", slot->node, slot->core, slot->tid);
+	// printf("GOT A NEW SLOT with node: %d and core: %d for thread with pid %d\n", slot->node, slot->core, slot->tid);
       }
       else if (slot->used == END_PTHREADS) {
 	printf("The thread with pid %d and ppid %d has finished.", slot->tid, slot->pid);
 	// find the hwc this thread was using ...
 	int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) &slot->tid, compare_pids));
-	printf("Hwc that was used is: %d\n", hwc);
+	// printf("Hwc that was used is: %d\n", hwc);
 	used_hwcs[hwc] = false;
 
 	slot->used = NONE;

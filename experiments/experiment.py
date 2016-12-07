@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.4
 import sys
 import string
 
@@ -8,14 +8,13 @@ glibc_build_directory = sys.argv[2]
 none_scheduler_file = sys.argv[3]
 slate_scheduler_file = sys.argv[4]
 linux_scheduler_file = sys.argv[5]
+LINK_SCRIPT_FILE = "link.sh"
 
 def to_slate_scheduler(policy, program):
-    link_script_file = "/home/kantonia/scheduler/testapp.sh"
-    return policy + " " + link_script_file + " " + glibc_build_directory + " " + str.join(' ', program)
+    return policy + " " + LINK_SCRIPT_FILE + " " + glibc_build_directory + " " + str.join(' ', program)
 
 def to_none_scheduler(policy, program):
-    link_script_file = "/home/kantonia/scheduler/testapp.sh"
-    return "MCTOP_ALLOC_NONE" + " " + link_script_file + " " + glibc_build_directory + " " + str.join(' ', program)
+    return "MCTOP_ALLOC_NONE" + " " + LINK_SCRIPT_FILE + " " + glibc_build_directory + " " + str.join(' ', program)
 
 def to_linux_scheduler(policy, program):
     return "LINUX_SCHEDULER" + " " + str.join(' ', program)
@@ -40,4 +39,3 @@ def create_scheduler_file(to_scheduler_function, file_name):
 create_scheduler_file(to_none_scheduler, none_scheduler_file)
 create_scheduler_file(to_slate_scheduler, slate_scheduler_file)
 create_scheduler_file(to_linux_scheduler, linux_scheduler_file)
-

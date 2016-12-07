@@ -1,4 +1,0 @@
-
-
-1) glibc should only open once the communication slots file, not once per thread creation.
-   Possible problems: How do you guarantee it's opened only once? Even if you put a sem_t in glibc, how do you guarantee it's only initialized once? Furthermore, when do you close the file? 

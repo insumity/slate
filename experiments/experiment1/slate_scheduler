@@ -1,0 +1,3 @@
+0 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES link.sh /localhome/kantonia/glibc-build2/  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
+1 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES link.sh /localhome/kantonia/glibc-build2/  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 9
+2 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES link.sh /localhome/kantonia/glibc-build2/  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 5 
