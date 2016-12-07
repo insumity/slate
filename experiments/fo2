@@ -1,2 +1,0 @@
-MCTOP_ALLOC_BW_ROUND_ROBIN_CORES ./testapp.sh /localhome/kantonia/glibc-build2 /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6
-MCTOP_ALLOC_SEQUENTIAL ./testapp.sh /localhome/kantonia/glibc-build2 /home/kantonia/Metis/obj/wc /home/kantonia/Metis/300MB_1M_Keys.txt -p 6
