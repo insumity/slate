@@ -1,3 +1,0 @@
-1	16985	22.122403	MCTOP_ALLOC_NONE	link.sh /localhome/kantonia/glibc-build2/ /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 9
-0	16983	31.828403	MCTOP_ALLOC_NONE	link.sh /localhome/kantonia/glibc-build2/ /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6
-2	16987	37.024822	MCTOP_ALLOC_NONE	link.sh /localhome/kantonia/glibc-build2/ /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 5
