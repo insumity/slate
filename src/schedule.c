@@ -20,6 +20,7 @@
 #include <semaphore.h>
 
 #include "ticket.h"
+#include "slate_utils.h"
 #include "list.h"
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
@@ -37,84 +38,10 @@ typedef struct {
   int policy;
 } communication_slot;
 
-mctop_alloc_policy get_policy(char* policy) {
-  mctop_alloc_policy pol;
-  if (strcmp(policy, "MCTOP_ALLOC_NONE") == 0) {
-    pol = MCTOP_ALLOC_NONE;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_SEQUENTIAL") == 0) {
-    pol = MCTOP_ALLOC_SEQUENTIAL;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_HWCS") == 0) {
-    pol = MCTOP_ALLOC_MIN_LAT_HWCS;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_CORES_HWCS") == 0) {
-    pol = MCTOP_ALLOC_MIN_LAT_CORES_HWCS;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_CORES") == 0) {
-    pol = MCTOP_ALLOC_MIN_LAT_CORES;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_HWCS_BALANCE") == 0) {
-    pol = MCTOP_ALLOC_MIN_LAT_HWCS_BALANCE;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_CORES_HWCS_BALANCE") == 0) {
-    pol = MCTOP_ALLOC_MIN_LAT_CORES_HWCS_BALANCE;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_MIN_LAT_CORES_BALANCE") == 0) {
-    pol = MCTOP_ALLOC_MIN_LAT_CORES_BALANCE;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_BW_ROUND_ROBIN_HWCS") == 0) {
-    pol = MCTOP_ALLOC_BW_ROUND_ROBIN_HWCS;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_BW_ROUND_ROBIN_CORES") == 0) {
-    pol = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
-  }
-  else if (strcmp(policy, "MCTOP_ALLOC_BW_BOUND") == 0) {
-    pol = MCTOP_ALLOC_BW_BOUND;
-  }
-  else {
-    perror("Not recognized policy\n");
-    return -1;
-  }
-
-  return pol;
-}
-
-/* typedef struct { */
-/*   pid_t child; */
-
-/*   int* used_hwc; */
-/*   int length; */
-
-/*   bool* used_hwc_to_change; */
-/* } forked_data; */
-
-/* void* wait_for_process(void* dt) { */
-/*   forked_data fdt = *((forked_data *) dt); */
-
-/*   pid_t pid = fdt.child; */
-/*   printf("I'm here with pid: %ld\n", pid); */
-
-/*   int return_status = -1; */
-/*   waitpid(pid, &return_status, 0); */
-/*   if (return_status == 0) { */
-/*     printf("process finished fine!\n"); */
-/*   } */
-  
-/*   for (int i = 0; i < fdt.length; ++i) { */
-/*     printf("Used one: %d\n", (fdt.used_hwc)[i]); */
-/*     (fdt.used_hwc_to_change)[(fdt.used_hwc)[i]] = false; */
-/*   } */
-
-/*   return NULL; */
-/* } */
-
 typedef struct {
   int core;
   int node;
 } pin_data;
-
-//int pin_cnt[MCTOP_ALLOC_NUM];
 
 pin_data create_pin_data(int core, int node) {
   pin_data tmp;
@@ -201,6 +128,7 @@ typedef struct {
   communication_slot* slots;
   pin_data** pin;
 } check_slots_args;
+
 void* check_slots(void* dt) {
   check_slots_args* args = (check_slots_args *) dt;
   communication_slot* slots = args->slots;
