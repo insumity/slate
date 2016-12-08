@@ -7,14 +7,14 @@ We do not know of any way to call `set_mempolicy` for another process. To solve 
 
 **How does the pthread library communicate with the scheduler?**
 
-The idea is the following. Both the pthread and the scheduler issue read and writes to the same file (`/tmp/scheduler`) that is memory mapped by both. I couldn't use shared memory (`shm_open`) because it seems that `lrt`(the shared memory component of glibc) was using threads, so there was a cycle I couldn't kill.
-This files contain some slots (`communication_slot`) and their access is controlled by semaphores.
+The idea is the following. Both the code in the pthread library and the scheduler issue read and writes to the same file (`SLOTS_FILE_NAME`) that is memory mapped by both. We couldn't use shared memory (`shm_open`) because it seems that `lrt`(the shared memory component of glibc) was using threads, so there was a cycle I couldn't kill in the make files.
+This files contain some slots (`communication_slot`) and their access is controlled by ticket locks. Ticket locks were chosen because simple semaphores are not fair locks (they were actually far away from fair).
 The protocol is the following:
 
-1. The scheduler initializes its slots to `NONE` (meaning noone is using them)
-2. When the pthread library creates a new thread, it uses an emtpy slot and changes is it to `PTHREADS`
-3. The scheduler keeps on checking the slots: When it reads a `PTHREADS` slot, it changes its `core` and `node` values and changes the slot to `SCHEDULER`
-4. The pthread library sees that its slots got changed to `SCHEDULER`, so it gets the data (`core` and `node`) and changes its affinity and memory policy. Afterwards it erases the slot by making it as a `NONE`
+1. The scheduler initializes its slots to `NONE` (the `used_by` field) (meaning noone is using them)
+2. When the pthread library creates a new thread, it uses an emtpy slot and changes it to `PTHREADS`. Furthermore, it augments the slot with information on the thread id, as well as its process id.
+3. The scheduler keeps on checking the slots: When it reads a `PTHREADS` slot, it changes its `core` and `node` values and changes the slot to `SCHEDULER`. The scheduler also stores the MCTOP policy of the application in the slot when communicating with the pthread library. This way, if the polocy is `MCTOP_ALLOC_NONE`, no set of affinity or memory policy is done.
+4. The pthread library sees that its slots got changed to `SCHEDULER`, so it gets the data (`core` and `node`) and changes its affinity and memory policy. Afterwards it erases the slot by making it as a `NONE`.
 
 
 The "Assymatry Matters" papers uses 2 programs from PARSEC: swaptions and streamcluster. They can be executed as follows:
