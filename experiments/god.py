@@ -1,11 +1,11 @@
-#!/usr/bin/python3.4
+#!/usr/bin/env python3
 import sys
 import string
 import os
 import time
 import tempfile
 
-run_programs_concurrently = True
+run_programs_concurrently = False
 GLIBC_BUILD_DIRECTORY = "/localhome/kantonia/glibc-build2/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -44,28 +44,39 @@ def get_line(fname, n):
 def execute_one_by_one(scheduler_file):
     lines = file_len(scheduler_file)
     for i in range(0, lines):
+        file_name = ""
         f = tempfile.NamedTemporaryFile(mode='w', delete=False)
         print("Line " + str(i) + " .. of file: " + get_line(scheduler_file, i))
         line = get_line(scheduler_file, i)
         f.write(line)
+        file_name = f.name
         f.flush()
         print("The file that was used is: " + f.name);
         f.close()
         os.system("../schedule " + f.name + " " + f.name + ".results")
         os.system("cat " + f.name + ".results >> " + scheduler_file + ".results")
+        os.remove(file_name)
+        os.remove(file_name + ".results")
+
 
 def execute_linux_one_by_one(scheduler_file):
     lines = file_len(scheduler_file)
     for i in range(0, lines):
+        file_name = ""
         f = tempfile.NamedTemporaryFile(mode='w', delete=False)
         print("Line " + str(i) + " .. of file: " + get_line(scheduler_file, i))
         line = get_line(scheduler_file, i)
         f.write(line)
+        file_name = f.name
         f.flush()
-        print("The file that was used is: " + f.name);
         f.close()
         os.system("./use_linux_scheduler " + f.name + " " + f.name + ".results")
         os.system("cat " + f.name + ".results >> " + scheduler_file + ".results")
+        os.remove(file_name)
+        os.remove(file_name + ".results")
+
+
+
 
             
 if run_programs_concurrently:
