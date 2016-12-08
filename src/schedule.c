@@ -22,6 +22,8 @@
 #include "ticket.h"
 #include "list.h"
 
+#define SLEEPING_TIME_IN_MICROSECONDS 5000
+
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define NUM_SLOTS 10
 
@@ -78,41 +80,40 @@ mctop_alloc_policy get_policy(char* policy) {
   return pol;
 }
 
-typedef struct {
-  pid_t child;
+/* typedef struct { */
+/*   pid_t child; */
 
-  int* used_hwc;
-  int length;
+/*   int* used_hwc; */
+/*   int length; */
 
-  bool* used_hwc_to_change;
-} forked_data;
+/*   bool* used_hwc_to_change; */
+/* } forked_data; */
 
-void* wait_for_process(void* dt) {
-  forked_data fdt = *((forked_data *) dt);
+/* void* wait_for_process(void* dt) { */
+/*   forked_data fdt = *((forked_data *) dt); */
 
-  pid_t pid = fdt.child;
-  printf("I'm here with pid: %ld\n", pid);
+/*   pid_t pid = fdt.child; */
+/*   printf("I'm here with pid: %ld\n", pid); */
 
-  int return_status = -1;
-  waitpid(pid, &return_status, 0);
-  if (return_status == 0) {
-    printf("process finished fine!\n");
-  }
+/*   int return_status = -1; */
+/*   waitpid(pid, &return_status, 0); */
+/*   if (return_status == 0) { */
+/*     printf("process finished fine!\n"); */
+/*   } */
   
-  for (int i = 0; i < fdt.length; ++i) {
-    printf("Used one: %d\n", (fdt.used_hwc)[i]);
-    (fdt.used_hwc_to_change)[(fdt.used_hwc)[i]] = false;
-  }
+/*   for (int i = 0; i < fdt.length; ++i) { */
+/*     printf("Used one: %d\n", (fdt.used_hwc)[i]); */
+/*     (fdt.used_hwc_to_change)[(fdt.used_hwc)[i]] = false; */
+/*   } */
 
-  return NULL;
-}
+/*   return NULL; */
+/* } */
 
 typedef struct {
   int core;
   int node;
 } pin_data;
 
-pin_data pin[MCTOP_ALLOC_NUM][48];
 //int pin_cnt[MCTOP_ALLOC_NUM];
 
 pin_data create_pin_data(int core, int node) {
@@ -122,7 +123,7 @@ pin_data create_pin_data(int core, int node) {
   return tmp;
 }
 
-void initialize_pin_data(mctop_t* topo) {
+pin_data** initialize_pin_data(mctop_t* topo) {
 
   size_t num_nodes = mctop_get_num_nodes(topo);
   size_t num_cores = mctop_get_num_cores(topo);
@@ -131,6 +132,10 @@ void initialize_pin_data(mctop_t* topo) {
   size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
 
   size_t total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
+  pin_data** pin = malloc(sizeof(pin_data*) * MCTOP_ALLOC_NUM);
+  for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
+    pin[i] = malloc(sizeof(pin_data) * total_hwcs);
+  }
 
   for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
 
@@ -138,18 +143,31 @@ void initialize_pin_data(mctop_t* topo) {
     /* this policy does not contain any hardware contexts */
     if (i == MCTOP_ALLOC_NONE) {
       pol = i + 1; // the hardware contexts are always skipped actually
-      // only done so we can measure cost of communicating with glibc
+      // only done so we can measure cost of communication between slate and glibc
     }
 
-    // TODO ... n_config should be different depending on the policy
-    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, num_nodes, pol);
+
+    int n_config = -1;
+    // Depending on the policy, n_config (3rd parameter of mctop_alloc_create) has different semantics.
+    if (pol == MCTOP_ALLOC_MIN_LAT_HWCS || pol == MCTOP_ALLOC_MIN_LAT_CORES_HWCS || pol == MCTOP_ALLOC_MIN_LAT_CORES) {
+      n_config = num_hwc_per_socket;
+    }
+    else {
+      n_config = num_nodes;
+    }
+    assert(n_config != -1);
+
+    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, n_config, pol);
     for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
       {
 	uint hwc = alloc->hwcs[hwc_i];
 	mctop_hwcid_get_local_node(topo, hwc);
 	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
       }
+    mctop_alloc_free(alloc);
   }
+
+  return pin;
 }
 
 void initialize_lock(int i, communication_slot* slots)
@@ -179,11 +197,17 @@ int compare_pids(void* p1, void* p2) {
 }
 
 size_t total_hwcs;
+typedef struct {
+  communication_slot* slots;
+  pin_data** pin;
+} check_slots_args;
 void* check_slots(void* dt) {
-  communication_slot* slots = dt;
+  check_slots_args* args = (check_slots_args *) dt;
+  communication_slot* slots = args->slots;
+  pin_data** pin = args->pin;
 
   while (true) {
-    usleep(5000);
+    usleep(SLEEPING_TIME_IN_MICROSECONDS);
     for (int i = 0; i < NUM_SLOTS; ++i) {
       acquire_lock(i, slots);
       communication_slot* slot = slots + i;
@@ -194,7 +218,10 @@ void* check_slots(void* dt) {
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
 	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
-	// TODO ... check result
+	if (policy == NULL) {
+	  fprintf(stderr, "Couldn't find policy of specific process with pid: %ld\n", (long int*) (pt_pid));
+	  exit(-1);
+	}
 
 	int pol = *((int *) policy);
 
@@ -202,7 +229,6 @@ void* check_slots(void* dt) {
 	pin_data pd = pin[pol][cnt];
 	int core = pd.core;
 	int node = pd.node;
-	//pin_cnt[pol]++;
 	cnt++;
 	while (used_hwcs[core]) {
 	  if (cnt == total_hwcs) {
@@ -229,14 +255,16 @@ void* check_slots(void* dt) {
 	list_add(hwcs_per_pid, (void *) pt_tid, (void *) pt_core);
 
 	slot->used = SCHEDULER;
-	// printf("GOT A NEW SLOT with node: %d and core: %d for thread with pid %d\n", slot->node, slot->core, slot->tid);
       }
       else if (slot->used == END_PTHREADS) {
-	printf("The thread with pid %d and ppid %d has finished.", slot->tid, slot->pid);
 	// find the hwc this thread was using ...
-	int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) &slot->tid, compare_pids));
-	// printf("Hwc that was used is: %d\n", hwc);
-	used_hwcs[hwc] = false;
+	int* hwc = ((int *) list_get_value(hwcs_per_pid, (void *) &slot->tid, compare_pids));
+	if (hwc == NULL) {
+	  fprintf(stderr, "Couldn't find the hwc this process is using: %ld\n", (slot->tid));
+	  exit(-1);
+	}
+	
+	used_hwcs[*hwc] = false;
 
 	slot->used = NONE;
       }
@@ -327,12 +355,7 @@ char** read_line(char* line, char* policy, int* num_id)
     return program;
 }
 
-int main(int argc, char* argv[]) {
-
-  results_fp = fopen(argv[2], "w");
-  policy_per_process = create_list();
-  hwcs_per_pid = create_list();
-
+communication_slot* initialize_slots() {
   int fd = open(SLOTS_FILE_NAME, O_CREAT | O_RDWR, 0777);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -349,10 +372,7 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
   }
 
-
-  /* initialize semaphores */
   for (int j = 0; j < NUM_SLOTS; ++j) {
-
     initialize_lock(j, slots);
     
     communication_slot* slot = &slots[j];
@@ -364,20 +384,36 @@ int main(int argc, char* argv[]) {
     slot->policy = MCTOP_ALLOC_NONE;
   }
 
+  return slots;
+}
+
+int main(int argc, char* argv[]) {
+
+  if (argc != 3) {
+    perror("Call schedule like this: ./schedule input_file output_file_for_results\n");
+    return -1;
+  }
+
+  results_fp = fopen(argv[2], "w");
+  policy_per_process = create_list();
+  hwcs_per_pid = create_list();
+
+
   mctop_t* topo = mctop_load(NULL);
   if (!topo)   {
     fprintf(stderr, "Couldn't load topology file.\n");
     return EXIT_FAILURE;
   }
 
-  initialize_pin_data(topo);
-
-  printf("Provide it with the following input: \"POLICY FULL_PATH_PROGRAM\"\n");
+  communication_slot* slots = initialize_slots();
+  pin_data** pin = initialize_pin_data(topo);
 
   // create a thread to check for new slots
-
-  pthread_t check_slots_threads;
-  pthread_create(&check_slots_threads, NULL, check_slots, slots);
+  pthread_t check_slots_thread;
+  check_slots_args* args = malloc(sizeof(check_slots_args));
+  args->slots = slots;
+  args->pin = pin;
+  pthread_create(&check_slots_thread, NULL, check_slots, args);
 
   size_t num_nodes = mctop_get_num_nodes(topo);
   size_t num_cores = mctop_get_num_cores(topo);
@@ -403,13 +439,11 @@ int main(int argc, char* argv[]) {
     char** program = read_line(line, policy, &num_id);
     line[0] = '\0';
 
-    printf("policy: (%s), program: (%s) program1: (%p)\n", policy, program[0], program[1]);
-
-    /* TODO not sure about the third parameter */
     mctop_alloc_policy pol = get_policy(policy);
     cpu_set_t st;
     CPU_ZERO(&st);
     int cnt = 0;
+    /* FIXME: can run out ... */
     while (used_hwcs[pin[pol][cnt].core]) {
       cnt++;
     }
@@ -420,7 +454,7 @@ int main(int argc, char* argv[]) {
     if (pol != MCTOP_ALLOC_NONE) {
       if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &st)) {
 	perror("sched_setaffinity!\n");
-      }
+     }
       
       unsigned long num = 1 << pin[pol][cnt].node;
       if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
@@ -453,11 +487,9 @@ int main(int argc, char* argv[]) {
 
     if (pid == 0) {
       char* envp[1] = {NULL};
-      printf("About to run execve. (%s) (%s) (%s) (%s)\n", program[0], program[1], program[2], program[3]);
       execve(program[0], program, envp);
       perror("execve didn't work!\n"); 
     }
-    printf("The child has pid: %ld\n", (long) pid);
 
     pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
