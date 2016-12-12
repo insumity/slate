@@ -6,7 +6,7 @@ import time
 import tempfile
 
 run_programs_concurrently = False
-GLIBC_BUILD_DIRECTORY = "/localhome/kantonia/glibc-build2/"
+GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
 SLATE_SCHEDULER_FILE = "slate_scheduler"

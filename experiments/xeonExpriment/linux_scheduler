@@ -1,0 +1,3 @@
+0 LINUX_SCHEDULER  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
+1 LINUX_SCHEDULER  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 9
+2 LINUX_SCHEDULER  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 5 

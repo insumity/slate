@@ -56,6 +56,7 @@ typedef struct {
   ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
+  int policy;
 } communication_slot;
 
 

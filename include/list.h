@@ -19,4 +19,6 @@ int list_remove(list* l, void* key, int (*compare)(void*, void*));
 
 void* list_get_value(list*l, void* key, int (*compare)(void*, void*));
 
+void list_traverse(list* l, void (*print_value)(void*, void*));
+
 #endif

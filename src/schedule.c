@@ -19,9 +19,18 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
+#include <linux/perf_event.h>
+#include <linux/hw_breakpoint.h>
+
 #include "ticket.h"
 #include "slate_utils.h"
 #include "list.h"
+
+
+#define CACHE_EVENT(cache,operation,result) (\
+					     (PERF_COUNT_HW_CACHE_ ## cache) | \
+					     (PERF_COUNT_HW_CACHE_OP_ ## operation << 8) | \
+					     (PERF_COUNT_HW_CACHE_RESULT_ ## result << 16))
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
 
@@ -53,7 +62,6 @@ pin_data create_pin_data(int core, int node) {
 pin_data** initialize_pin_data(mctop_t* topo) {
 
   size_t num_nodes = mctop_get_num_nodes(topo);
-  size_t num_cores = mctop_get_num_cores(topo);
   size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
   size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
   size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
@@ -116,7 +124,7 @@ void release_lock(int i, communication_slot* slots)
 }
 
 // hwcs_per_id stores (pid, hwcs) meaning thread or process with pid is using hwcs
-list* policy_per_process, *hwcs_per_pid;
+list* policy_per_process, *hwcs_per_pid, *fd_counters_per_pid;
 bool* used_hwcs;
 
 int compare_pids(void* p1, void* p2) {
@@ -128,6 +136,25 @@ typedef struct {
   communication_slot* slots;
   pin_data** pin;
 } check_slots_args;
+
+typedef struct {
+  int instructions;
+  int cycles; // not affected by frequency scaling
+
+  int l1i_cache_read_accesses;
+  int l1i_cache_write_accesses;
+  int l1d_cache_read_accesses;
+  int l1d_cache_write_accesses;
+  int l1i_cache_read_misses;
+  int l1i_cache_write_misses;
+  int l1d_cache_read_misses;
+  int l1d_cache_write_misses;
+
+  int ll_cache_read_accesses;
+  int ll_cache_write_accesses;
+  int ll_cache_read_misses;
+  int ll_cache_write_misses;
+} hw_counters_fd;
 
 void* check_slots(void* dt) {
   check_slots_args* args = (check_slots_args *) dt;
@@ -142,12 +169,13 @@ void* check_slots(void* dt) {
 
       if (slot->used == START_PTHREADS) {
 	pid_t pid = slot->pid;
-
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
+
+
 	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
 	if (policy == NULL) {
-	  fprintf(stderr, "Couldn't find policy of specific process with pid: %ld\n", (long int*) (pt_pid));
+	  fprintf(stderr, "Couldn't find policy of specific process with pid: %ld\n", *(long int*) (pt_pid));
 	  exit(-1);
 	}
 
@@ -182,13 +210,40 @@ void* check_slots(void* dt) {
 	*pt_core = core;
 	list_add(hwcs_per_pid, (void *) pt_tid, (void *) pt_core);
 
+
+	hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
+	cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+	cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
+
+	cnt2->l1i_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, ACCESS));
+	cnt2->l1i_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, ACCESS));
+	cnt2->l1d_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, READ, ACCESS));
+	cnt2->l1d_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, ACCESS));
+	cnt2->l1i_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, MISS));
+	cnt2->l1i_cache_write_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, MISS));
+	cnt2->l1d_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, READ, MISS));
+	cnt2->l1d_cache_write_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, WRITE, MISS));
+
+	cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
+	cnt2->ll_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, WRITE, ACCESS));
+	cnt2->ll_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
+	cnt2->ll_cache_write_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, WRITE, MISS));
+
+ 
+	list_add(fd_counters_per_pid, (void*) pt_tid, (void*) cnt2);
+	
+	start_perf_reading(cnt2->instructions);
+	start_perf_reading(cnt2->cycles);
+	//	start_perf_reading(cnt2->cache_accesses);
+	// start_perf_reading(cnt2->cache_misses);
+	
 	slot->used = SCHEDULER;
       }
       else if (slot->used == END_PTHREADS) {
 	// find the hwc this thread was using ...
 	int* hwc = ((int *) list_get_value(hwcs_per_pid, (void *) &slot->tid, compare_pids));
 	if (hwc == NULL) {
-	  fprintf(stderr, "Couldn't find the hwc this process is using: %ld\n", (slot->tid));
+	  fprintf(stderr, "Couldn't find the hwc this process is using: %ld\n", (long int) (slot->tid));
 	  exit(-1);
 	}
 	
@@ -228,7 +283,7 @@ void* wait_for_process_async(void* dt)
   
   double elapsed = (finish->tv_sec - start->tv_sec);
   elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
-  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\n", p->num_id, *pid, elapsed, p->policy, p->program);
+  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program);
   processes_finished++;
   return NULL;
 }
@@ -287,17 +342,18 @@ communication_slot* initialize_slots() {
   int fd = open(SLOTS_FILE_NAME, O_CREAT | O_RDWR, 0777);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
-    return EXIT_FAILURE;
+    exit(-1);
   }
 
   if (ftruncate(fd, sizeof(communication_slot) * NUM_SLOTS) == -1) {
     fprintf(stderr, "Couldn't ftruncate file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
-    return EXIT_FAILURE;
+    exit(-1);
   }
   communication_slot *slots = mmap(NULL, sizeof(communication_slot) * NUM_SLOTS, 
 				  PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (slots == MAP_FAILED) {
     fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
+    exit(-1);
   }
 
   for (int j = 0; j < NUM_SLOTS; ++j) {
@@ -315,6 +371,39 @@ communication_slot* initialize_slots() {
   return slots;
 }
 
+void print_counters(void* key, void *data)
+{
+  hw_counters_fd* dt = (hw_counters_fd*) data;
+  long long int instructions = read_perf_counter(dt->instructions);
+  long long int cycles = read_perf_counter(dt->cycles);
+
+  //long long int cache_accesses = read_perf_counter(dt->cache_accesses);
+  //loang long int cache_misses = read_perf_counter(dt->cache_misses);
+
+  if (0) {
+    reset_perf_counter(dt->instructions);
+    reset_perf_counter(dt->cycles);
+    //reset_perf_counter(dt->cache_accesses);
+    //reset_perf_counter(dt->cache_misses);
+  }
+
+  printf("pid: %ld = instructions: %lld ... cycles: %lld, %lf\n", *((pid_t *) key), instructions, cycles,
+	 ((double) instructions) / cycles );
+  //  printf("pid: %ld = cache accceses: %lld ... misses: %lld, %lf\n", *((pid_t *) key), cache_accesses, cache_misses,
+  //	 ((double) cache_misses) / cache_accesses );
+
+}
+
+void* check_counters(void* data)
+{
+  sleep(2);
+
+  while (true) {
+    list_traverse(fd_counters_per_pid, print_counters);
+    sleep(2);
+  }
+}
+
 int main(int argc, char* argv[]) {
 
   if (argc != 3) {
@@ -325,7 +414,7 @@ int main(int argc, char* argv[]) {
   results_fp = fopen(argv[2], "w");
   policy_per_process = create_list();
   hwcs_per_pid = create_list();
-
+  fd_counters_per_pid = create_list();
 
   mctop_t* topo = mctop_load(NULL);
   if (!topo)   {
@@ -343,6 +432,12 @@ int main(int argc, char* argv[]) {
   args->pin = pin;
   pthread_create(&check_slots_thread, NULL, check_slots, args);
 
+
+  pthread_t check_counters_thread;
+  pthread_create(&check_counters_thread, NULL, check_counters, args);
+
+
+  
   size_t num_nodes = mctop_get_num_nodes(topo);
   size_t num_cores = mctop_get_num_cores(topo);
   size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
@@ -423,6 +518,7 @@ int main(int argc, char* argv[]) {
     *pt_pid = pid;
     int *pt_core = malloc(sizeof(int));
     *pt_core = process_core;
+
     list_add(hwcs_per_pid, (void *) pt_pid, (void *) pt_core);
 
     pthread_t* pt = malloc(sizeof(pthread_t));

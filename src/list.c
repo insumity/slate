@@ -19,6 +19,18 @@ void list_add(list* l, void* key, void* data) {
   l->head = tmp;
 }
 
+void list_traverse(list* l, void (*print_value)(void*, void *)) {
+  if (l->head == NULL) {
+    return;
+  }
+
+  struct node *tmp = l->head;
+  while (tmp != NULL) {
+    print_value(tmp->key, tmp->data);
+    tmp = tmp->next;
+  }
+}
+
 int list_remove(list* l, void* key, int (*compare)(void*, void*)) {
   if (l->head == NULL) {
     return 0;

@@ -37,8 +37,7 @@
 #include <shlib-compat.h>
 
 #include <stap-probe.h>
-
-/* My additions for using shared memory */
+/* Karolos additions */
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -49,6 +48,10 @@
 #include <numaif.h>
 #include <sched.h>
 #include <time.h>
+#include <sys/ioctl.h>
+#include <linux/perf_event.h>
+#include <asm/unistd.h>
+
 
 #include "ticket_lock.h"
 
@@ -63,6 +66,7 @@ typedef struct {
   ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
+  int policy;
 } communication_slot;
 
 void acquire_lock(int i, communication_slot* slots);
@@ -551,7 +555,6 @@ long set_mempolicy(int mode, const unsigned long *nmask,
   return i;
 }
 
-
 void *injected_start_routine(void *injected_arg)
 {
   //printf("The thread is is: %ld\n", syscall(__NR_gettid));
@@ -588,6 +591,7 @@ void *injected_start_routine(void *injected_arg)
 	slot->used = START_PTHREADS;
 	slot->tid = tid;
 	slot->pid = getpid();
+				 
 	printf("I'm starting a thread with : tid %ld, pid %ld\n", (long) tid, (long) getpid());
 	found_slot = 1;
 	index = k;
