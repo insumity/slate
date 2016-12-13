@@ -60,6 +60,11 @@ static int perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
   return ret;
 }
 
+#define CACHE_EVENT(cache, operation, result) (\
+					     (PERF_COUNT_HW_CACHE_ ## cache) | \
+					     (PERF_COUNT_HW_CACHE_OP_ ## operation << 8) | \
+					     (PERF_COUNT_HW_CACHE_RESULT_ ## result << 16))
+
 
 int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
 {
@@ -67,16 +72,17 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
   int fd;
 
   memset(&pe, 0, sizeof(struct perf_event_attr));
-  pe.type = PERF_TYPE_HARDWARE;
+  pe.type = type;
   pe.size = sizeof(struct perf_event_attr);
   pe.config = perf_event_config;
   pe.disabled = 1;
-  pe.exclude_kernel = 1;
+  pe.exclude_kernel = 0;
   /*pe.exclude_hv = 1; */
 
   fd = perf_event_open(&pe, pid, -1, -1, 0);
   if (fd == -1) {
-    fprintf(stderr, "Error opening leader %llx\n", pe.config);
+    fprintf(stderr, "Error opening leader %lld\n", pe.config);
+    perror("");
     exit(EXIT_FAILURE);
   }
 
