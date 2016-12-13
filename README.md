@@ -45,3 +45,4 @@ TODO
 
 1) glibc should only open once the communication slots file, not once per thread creation.
    Possible problems: How do you guarantee it's opened only once? Even if you put a sem_t in glibc, how do you guarantee it's only initialized once? Furthermore, when do you close the file? 
+perf stat -e L1-dcache-load-misses -e L1-dcache-loads -e L1-dcache-store-misses -e L1-dcache-stores -e L1-icache-load-misses -e LLC-loads -e LLC-load-misses -e LLC-store-misses -e LLC-stores -e cache-misses  -e cache-references -e stalled-cycles-frontend ./a.out 
