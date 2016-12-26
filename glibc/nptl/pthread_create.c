@@ -561,7 +561,7 @@ void *injected_start_routine(void *injected_arg)
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
-  clock_t start = clock();
+  //clock_t start = clock();
   int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -592,7 +592,7 @@ void *injected_start_routine(void *injected_arg)
 	slot->tid = tid;
 	slot->pid = getpid();
 				 
-	printf("I'm starting a thread with : tid %ld, pid %ld\n", (long) tid, (long) getpid());
+	//printf("I'm starting a thread with : tid %ld, pid %ld\n", (long) tid, (long) getpid());
 	found_slot = 1;
 	index = k;
       }
@@ -612,6 +612,10 @@ void *injected_start_routine(void *injected_arg)
       slot->used = NONE;
       slot->tid = tid;
 
+      if (slot->policy == 0) { // MCTOP_ALLOC_NONE
+	release_lock(index, slots);
+	break;
+      }
       cpu_set_t set;
       CPU_ZERO(&set);
       CPU_SET(slot->core, &set);
@@ -630,9 +634,9 @@ void *injected_start_routine(void *injected_arg)
 
   close(fd);
 
-  clock_t end = clock();
-  double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
-  printf("Time spent: %lf\n", time_spent);
+  //clock_t end = clock();
+  //double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
+  //printf("Time spent: %lf\n", time_spent);
   void** tmp = injected_arg;
   void *(*f) (void*) = tmp[0];
   void* result = f(tmp[1]);

@@ -77,6 +77,8 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
   pe.config = perf_event_config;
   pe.disabled = 1;
   pe.exclude_kernel = 0;
+  //pe.inherit = 1;
+  
   /*pe.exclude_hv = 1; */
 
   fd = perf_event_open(&pe, pid, -1, -1, 0);

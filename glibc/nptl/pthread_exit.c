@@ -68,7 +68,7 @@ void release_lock(int i, communication_slot* slots);
 void
 __pthread_exit (void *value)
 {
-  clock_t start = clock();
+  //clock_t start = clock();
   int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -89,14 +89,14 @@ __pthread_exit (void *value)
     int k;
     for (k = 0; k < NUM_SLOTS; ++k) {
       acquire_lock(k, slots);
-      printf("I'm here in pthread_exit() before closing a thread:%d ...\n", k);
+      //printf("I'm here in pthread_exit() before closing a thread:%d ...\n", k);
       communication_slot *b = &slots[k];
 
       if (b->used == NONE) {
 	b->used = END_PTHREADS;
 	b->tid = syscall(__NR_gettid);
 	b->pid = getpid();
-	printf("A thread with tid %ld and ppid %ld is closing in pthread_exit() ... kill it\n", (long) b->tid, (long) getpid());
+	//printf("A thread with tid %ld and ppid %ld is closing in pthread_exit() ... kill it\n", (long) b->tid, (long) getpid());
 	found_slot = 1;
       }
 
@@ -108,9 +108,9 @@ __pthread_exit (void *value)
   }
   close(fd);
 
-  clock_t end = clock();
-  double time = (double) (end - start) / CLOCKS_PER_SEC;
-  printf("Time spent in exit: %lf\n", time);
+  //clock_t end = clock();
+  //double time = (double) (end - start) / CLOCKS_PER_SEC;
+  //printf("Time spent in exit: %lf\n", time);
 
   THREAD_SETMEM (THREAD_SELF, result, value);
   __do_cancel ();
