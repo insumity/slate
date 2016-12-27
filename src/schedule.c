@@ -26,7 +26,6 @@
 #include "slate_utils.h"
 #include "list.h"
 
-
 #define CACHE_EVENT(cache,operation,result) (\
 					     (PERF_COUNT_HW_CACHE_ ## cache) | \
 					     (PERF_COUNT_HW_CACHE_OP_ ## operation << 8) | \
@@ -123,7 +122,7 @@ void release_lock(int i, communication_slot* slots)
 }
 
 // hwcs_per_id stores (pid, hwcs) meaning thread or process with pid is using hwcs
-list* policy_per_process, *hwcs_per_pid, *fd_counters_per_pid;
+list* policy_per_process, *hwcs_per_pid, *fd_counters_per_pid, *tids_per_pid;
 bool* used_hwcs;
 
 int compare_pids(void* p1, void* p2) {
@@ -209,26 +208,23 @@ void* check_slots(void* dt) {
 	int* pt_core = malloc(sizeof(int));
 	*pt_core = core;
 
+	list_add(tids_per_pid, (void *) pt_pid, (void *) pt_tid);
 	list_add(hwcs_per_pid, (void *) pt_tid, (void *) pt_core);
 
 	hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
 	//cnt2->ll_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, WRITE, ACCESS));
-	printf("I'm good\n");
 	cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
 	cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-	printf("I'm good\n");
+
 	// doesn't support
 	//cnt2->l1i_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, ACCESS));
 	//printf("I'm good\n");
 	cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-	printf("I'm good\n");
 	//cnt2->l1d_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, READ, ACCESS));
-	printf("I'm good!!\n");
 	
 	//cnt2->l1i_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, MISS));
 	//printf("I'm good\n");
 	cnt2->ll_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
-	printf("#$@$I'm good\n");
 	//cnt2->l1i_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, MISS));
 	//printf("I'm good\ns");
 	/*cnt2->l1i_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, ACCESS));
@@ -290,9 +286,9 @@ typedef struct {
 
 FILE* results_fp;
 volatile int processes_finished = 0;
-void* wait_for_process_async(void* dt)
+void* wait_for_process_async(void* pro)
 {
-  process* p = (process *) dt;
+  process* p = (process *) pro;
   struct timespec *start = p->start;
   pid_t* pid = p->pid;
   int status;
@@ -303,10 +299,47 @@ void* wait_for_process_async(void* dt)
 
   struct timespec *finish = malloc(sizeof(struct timespec));
   clock_gettime(CLOCK_MONOTONIC, finish);
+
+  pid_t* current_id = pid;
+  
+  void* fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
+  hw_counters_fd* dt = (hw_counters_fd*) fd_counters;
+
+  long long int instructions = read_perf_counter(dt->instructions);
+  long long int cycles = read_perf_counter(dt->cycles);
+  long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
+  long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
+
+ back:
+  current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
+  if (current_id != NULL) {
+    fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
+    if (fd_counters != NULL) {
+      dt = (hw_counters_fd*) fd_counters;
+      instructions += read_perf_counter(dt->instructions);
+      cycles += read_perf_counter(dt->cycles);
+      ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
+      ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
+      list_remove(tids_per_pid, (void *) pid, compare_pids);
+      current_id = pid;
+      goto back;
+    }
+  }
+
+  printf("@#$#@$OLAOLApid: %ld = instructions: %lld ... cycles: %lld, %lf\n", *((pid_t *) pid), instructions, cycles,
+	 ((double) instructions) / cycles );
+  printf("@#$@#$@#LLC_read_accesses: %lld, LLC_read_misses: %lld, %lf\n", ll_cache_read_accesses, ll_cache_read_misses,
+	 1 - ((double) ll_cache_read_misses / ll_cache_read_accesses));
+
+
   
   double elapsed = (finish->tv_sec - start->tv_sec);
   elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
-  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program);
+  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
+	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
+	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
+	  1 - ((double) ll_cache_read_misses / ll_cache_read_accesses));
+	  
   processes_finished++;
   return NULL;
 }
@@ -446,6 +479,7 @@ int main(int argc, char* argv[]) {
   policy_per_process = create_list();
   hwcs_per_pid = create_list();
   fd_counters_per_pid = create_list();
+  tids_per_pid = create_list();
 
   mctop_t* topo = mctop_load(NULL);
   if (!topo)   {
