@@ -338,7 +338,7 @@ void* wait_for_process_async(void* pro)
   fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
 	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
 	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
-	  1 - ((double) ll_cache_read_misses / ll_cache_read_accesses));
+	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
 	  
   processes_finished++;
   return NULL;
