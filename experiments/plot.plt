@@ -11,7 +11,7 @@ set style fill solid border
 set style histogram clustered gap 1
 set key autotitle columnheader
 set boxwidth 1 relative
-set ylabel "Time (s)"
+set ylabel yaxislabel
 set xlabel "Applications"
 set yrange [0:]
 set mxtics

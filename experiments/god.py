@@ -82,25 +82,28 @@ def execute_linux_one_by_one(scheduler_file):
 if run_programs_concurrently:
     print("Going to the slate scheduler.") 
     os.system("../schedule " + slate_scheduler_file + " " + slate_scheduler_file + ".results")
-    print("Going to the none-slate scheduler.")
-    os.system("../schedule " + none_scheduler_file + " " + none_scheduler_file + ".results")
+    #print("Going to the none-slate scheduler.")
+    #os.system("../schedule " + none_scheduler_file + " " + none_scheduler_file + ".results")
     print("Going to the Linux scheduler.") 
     os.system("./use_linux_scheduler " + linux_scheduler_file + " " + linux_scheduler_file + ".results")
 else:
     print("Going to the slate scheduler.") 
     execute_one_by_one(slate_scheduler_file)
-    print("Going to the none-slate scheduler.")
-    execute_one_by_one(none_scheduler_file)
+    #print("Going to the none-slate scheduler.")
+    #execute_one_by_one(none_scheduler_file)
     print("Going to the Linux scheduler.")
     execute_linux_one_by_one(linux_scheduler_file)
     
 #merge results to a results_file
-os.system("./merge.py " + none_scheduler_file + ".results" + " none 0 2 "
-          + slate_scheduler_file + ".results" " slate 0 2 "
-          + linux_scheduler_file + ".results" " Linux 0 2 >  " + experiment_name + "/merged_results")
+os.system("./merge.py " #+ none_scheduler_file + ".results" + " none 0 2 6 9 " ifUNCOMMENT changle line below as well
+          + slate_scheduler_file + ".results" " slate 0 2 7 10 "
+          + linux_scheduler_file + ".results" " Linux 0 2 6 9 >  " + experiment_name + "/merged_results")
 
 #plot the file and creat the png
 os.system("gnuplot -e \"filename='" + experiment_name + "/merged_results" 
-          + "'; from='2'; to='4'; result_file='" + experiment_name +"/" + plotted_figure_file + "'\" plot.plt")
+          + "'; from='2'; to='3'; yaxislabel='Time (s)'; result_file='" + experiment_name +"/" + plotted_figure_file + "'\" plot.plt")
+
+os.system("gnuplot -e \"filename='" + experiment_name + "/merged_results" 
+          + "'; from='4'; to='7'; yaxislabel=''; result_file='" + experiment_name +"/hw_" + plotted_figure_file + "'\" plot.plt")
 
 

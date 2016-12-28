@@ -8,6 +8,105 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/perf_event.h>
+#include <asm/unistd.h>
+#include <stdint.h>
+
+typedef struct {
+  int instructions;
+  int cycles; // not affected by frequency scaling
+
+  int l1i_cache_read_accesses;
+  int l1i_cache_write_accesses;
+  int l1d_cache_read_accesses;
+  int l1d_cache_write_accesses;
+  int l1i_cache_read_misses;
+  int l1i_cache_write_misses;
+  int l1d_cache_read_misses;
+  int l1d_cache_write_misses;
+
+  int ll_cache_read_accesses;
+  int ll_cache_write_accesses;
+  int ll_cache_read_misses;
+  int ll_cache_write_misses;
+} hw_counters_fd;
+
+static int perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
+		  int cpu, int group_fd, unsigned long flags)
+{
+  int ret;
+
+  ret = syscall(__NR_perf_event_open, hw_event, pid, cpu,
+		group_fd, flags);
+  return ret;
+}
+
+#define CACHE_EVENT(cache, operation, result) (\
+					     (PERF_COUNT_HW_CACHE_ ## cache) | \
+					     (PERF_COUNT_HW_CACHE_OP_ ## operation << 8) | \
+					     (PERF_COUNT_HW_CACHE_RESULT_ ## result << 16))
+
+
+int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
+{
+  struct perf_event_attr pe;
+  int fd;
+
+  memset(&pe, 0, sizeof(struct perf_event_attr));
+  pe.type = type;
+  pe.size = sizeof(struct perf_event_attr);
+  pe.config = perf_event_config;
+  pe.disabled = 1;
+  pe.exclude_kernel = 0;
+  pe.inherit = 1;
+  
+  /*pe.exclude_hv = 1; */
+
+  fd = perf_event_open(&pe, pid, -1, -1, 0);
+  if (fd == -1) {
+    fprintf(stderr, "Error opening leader %lld\n", pe.config);
+    perror("");
+    exit(EXIT_FAILURE);
+  }
+
+  return fd;
+}
+
+void close_perf(int fd)
+{
+  close(fd);
+}
+
+void start_perf_reading(int fd)
+{
+  int ret = ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+  if (ret == -1) {
+    perror("ioctl failed\n");
+  }
+  ret = ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
+  if (ret == -1) {
+    perror("ioctl failed\n");
+  }
+}
+
+void reset_perf_counter(int fd) {
+  int ret = ioctl(fd, PERF_EVENT_IOC_RESET, 0);
+  if (ret == -1) {
+    perror("ioctl failed\n");
+  }
+}
+
+long long read_perf_counter(int fd)
+{
+  long long count = 0;
+  int ret = read(fd, &count, sizeof(long long));
+  if (ret == -1) {
+    perror("read failed\n");
+  }
+  return count;
+}
+
 
 char** read_line(char* line, char* policy, int* num_id)
 {
@@ -74,20 +173,45 @@ void* execute_process(void* arg)
   struct timespec start, end;
   clock_gettime(CLOCK_MONOTONIC, &start);
 
+  	hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
+
+	
   pid_t pid = fork();
   if (pid == 0) {
     execv(program[0], program); // SPPEND TWO HOURS ON this, if you use execve instead with envp = {NULL} it doesn't work
     perror("Couldn't run execv\n");
   }
+	cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+	cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
+	cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
+	cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
 
+	start_perf_reading(cnt2->instructions);
+	start_perf_reading(cnt2->cycles);
+	start_perf_reading(cnt2->ll_cache_read_accesses);
+	start_perf_reading(cnt2->ll_cache_read_misses);
+
+  
   int status;
   waitpid(pid, &status, 0);
   clock_gettime(CLOCK_MONOTONIC, &end);
+
+  long long int instructions = read_perf_counter(cnt2->instructions);
+  long long int cycles = read_perf_counter(cnt2->cycles);
+  long long ll_cache_read_accesses = read_perf_counter(cnt2->ll_cache_read_accesses);
+  long long ll_cache_read_misses = read_perf_counter(cnt2->ll_cache_read_misses);
+
   
   double *elapsed = malloc(sizeof(double));
   *elapsed = (end.tv_sec - start.tv_sec);
   *elapsed += (end.tv_nsec - start.tv_nsec) / 1000000000.0;
-  fprintf(fp, "%s\t%ld\t%lf\tprogram\n", id, (long) syscall(SYS_gettid), *elapsed);
+  fprintf(fp, "%s\t%ld\t%lf\tprogram\t" \
+	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n",
+	  id, (long) syscall(SYS_gettid), *elapsed,
+	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
+	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
+	  
+
   return elapsed;
 }
 
