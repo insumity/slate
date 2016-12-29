@@ -22,6 +22,8 @@ set grid xtics mxtics ytics mytics back ls 12, ls 13
 set terminal pngcairo
 set output result_file
 
-plot filename using 2:5:xtic(1) title 'slate', '' using 8:11:xtic(1) title 'Linux'
+plot filename using 3:6:xtic(1) title 'slate-IPC', '' using 9:12:xtic(1) title 'Linux-IPC', '' using 4:7:xtic(1) title 'slate-LLC', '' using 10:13:xtic(1) title 'Linux-LLC'
+
+
 
 #plot for [COL=from:to] filename using COL:8:xticlabels(1) title columnheader
