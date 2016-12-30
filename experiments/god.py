@@ -8,7 +8,7 @@ import csv
 import copy
 import math
 
-run_programs_concurrently = True
+run_programs_concurrently = False
 GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -44,7 +44,7 @@ def get_line(fname, n):
             if i == n:
                 return line
 
-def execute_one_by_one(scheduler_file):
+def execute_one_by_one(scheduler_file, output_file):
     lines = file_len(scheduler_file)
     for i in range(0, lines):
         file_name = ""
@@ -57,12 +57,12 @@ def execute_one_by_one(scheduler_file):
         print("The file that was used is: " + f.name);
         f.close()
         os.system("../schedule " + f.name + " " + f.name + ".results")
-        os.system("cat " + f.name + ".results >> " + scheduler_file + ".results")
+        os.system("cat " + f.name + ".results >> " + output_file)
         os.remove(file_name)
         os.remove(file_name + ".results")
 
 
-def execute_linux_one_by_one(scheduler_file):
+def execute_linux_one_by_one(scheduler_file, output_file):
     lines = file_len(scheduler_file)
     for i in range(0, lines):
         file_name = ""
@@ -74,13 +74,13 @@ def execute_linux_one_by_one(scheduler_file):
         f.flush()
         f.close()
         os.system("./use_linux_scheduler " + f.name + " " + f.name + ".results")
-        os.system("cat " + f.name + ".results >> " + scheduler_file + ".results")
+        os.system("cat " + f.name + ".results >> " + output_file)
         os.remove(file_name)
         os.remove(file_name + ".results")
 
 
 
-ITERATIONS=10
+ITERATIONS=5
             
 if run_programs_concurrently:
     for i in range(ITERATIONS):
@@ -99,13 +99,20 @@ if run_programs_concurrently:
     
 else:
     # TODO many iterations
-    print("Going to the slate scheduler.") 
-    execute_one_by_one(slate_scheduler_file)
-    #print("Going to the none-slate scheduler.")
-    #execute_one_by_one(none_scheduler_file)
-    print("Going to the Linux scheduler.")
-    execute_linux_one_by_one(linux_scheduler_file)
-
+    for i in range(ITERATIONS):
+        print("Going to the slate scheduler.") 
+        execute_one_by_one(slate_scheduler_file, slate_scheduler_file + str(i) + ".results")
+        #print("Going to the none-slate scheduler.")
+        #execute_one_by_one(none_scheduler_file)
+        print("Going to the Linux scheduler.")
+        execute_linux_one_by_one(linux_scheduler_file, linux_scheduler_file + str(i) + ".results")
+        
+        #merge results to a results_file
+        os.system("./merge.py " #+ none_scheduler_file + ".results" + " none 0 2 6 9 " ifUNCOe line below as well
+          + slate_scheduler_file + str(i) + ".results" " slate 0 2 7 10 "
+                  + linux_scheduler_file + str(i) + ".results" " Linux 0 2 6 9 >  " +
+                  experiment_name + "/merged_results" + str(i))
+        
 
 slate = dict()
 linux = dict()
