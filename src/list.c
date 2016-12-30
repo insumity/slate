@@ -5,6 +5,10 @@
 list* create_list() {
   list* l = malloc(sizeof(list));
   l->head = NULL;
+  int res = sem_init(&(l->lock), 0, 1);
+  if (res == -1) {
+    perror("couldn't create list");
+  }
   return l;
 }
 
@@ -12,15 +16,20 @@ void list_add(list* l, void* key, void* data) {
   struct node *head = l->head;
   
   struct node *tmp = malloc(sizeof(struct node));
+  sem_wait(&(l->lock));
   tmp->key = key;
   tmp->data = data;
   tmp->next = head;
 
   l->head = tmp;
+  sem_post(&(l->lock));
 }
 
 void list_traverse(list* l, void (*print_value)(void*, void *)) {
+  sem_wait(&(l->lock));
+
   if (l->head == NULL) {
+    sem_post(&(l->lock));
     return;
   }
 
@@ -29,10 +38,13 @@ void list_traverse(list* l, void (*print_value)(void*, void *)) {
     print_value(tmp->key, tmp->data);
     tmp = tmp->next;
   }
+  sem_post(&(l->lock));
 }
 
 int list_remove(list* l, void* key, int (*compare)(void*, void*)) {
+  sem_wait(&(l->lock));
   if (l->head == NULL) {
+    sem_post(&(l->lock));
     return 0;
   }
 
@@ -40,6 +52,7 @@ int list_remove(list* l, void* key, int (*compare)(void*, void*)) {
   if (compare(tmp->key, key)) {
     l->head = l->head->next;
     free(tmp);
+    sem_post(&(l->lock));
     return 1;
   }
 
@@ -48,27 +61,33 @@ int list_remove(list* l, void* key, int (*compare)(void*, void*)) {
       struct node *t = tmp->next;
       tmp->next = tmp->next->next;
       free(t);
+      sem_post(&(l->lock));
       return 1;
     }
     tmp = tmp->next;
   }
 
+  sem_post(&(l->lock));
   return 0;
 }
 
 void* list_get_value(list* l, void* key, int (*compare)(void*, void*)) {
+  sem_wait(&(l->lock));
   if (l->head == NULL) {
+    sem_post(&(l->lock));
     return NULL;
   }
 
   struct node *tmp = l->head;
   while (tmp != NULL) {
     if (compare(tmp->key, key)) {
+      sem_post(&(l->lock));
       return tmp->data;
     }
     tmp = tmp->next;
   }
 
+  sem_post(&(l->lock));
   return NULL;
 }
 

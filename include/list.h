@@ -1,6 +1,8 @@
 #ifndef __LIST_H
 #define __LIST_H
 
+#include <semaphore.h>
+
 struct node {
   struct node *next;
   void *key, *data;
@@ -8,6 +10,7 @@ struct node {
 
 typedef struct {
   struct node* head;
+  sem_t lock;
 } list;
 
 list* create_list();
