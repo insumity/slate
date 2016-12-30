@@ -58,6 +58,21 @@ int main() {
   assert(list_get_value(l, p.k, compare) == NULL);
   assert(list_remove(l, p.k, compare) == 0);
 
+  p = create_pair(58, 94);
+  list_add(l, p.k, p.v);
+  p = create_pair(58, 9891);
+  list_add(l, p.k, p.v);
+  int cnt;
+  void** res = list_get_all_values(l, p.k, compare, &cnt);
+  assert(cnt == 2);
+  assert(*((int *)res[0]) == 9891);
+  assert(*((int *)res[1]) == 94);
+
+  assert(list_remove(l, p.k, compare) == 1);
+  res = list_get_all_values(l, p.k, compare, &cnt);
+  assert(cnt == 1);
+  assert(*((int *)res[0]) == 94);
+
   return 0;
 }
 

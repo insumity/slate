@@ -91,3 +91,42 @@ void* list_get_value(list* l, void* key, int (*compare)(void*, void*)) {
   return NULL;
 }
 
+void** list_get_all_values(list* l, void* key, int (*compare)(void*, void*), int* number_of_elements) {
+  sem_wait(&(l->lock));
+  if (l->head == NULL) {
+    *number_of_elements = 0;
+    sem_post(&(l->lock));
+    return NULL;
+  }
+
+  int cnt = 0;
+  struct node *tmp = l->head;
+  while (tmp != NULL) {
+    if (compare(tmp->key, key)) {
+      cnt++;
+    }
+    tmp = tmp->next;
+  }
+  *number_of_elements = cnt;
+
+  if (cnt == 0) {
+    sem_post(&(l->lock));
+    return NULL;
+  }
+
+  void** elements = malloc(sizeof(void *) * cnt);
+  cnt = 0;
+  tmp = l->head;
+  while (tmp != NULL) {
+    if (compare(tmp->key, key)) {
+      elements[cnt] = tmp->data;
+      cnt++;
+    }
+    tmp = tmp->next;
+  }
+
+
+  sem_post(&(l->lock));
+  return elements;
+}
+
