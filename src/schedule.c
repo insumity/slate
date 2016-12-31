@@ -90,13 +90,16 @@ pin_data** initialize_pin_data(mctop_t* topo) {
     }
     assert(n_config != -1);
 
+    printf("%d: ", pol);
     mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, n_config, pol);
     for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
       {
 	uint hwc = alloc->hwcs[hwc_i];
 	mctop_hwcid_get_local_node(topo, hwc);
 	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
+	printf("%d, ", hwc);
       }
+    printf("\n");
     mctop_alloc_free(alloc);
   }
 
@@ -326,11 +329,10 @@ void* wait_for_process_async(void* pro)
     }
   }
 
-  printf("@#$#@$OLAOLApid: %ld = instructions: %lld ... cycles: %lld, %lf\n", *((pid_t *) pid), instructions, cycles,
+  /*  printf("@#$#@$OLAOLApid: %ld = instructions: %lld ... cycles: %lld, %lf\n", *((pid_t *) pid), instructions, cycles,
 	 ((double) instructions) / cycles );
   printf("@#$@#$@#LLC_read_accesses: %lld, LLC_read_misses: %lld, %lf\n", ll_cache_read_accesses, ll_cache_read_misses,
-	 1 - ((double) ll_cache_read_misses / ll_cache_read_accesses));
-
+  1 - ((double) ll_cache_read_misses / ll_cache_read_accesses)); */
 
   
   double elapsed = (finish->tv_sec - start->tv_sec);
@@ -462,10 +464,109 @@ void* check_counters(void* data)
   sleep(2);
 
   while (true) {
-    printf("What's happenning\n");
-    list_traverse(fd_counters_per_pid, print_counters);
+    //    list_traverse(fd_counters_per_pid, print_counters);
     sleep(2);
   }
+}
+
+void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_data** pin)
+{
+  int i;
+  // first schedule the process
+  int process_core = pin[policy][0].core;
+  cpu_set_t st;
+  CPU_ZERO(&st);
+  CPU_SET(process_core, &st);
+
+  //printf("pid: %lld to %d\n", pid, process_core);
+  sched_setaffinity(pid, sizeof(cpu_set_t), &st);
+
+  //  printf("The number of threads is: %d\n", number_of_threads);
+  for (i = 0; i < number_of_threads; ++i) {
+    int process_core = pin[policy][i + 1].core;
+    cpu_set_t st;
+    CPU_ZERO(&st);
+    CPU_SET(process_core, &st);
+
+    if (sched_setaffinity(*((pid_t *) tids[i]), sizeof(cpu_set_t), &st)) {
+      perror("sched_setaffinity");
+      return;
+     }
+  }
+
+}
+
+void print_pid(void *dt)
+{
+  printf("%lld ", *((pid_t *) dt));
+}
+
+void* find_best_policy(void* data, pin_data** pin)
+{
+  pid_t* pid = (pid_t*) data;
+  hw_counters_fd* dt = list_get_value(fd_counters_per_pid, pid, compare_pids);
+
+  int number_of_threads;
+  void** tids = list_get_all_values(tids_per_pid, pid, compare_pids, &number_of_threads);
+
+  int SLEEP_IN_BETWEEN_IN_MS = 250;
+      
+  int best_policy;
+  int k;
+  for (k = 0; k < 1; ++k) {
+    double best_IPC = 0.0;
+    int i;
+    for (i = 1; i < 11; ++i) {
+      long long int instructions = read_perf_counter(dt->instructions);
+      long long int cycles = read_perf_counter(dt->cycles);
+
+
+      // add hw conters of the process threads
+      int j;
+      for (j = 0; j < number_of_threads; ++j) {
+	hw_counters_fd* cnts = list_get_value(fd_counters_per_pid, tids[j], compare_pids);
+	if (cnts != NULL) {
+	  instructions += read_perf_counter(cnts->instructions);
+	  cycles += read_perf_counter(cnts->cycles);
+	}
+      }
+      //printf("instructions: %lld, cycles: %lld\n", instructions, cycles);
+
+      usleep(SLEEP_IN_BETWEEN_IN_MS * 1000); 
+      long long int new_instructions = read_perf_counter(dt->instructions);
+      long long int new_cycles = read_perf_counter(dt->cycles);
+
+      for (j = 0; j < number_of_threads; ++j) {
+	hw_counters_fd* cnts = list_get_value(fd_counters_per_pid, tids[j], compare_pids);
+	if (cnts != NULL) {
+	  new_instructions += read_perf_counter(cnts->instructions);
+	  new_cycles += read_perf_counter(cnts->cycles);
+	}
+      }
+
+      //printf("new_instructions: %lld, new_cycles: %lld\n", new_instructions, new_cycles);
+
+      new_instructions -= instructions;
+      new_cycles -= cycles;
+    
+      double IPC = new_instructions / ((double) new_cycles);
+      if (IPC > best_IPC) {
+	best_IPC = IPC;
+	best_policy = i;
+      }
+      printf("Policy: %d, IPC: %lf\n", i, IPC);
+      reschedule(i, number_of_threads, *pid, tids, pin);
+    }
+    printf("%d: Best policy is: %d\n", k, best_policy);
+    //usleep(731 * 1000);
+  }
+
+  
+  if (best_policy != 10) { //if it is the last one, no reason to reschedule
+    reschedule(best_policy, number_of_threads, *pid, tids, pin);
+  }
+
+  return NULL;
 }
 
 int main(int argc, char* argv[]) {
@@ -526,7 +627,14 @@ int main(int argc, char* argv[]) {
     char** program = read_line(line, policy, &num_id);
     line[0] = '\0';
 
-    mctop_alloc_policy pol = get_policy(policy);
+    mctop_alloc_policy pol;
+    if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0) {
+      pol = 1; // go sequential so far ..
+    }
+    else {
+      pol = get_policy(policy);
+    }
+    
     cpu_set_t st;
     CPU_ZERO(&st);
     int cnt = 0;
@@ -538,7 +646,7 @@ int main(int argc, char* argv[]) {
     used_hwcs[pin[pol][cnt].core] = true;
     CPU_SET(pin[pol][cnt].core, &st);
 
-    if (pol != MCTOP_ALLOC_NONE) {
+    if (pol != MCTOP_ALLOC_NONE && strcmp(policy, "MCTOP_ALLOC_SLATE") != 0) {
       if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &st)) {
 	perror("sched_setaffinity!\n");
      }
@@ -575,7 +683,7 @@ int main(int argc, char* argv[]) {
     if (pid == 0) {
       char* envp[1] = {NULL};
       execve(program[0], program, envp);
-      perror("execve didn't work!\n"); 
+      perror("execve didn't work"); 
     }
 
     pid_t* pt_pid = malloc(sizeof(pid_t));
@@ -609,6 +717,11 @@ int main(int argc, char* argv[]) {
     start_perf_reading(cnt2->ll_cache_read_accesses);
     //start_perf_reading(cnt2->l1i_cache_read_misses);
     start_perf_reading(cnt2->ll_cache_read_misses);
+
+    if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0)  {
+      usleep(100 * 1000); // wait 200ms
+      find_best_policy(pt_pid, pin);
+    }
 
     printf("Added %ld to list with processes\n", (long) (*pt_pid));
   }
