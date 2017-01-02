@@ -126,7 +126,7 @@ void release_lock(int i, communication_slot* slots)
 
 // hwcs_per_id stores (pid, hwcs) meaning thread or process with pid is using hwcs
 list* policy_per_process, *hwcs_per_pid, *fd_counters_per_pid, *tids_per_pid;
-bool* used_hwcs;
+volatile bool* used_hwcs;
 
 int compare_pids(void* p1, void* p2) {
   return *((unsigned int *) p1) == *((unsigned int *) p2);
@@ -469,11 +469,23 @@ void* check_counters(void* data)
   }
 }
 
-void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_data** pin)
+void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_data** pin,
+		int* used_threads)
 {
   int i;
   // first schedule the process
   int process_core = pin[policy][0].core;
+  int j = 1;
+  //printf("The chosen process_Cores is :%d @#$#@$#@\n", process_core);
+  while (used_hwcs[process_core]) {
+    process_core = pin[policy][j].core;
+    //printf("???The chosen process_Cores is :%d @#$#@$#@\n", process_core);
+
+    ++j;
+  }
+  used_hwcs[process_core] = true;
+  used_threads[0] = process_core; // save which used_hwcs were set to true so we set themback to false
+  
   cpu_set_t st;
   CPU_ZERO(&st);
   CPU_SET(process_core, &st);
@@ -481,12 +493,21 @@ void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_d
   //printf("pid: %lld to %d\n", pid, process_core);
   sched_setaffinity(pid, sizeof(cpu_set_t), &st);
 
-  //  printf("The number of threads is: %d\n", number_of_threads);
+  //printf("The number of threads is: %d\n", number_of_threads);
   for (i = 0; i < number_of_threads; ++i) {
     int process_core = pin[policy][i + 1].core;
+    int j = 1;
+    while (used_hwcs[process_core]) {
+      process_core = pin[policy][j].core;
+      ++j;
+    }
+    used_hwcs[process_core] = true;
+    used_threads[i + 1] = process_core;
+
     cpu_set_t st;
     CPU_ZERO(&st);
     CPU_SET(process_core, &st);
+    //printf("pid: %lld to %d\n", *((pid_t *) tids[i]), process_core);
 
     if (sched_setaffinity(*((pid_t *) tids[i]), sizeof(cpu_set_t), &st)) {
       perror("sched_setaffinity");
@@ -509,14 +530,23 @@ void* find_best_policy(void* data, pin_data** pin)
   int number_of_threads;
   void** tids = list_get_all_values(tids_per_pid, pid, compare_pids, &number_of_threads);
 
-  int SLEEP_IN_BETWEEN_IN_MS = 250;
-      
+  int SLEEP_IN_BETWEEN_IN_MS = 230;
+
+  int used_threads[40] = {0};
   int best_policy;
   int k;
   for (k = 0; k < 1; ++k) {
+
     double best_IPC = 0.0;
     int i;
     for (i = 1; i < 11; ++i) {
+      if (i > 1) {
+	int l;
+	for (l = 0; l < number_of_threads + 1; ++l) {
+	  used_hwcs[used_threads[l]] = false;
+	}
+      }
+
       long long int instructions = read_perf_counter(dt->instructions);
       long long int cycles = read_perf_counter(dt->cycles);
 
@@ -555,7 +585,8 @@ void* find_best_policy(void* data, pin_data** pin)
 	best_policy = i;
       }
       printf("Policy: %d, IPC: %lf\n", i, IPC);
-      reschedule(i, number_of_threads, *pid, tids, pin);
+
+      reschedule(i, number_of_threads, *pid, tids, pin, used_threads);
     }
     printf("%d: Best policy is: %d\n", k, best_policy);
     //usleep(731 * 1000);
@@ -563,7 +594,12 @@ void* find_best_policy(void* data, pin_data** pin)
 
   
   if (best_policy != 10) { //if it is the last one, no reason to reschedule
-    reschedule(best_policy, number_of_threads, *pid, tids, pin);
+    int l;
+    for (l = 0; l < number_of_threads + 1; ++l) {
+      used_hwcs[used_threads[l]] = false;
+    }
+
+    reschedule(best_policy, number_of_threads, *pid, tids, pin, used_threads);
   }
 
   return NULL;
@@ -629,7 +665,7 @@ int main(int argc, char* argv[]) {
 
     mctop_alloc_policy pol;
     if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0) {
-      pol = 1; // go sequential so far ..
+      pol = 1; // go sequential for now ...
     }
     else {
       pol = get_policy(policy);
@@ -642,7 +678,9 @@ int main(int argc, char* argv[]) {
     while (used_hwcs[pin[pol][cnt].core]) {
       cnt++;
     }
+    
     int process_core = pin[pol][cnt].core;
+    printf("Chosen core: %d\n", process_core);
     used_hwcs[pin[pol][cnt].core] = true;
     CPU_SET(pin[pol][cnt].core, &st);
 
@@ -719,7 +757,7 @@ int main(int argc, char* argv[]) {
     start_perf_reading(cnt2->ll_cache_read_misses);
 
     if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0)  {
-      usleep(100 * 1000); // wait 200ms
+      usleep(6000 * 1000); // wait 200ms
       find_best_policy(pt_pid, pin);
     }
 

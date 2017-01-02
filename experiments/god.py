@@ -8,7 +8,8 @@ import csv
 import copy
 import math
 
-run_programs_concurrently = False
+run_programs_concurrently = True
+ITERATIONS=5
 GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -80,7 +81,6 @@ def execute_linux_one_by_one(scheduler_file, output_file):
 
 
 
-ITERATIONS=5
             
 if run_programs_concurrently:
     for i in range(ITERATIONS):
@@ -138,6 +138,8 @@ for i in range(ITERATIONS):
                 linux[id]['IPC'] = 0.0
                 linux[id]['LLC'] = 0.0
 
+            print("===")
+            print(row)
             slate[id]['runtime'] += float(row[1])
             linux[id]['runtime'] += float(row[2])
             slate[id]['IPC'] += float(row[3])
@@ -164,9 +166,9 @@ with open(experiment_name + "/merged_results" + str(0), 'r') as csvfile:
             
 meanslate = copy.deepcopy(slate)
 meanlinux = copy.deepcopy(linux)
-print(meanslate)
-print(meanlinux)
-print("============================\n")
+#print(meanslate)
+#print(meanlinux)
+#print("============================\n")
 
 stdslate = dict()
 stdlinux = dict()
@@ -273,9 +275,8 @@ for i in range(0, applications_run):
 
 results.close()
 
-
-print(stdslate)
-print(stdlinux)
+#print(stdslate)
+#print(stdlinux)
     
 #plot the file and creat the png
 os.system("gnuplot -e \"filename='" + experiment_name + "/merged_results" 
