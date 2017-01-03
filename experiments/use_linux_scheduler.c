@@ -13,6 +13,7 @@
 #include <asm/unistd.h>
 #include <stdint.h>
 
+
 typedef struct {
   int instructions;
   int cycles; // not affected by frequency scaling
@@ -31,6 +32,7 @@ typedef struct {
   int ll_cache_read_misses;
   int ll_cache_write_misses;
 } hw_counters_fd;
+
 
 static int perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
 		  int cpu, int group_fd, unsigned long flags)
@@ -106,6 +108,47 @@ long long read_perf_counter(int fd)
   }
   return count;
 }
+
+typedef struct {
+  int program;
+  int time;
+  hw_counters_fd* cnts;
+} calculate_data;
+
+void* calculate_IPC_every(void* time_in_ms)
+{
+  calculate_data* dt = (calculate_data *) time_in_ms;
+  int program = dt->program;
+
+  char program_str[30];
+  sprintf(program_str, "%d", program);
+  
+  FILE* fp = fopen(program_str, "w");
+  
+  int every = dt->time;
+  hw_counters_fd* fd = dt->cnts;
+  
+  long instructions = 0;
+  long cycles = 0;
+
+  int i = 0;
+  while (1) {
+    usleep(every * 1000);
+
+    long long int new_instructions = read_perf_counter(fd->instructions);
+    long long int new_cycles = read_perf_counter(fd->cycles);
+
+    long long inst = new_instructions - instructions;
+    long long cycl = new_cycles - cycles;
+    fprintf(fp, "%d\t%d\t%lf\n", i, program, inst / ((double) cycl));
+    fflush(fp);
+    i++;
+    
+    instructions = new_instructions;
+    cycles = new_cycles;
+  }
+}
+
 
 
 char** read_line(char* line, char* policy, int* num_id)
@@ -191,9 +234,17 @@ void* execute_process(void* arg)
 	start_perf_reading(cnt2->ll_cache_read_accesses);
 	start_perf_reading(cnt2->ll_cache_read_misses);
 
-  
+
+	calculate_data* cd = malloc(sizeof(calculate_data));
+	cd->program = atoi(a->id);
+	cd->time = 100;
+	cd->cnts = cnt2;
+	//pthread_t foo;
+	//pthread_create(&foo, NULL, calculate_IPC_every, cd);
+
   int status;
   waitpid(pid, &status, 0);
+
   clock_gettime(CLOCK_MONOTONIC, &end);
 
   long long int instructions = read_perf_counter(cnt2->instructions);
@@ -214,6 +265,7 @@ void* execute_process(void* arg)
 
   return elapsed;
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -247,6 +299,7 @@ int main(int argc, char* argv[])
     void* result;
     pthread_join(threads[i], &result);
   }
+
 
   fclose(fp);
   fclose(outfp);
