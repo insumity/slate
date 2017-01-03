@@ -8,8 +8,8 @@ import csv
 import copy
 import math
 
-run_programs_concurrently = True
-ITERATIONS=5
+run_programs_concurrently = False
+ITERATIONS=2
 GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -25,6 +25,7 @@ else:
     print("A directory with the same experiment name: " + experiment_name + ", already exists")
     sys.exit(-1)
 
+os.system("cp " + input_programs_file + " " + experiment_name + "/" + input_programs_file)
 
 none_scheduler_file = os.path.join(experiment_name, NONE_SCHEDULER_FILE)
 slate_scheduler_file = os.path.join(experiment_name, SLATE_SCHEDULER_FILE)
