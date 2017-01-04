@@ -444,6 +444,7 @@ void* wait_for_process_async(void* pro)
 {
   process* p = (process *) pro;
   struct timespec *start = p->start;
+  printf("Wait for process async from process: %p\n", p);
   pid_t* pid = p->pid;
   int status;
   waitpid(*pid, &status, 0);
@@ -793,18 +794,23 @@ void* execute_process(void* dt) {
   usleep(args->start_time_ms * 1000);
 
   char**program = args->program;
+  printf("I'm here with the given p being: %p\n", (args->p));
   clock_gettime(CLOCK_MONOTONIC, (args->p)->start);
   pid_t pid = fork();
 
   if (pid == 0) {
     char* envp[1] = {NULL};
-    time_t seconds  = time(NULL);
-    printf("About to start executing program with %d: %ld\n", result.num_id, seconds);
+    //    time_t seconds  = time(NULL);
+    //printf("About to start executing program with %d: %ld\n", result.num_id, seconds);
     execve(program[0], program, envp);
     printf("== %s\n", program[0]);
     perror("execve didn't work");
     exit(1);
   }
+
+  pid_t* pid_pt = malloc(sizeof(pid_t));
+  *pid_pt = pid;
+  pthread_exit(pid_pt);
 }
 
 int main(int argc, char* argv[]) {
@@ -950,11 +956,20 @@ int main(int argc, char* argv[]) {
 
 
     execute_process_args args;
-    args->p = p;
-    args->start_time_ms = result.start_time_ms;
-    args->program = program;
+    args.p = p;
+    args.start_time_ms = result.start_time_ms;
+    args.program = program;
     pthread_t execute_process_thread;
     pthread_create(&execute_process_thread, NULL, execute_process, &args);
+    pid_t pid = -1;
+
+    void* resulty;
+    if (pthread_join(execute_process_thread, &resulty) != 0) {
+      perror("SHIT hit the fan\n");
+      exit(-1);
+    }
+
+    pid = *((pid_t *) resulty);
     
     /* clock_gettime(CLOCK_MONOTONIC, p->start); */
     /* pid_t pid = fork(); */
