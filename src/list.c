@@ -130,3 +130,15 @@ void** list_get_all_values(list* l, void* key, int (*compare)(void*, void*), int
   return elements;
 }
 
+int list_elements(list* l) {
+  sem_wait(&(l->lock));
+  int cnt = 0;
+  struct node *tmp = l->head;
+  while (tmp != NULL) {
+    cnt++;
+    tmp = tmp->next;
+  }
+  sem_post(&(l->lock));
+  return cnt;
+}
+

@@ -27,4 +27,6 @@ void list_traverse(list* l, void (*print_value)(void*, void*));
 // if *num_of_elements != 0 then an array is returned with *num_of_elements void* elements
 void** list_get_all_values(list* l, void* key, int (*compare)(void*, void*), int* num_of_elements);
 
+int list_elements(list* l);
+
 #endif
