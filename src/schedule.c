@@ -142,24 +142,25 @@ list* used_sockets; // contains (socket, true) if one of the hwcs of one core of
 volatile pid_t* hwcs_used_by_pid; 
 
 // returns chosen node as well
+sem_t get_hwc_lock;
 int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo, int total_hwcs) {
+
+  sem_wait(&(get_hwc_lock));
+
   int cnt = 0;
-  pin_data pd = pin[policy][cnt];
-  int hwc = pd.core;
-  int node = pd.node;
 
   // go through all the sockets first and see if there is one with no running process
-  cnt++;
   while (cnt < total_hwcs) {
-    pd = pin[policy][cnt];
-    hwc = pd.core;
-    node = pd.node;
+    pin_data pd = pin[policy][cnt];
+    int hwc = pd.core;
+    int node = pd.node;
     *ret_node = node;
 
     void* socket = (void*) mctop_hwcid_get_socket(topo, hwc);
     list* lst = (list*) list_get_value(used_sockets, socket, compare_voids);
     if (lst == NULL) {
       printf("1) I found a free socket: %lld\n", (long long) pid);
+      sem_post(&(get_hwc_lock));
       return hwc;
     }
     else {
@@ -168,6 +169,7 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !used_hwcs[hwc]) {
 	printf("2) I found a free socket: %lld\n", (long long) pid);
+	  sem_post(&(get_hwc_lock));
 	return hwc;
       }
     }
@@ -177,21 +179,18 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
 
   // go through all the cores next and see if there is one with no running process
   cnt = 0;
-  pd = pin[policy][cnt];
-  hwc = pd.core;
-  node = pd.node;
 
-  cnt++;
   while (cnt < total_hwcs) {
-    pd = pin[policy][cnt];
-    hwc = pd.core;
-    node = pd.node;
+    pin_data pd = pin[policy][cnt];
+    int hwc = pd.core;
+    int node = pd.node;
     *ret_node = node;
 
     void* core = (void*) mctop_hwcid_get_core(topo, hwc);
     list* lst = (list*) list_get_value(used_cores, core, compare_voids);
     if (lst == NULL) {
       printf("A found a free core: %lld\n", (long long) pid);
+        sem_post(&(get_hwc_lock));
       return hwc;
     }
     else {
@@ -200,6 +199,7 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !used_hwcs[hwc]) {
 	printf("A found a free core: %lld\n", (long long) pid);
+	  sem_post(&(get_hwc_lock));
 	return hwc;
       }
     }
@@ -210,34 +210,29 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
 
   // go through all the hwcs
   cnt = 0;
-  pd = pin[policy][cnt];
-  hwc = pd.core;
-  node = pd.node;
-
-  cnt++;
   while (cnt < total_hwcs) {
-    pd = pin[policy][cnt];
-    hwc = pd.core;
-    node = pd.node;
+    pin_data pd = pin[policy][cnt];
+    int hwc = pd.core;
+    int node = pd.node;
     *ret_node = node;
 
     if (!used_hwcs[hwc]) {
       printf("A found a free hwc: %lld\n", (long long) pid);
+        sem_post(&(get_hwc_lock));
       return hwc;
     }
 
     cnt++;
   }
 
-  // just return first hwc
+  // just return first hwc TODO... go random instead of always [0]
   cnt = 0;
-  pd = pin[policy][cnt];
-  hwc = pd.core;
-  node = pd.node;
+  pin_data pd = pin[policy][cnt];
+  int hwc = pd.core;
+  int node = pd.node;
   *ret_node = node;
+  sem_post(&(get_hwc_lock));
   return hwc;
-
-
 }
 
 
@@ -264,11 +259,17 @@ void* check_slots(void* dt) {
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
 
-
-	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
-	if (policy == NULL) {
-	  fprintf(stderr, "Couldn't find policy of specific process with pid: %ld\n", *(long int*) (pt_pid));
-	  exit(-1);
+	int times = 0;
+      back: ;
+      void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
+      if (policy == NULL) {
+	  usleep(5000); // 5ms
+	  times++;
+	  if (times == 5) {
+	    fprintf(stderr, "Couldn't find policy of specific process with pid: %ld\n", *(long int*) (pt_pid));
+	    exit(-1);
+	  }
+	  goto back;
 	}
 
 	int pol = *((int *) policy);
@@ -729,6 +730,10 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
+  if (sem_init(&(get_hwc_lock), 0, 1)) {
+    perror("couldn't create lock for get_hwc");
+    return EXIT_FAILURE;
+  }
   results_fp = fopen(argv[2], "w");
   policy_per_process = create_list();
   hwcs_per_pid = create_list();
@@ -817,31 +822,6 @@ int main(int argc, char* argv[]) {
       pol = get_policy(policy);
     }
 
-    cpu_set_t st;
-    CPU_ZERO(&st);
-    int cnt = 0;
-    /*FIXME: can run out ...  */
-    while (used_hwcs[pin[pol][cnt].core]) {
-      cnt++;
-    }
-    
-    int process_core = pin[pol][cnt].core;
-    printf("Chosen core: %d\n", process_core);
-    used_hwcs[pin[pol][cnt].core] = true;
-    CPU_SET(pin[pol][cnt].core, &st);
-    
-
-    if (pol != MCTOP_ALLOC_NONE && strcmp(policy, "MCTOP_ALLOC_SLATE") != 0) {
-      if (sched_setaffinity(getpid(), sizeof(cpu_set_t), &st)) {
-	perror("sched_setaffinity!\n");
-     }
-
-      // TODO ... we don't use mempolicy anymore
-      //unsigned long num = 1 << pin[pol][cnt].node;
-      //if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
-      //perror("mempolicy didn't work\n");
-      //}
-    }
 
     process* p = malloc(sizeof(process));
     p->pid = malloc(sizeof(pid_t));
@@ -870,7 +850,6 @@ int main(int argc, char* argv[]) {
     args.program = program;
     pthread_t execute_process_thread;
     pthread_create(&execute_process_thread, NULL, execute_process, &args);
-    pid_t pid = -1;
 
     void* resulty;
     if (pthread_join(execute_process_thread, &resulty) != 0) {
@@ -878,36 +857,63 @@ int main(int argc, char* argv[]) {
       exit(-1);
     }
 
-    pid = *((pid_t *) resulty);
-    
-    /* clock_gettime(CLOCK_MONOTONIC, p->start); */
-    /* pid_t pid = fork(); */
-
-    /* if (pid == 0) { */
-    /*   char* envp[1] = {NULL}; */
-    /*   usleep(result.start_time_ms * 1000); */
-    /*   time_t seconds  = time(NULL); */
-    /*   printf("About to start executing program with %d: %ld\n", result.num_id, seconds); */
-    /*   execve(program[0], program, envp); */
-    /*   printf("== %s\n", program[0]); */
-    /*   perror("execve didn't work"); */
-    /*   exit(1); */
-    /* } */
-
+    pid_t pid = *((pid_t *) resulty);
     pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
-    int *pt_core = malloc(sizeof(int));
-    *pt_core = process_core;
 
+    int* pt_pol = malloc(sizeof(int));
+    *pt_pol = pol;
+    list_add(policy_per_process, pt_pid, pt_pol);
+    printf("Added policy in the list: %d\n", *pt_pol);
+
+
+    int node;
+    int core = get_hwc(pin, pol, pid, &node, topo, total_hwcs);
+    printf("Chosen core: %d\n", core);
+    void* socket_vd = (void*) mctop_hwcid_get_socket(topo, core);
+    list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
+    if (lst == NULL) {
+      perror("There is a missing socket from used_sockets");
+      exit(1);
+    }
+    list_add(lst, pt_pid, NULL);
+
+    void* core_vd = (void*) mctop_hwcid_get_core(topo, core);
+    lst = list_get_value(used_cores, core_vd, compare_voids);
+    if (lst == NULL) {
+      perror("There is a missing core from used_cores");
+      exit(1);
+    }
+    list_add(lst, pt_pid, NULL);
+
+    used_hwcs[core] = true;
+
+    cpu_set_t st;
+    CPU_ZERO(&st);
+    CPU_SET(core, &st);
+    
+
+    if (pol != MCTOP_ALLOC_NONE && strcmp(policy, "MCTOP_ALLOC_SLATE") != 0) {
+      if (sched_setaffinity(pid, sizeof(cpu_set_t), &st)) {
+	perror("sched_setaffinity!\n");
+     }
+
+      // TODO ... we don't use mempolicy anymore
+      //unsigned long num = 1 << pin[pol][cnt].node;
+      //if (set_mempolicy(MPOL_PREFERRED, &num, 31) != 0) {
+      //perror("mempolicy didn't work\n");
+      //}
+    }
+
+    
+    int *pt_core = malloc(sizeof(int));
+    *pt_core = core;
     list_add(hwcs_per_pid, (void *) pt_pid, (void *) pt_core);
 
     pthread_t* pt = malloc(sizeof(pthread_t));
     p->pid = pt_pid;
     pthread_create(pt, NULL, wait_for_process_async, p);
 
-    int* pt_pol = malloc(sizeof(int));
-    *pt_pol = pol;
-    list_add(policy_per_process, pt_pid, pt_pol);
 
     hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
     cnt2->instructions = open_perf(*pt_pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
