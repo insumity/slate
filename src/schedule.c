@@ -33,6 +33,11 @@
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define NUM_SLOTS 10
 
+
+
+char* heuristic;
+
+
 mctop_t* topo;
 
 typedef enum {NONE, SCHEDULER, START_PTHREADS, END_PTHREADS} used_by;
@@ -98,16 +103,16 @@ pin_data** initialize_pin_data(mctop_t* topo) {
     }
     assert(n_config != -1);
 
-    printf("%d: ", pol);
+    //printf("%d: ", pol);
     mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, n_config, pol);
     for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
       {
 	uint hwc = alloc->hwcs[hwc_i];
 	mctop_hwcid_get_local_node(topo, hwc);
 	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
-	printf("%d, ", hwc);
+	//	printf("%d, ", hwc);
       }
-    printf("\n\n");
+    //printf("\n\n");
     mctop_alloc_free(alloc);
   }
 
@@ -139,6 +144,7 @@ list* policy_per_process, *hwcs_per_pid, *fd_counters_per_pid, *tids_per_pid;
 volatile bool* used_hwcs;
 list* used_cores; // contains (core, true) if one of the hwcs of the core is used
 list* used_sockets; // contains (socket, true) if one of the hwcs of one core of the socket is used
+list* running_pids;
 volatile pid_t* hwcs_used_by_pid; 
 
 // returns chosen node as well
@@ -159,7 +165,6 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
     void* socket = (void*) mctop_hwcid_get_socket(topo, hwc);
     list* lst = (list*) list_get_value(used_sockets, socket, compare_voids);
     if (lst == NULL) {
-      printf("1) I found a free socket: %lld\n", (long long) pid);
       sem_post(&(get_hwc_lock));
       return hwc;
     }
@@ -168,7 +173,6 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
       void** data = list_get_all_values(lst, &pid, compare_pids, &num_elements);
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !used_hwcs[hwc]) {
-	printf("2) I found a free socket: %lld\n", (long long) pid);
 	  sem_post(&(get_hwc_lock));
 	return hwc;
       }
@@ -189,7 +193,6 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
     void* core = (void*) mctop_hwcid_get_core(topo, hwc);
     list* lst = (list*) list_get_value(used_cores, core, compare_voids);
     if (lst == NULL) {
-      printf("A found a free core: %lld\n", (long long) pid);
         sem_post(&(get_hwc_lock));
       return hwc;
     }
@@ -198,7 +201,6 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
       void** data = list_get_all_values(lst, &pid, compare_pids, &num_elements);
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !used_hwcs[hwc]) {
-	printf("A found a free core: %lld\n", (long long) pid);
 	  sem_post(&(get_hwc_lock));
 	return hwc;
       }
@@ -217,7 +219,6 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
     *ret_node = node;
 
     if (!used_hwcs[hwc]) {
-      printf("A found a free hwc: %lld\n", (long long) pid);
         sem_post(&(get_hwc_lock));
       return hwc;
     }
@@ -416,6 +417,8 @@ typedef struct {
   char* program;
 } process;
 
+void reschedule_on_exit(pin_data** pin);
+
 FILE* results_fp;
 volatile int processes_finished = 0;
 void* wait_for_process_async(void* pro)
@@ -425,10 +428,38 @@ void* wait_for_process_async(void* pro)
   printf("Wait for process async from process: %p\n", p);
   pid_t* pid = p->pid;
   int status;
+
   waitpid(*pid, &status, 0);
 
   int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) pid, compare_pids));
+
+  void* socket_vd = (void*) mctop_hwcid_get_socket(topo, hwc);
+  list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
+  if (lst == NULL) {
+    perror("wait_for_process_async There is a missing socket from used_sockets");
+    exit(1);
+  }
+
+  list_remove(lst, pid, compare_pids);
+
+  void* core_vd = (void*) mctop_hwcid_get_core(topo, hwc);
+  lst = list_get_value(used_cores, core_vd, compare_voids);
+  if (lst == NULL) {
+    perror("END_PTHREADS There is a missing core from used_cores");
+    exit(1);
+  }
+  list_remove(lst, pid, compare_pids);
   used_hwcs[hwc] = false;
+
+  list_remove(running_pids, pid, compare_pids);
+  
+  // FIXME
+  if (strcmp(heuristic, "NONE") != 0) {
+    pin_data** pin = initialize_pin_data(topo);
+
+    reschedule_on_exit(pin);
+  }
+  
 
   struct timespec *finish = malloc(sizeof(struct timespec));
   clock_gettime(CLOCK_MONOTONIC, finish);
@@ -548,6 +579,101 @@ void* check_counters(void* data)
     sleep(2);
   }
 }
+
+void unschedule(pid_t pid, int core)
+{
+  void* socket_vd = (void*) mctop_hwcid_get_socket(topo, core);
+  list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
+  if (lst == NULL) {
+    perror("wait_for_process_async There is a missing socket from used_sockets");
+    exit(1);
+  }
+  list_remove(lst, &pid, compare_pids);
+
+  void* core_vd = (void*) mctop_hwcid_get_core(topo, core);
+  lst = list_get_value(used_cores, core_vd, compare_voids);
+  if (lst == NULL) {
+    perror("END_PTHREADS There is a missing core from used_cores");
+    exit(1);
+  }
+  list_remove(lst, &pid, compare_pids);
+  used_hwcs[core] = false;
+}
+
+void schedule(pid_t pid, int core, int node)
+{
+  pid_t* pid_pt = malloc(sizeof(pid_t));
+  *pid_pt = pid;
+    
+  void* socket_vd = (void*) mctop_hwcid_get_socket(topo, core);
+  list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
+  if (lst == NULL) {
+    perror("There is a missing socket from used_sockets");
+    exit(1);
+  }
+  list_add(lst, pid_pt, NULL);
+
+  void* core_vd = (void*) mctop_hwcid_get_core(topo, core);
+  lst = list_get_value(used_cores, core_vd, compare_voids);
+  if (lst == NULL) {
+    perror("There is a missing core from used_cores");
+    exit(1);
+  }
+  list_add(lst, pid_pt, NULL);
+
+  used_hwcs[core] = true;
+
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(core, &set);
+
+  if (sched_setaffinity(pid, sizeof(cpu_set_t), &set) != 0) {
+    perror("sched affinity inside schedule didn't work");
+    exit(1);
+  }
+
+  int* pt_core = malloc(sizeof(int));
+  *pt_core = core;
+
+  list_add(hwcs_per_pid, (void *) pid_pt, (void *) pt_core);
+}
+void reschedule_for_process(pin_data** pin, int policy, pid_t pid) {
+  int node;
+  int core = get_hwc(pin, policy, pid, &node, topo, total_hwcs);
+
+  int previous_core = *(int *) list_get_value(hwcs_per_pid, &pid, compare_pids);
+  unschedule(pid, previous_core);
+  schedule(pid, core, node);
+  
+
+  int num_elements;
+  void** tids = list_get_all_values(tids_per_pid, &pid, compare_pids, &num_elements);
+
+  for (int i = 0; i < num_elements; ++i) {
+    pid_t tid = *((pid_t *) tids[i]);
+    core = get_hwc(pin, policy, tid, &node, topo, total_hwcs);
+    previous_core = *(int *) list_get_value(hwcs_per_pid, &tid, compare_pids);
+    unschedule(tid, previous_core);
+    schedule(tid, core, node);
+  }
+}
+
+
+void reschedule_on_exit(pin_data** pin) {
+
+  struct node* tmp = running_pids->head;
+
+  while (tmp != NULL) {
+    pid_t* pid = (pid_t *) tmp->key;
+
+    int pol = *(int *) list_get_value(policy_per_process, pid, compare_pids);
+    reschedule_for_process(pin, pol, *pid);
+
+    tmp = tmp->next;
+  }
+}
+
+
 
 void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_data** pin,
 		int* used_threads)
@@ -725,9 +851,11 @@ void* execute_process(void* dt) {
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 3) {
-    perror("Call schedule like this: ./schedule input_file output_file_for_results\n");
-    return -1;
+  heuristic = malloc(100);
+  
+  if (argc != 4) {
+    perror("Call schedule like this: ./schedule input_file output_file_for_results heuristic\n");
+    return EXIT_FAILURE;
   }
 
   if (sem_init(&(get_hwc_lock), 0, 1)) {
@@ -735,10 +863,14 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
   results_fp = fopen(argv[2], "w");
+
+  strcpy(heuristic, argv[3]);
+  
   policy_per_process = create_list();
   hwcs_per_pid = create_list();
   fd_counters_per_pid = create_list();
   tids_per_pid = create_list();
+  running_pids = create_list();
 
   topo = mctop_load(NULL);
   if (!topo)   {
@@ -861,6 +993,8 @@ int main(int argc, char* argv[]) {
     pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
 
+    list_add(running_pids, pt_pid, NULL);
+    
     int* pt_pol = malloc(sizeof(int));
     *pt_pol = pol;
     list_add(policy_per_process, pt_pid, pt_pol);
