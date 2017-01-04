@@ -1,3 +1,4 @@
-MCTOP_ALLOC_BW_ROUND_ROBIN_CORES  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
-MCTOP_ALLOC_BW_ROUND_ROBIN_CORES  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 9
-MCTOP_ALLOC_BW_ROUND_ROBIN_CORES  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 5 
+0 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
+5000 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 9
+1000 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES  /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 5 
+# first integer corresponds to time before the process starts executing in milliseconds
