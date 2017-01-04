@@ -1,6 +1,7 @@
 #!/usr/bin/gnuplot
-clear
-reset
+
+#clear
+#reset
 unset key
 # Make the x axis labels easier to read.
 set xtics rotate out
