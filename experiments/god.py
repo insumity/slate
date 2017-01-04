@@ -8,8 +8,8 @@ import csv
 import copy
 import math
 
-run_programs_concurrently = False
-ITERATIONS=2
+run_programs_concurrently = True
+ITERATIONS=5
 GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -75,7 +75,7 @@ def execute_linux_one_by_one(scheduler_file, output_file):
         file_name = f.name
         f.flush()
         f.close()
-        os.system("./use_linux_scheduler " + f.name + " " + f.name + ".results")
+        os.system("../use_linux_scheduler " + f.name + " " + f.name + ".results")
         os.system("cat " + f.name + ".results >> " + output_file)
         os.remove(file_name)
         os.remove(file_name + ".results")
@@ -90,7 +90,7 @@ if run_programs_concurrently:
         #print("Going to the none-slate scheduler.")
         #os.system("../schedule " + none_scheduler_file + " " + none_scheduler_file + str(i) + ".results")
         print("Going to the Linux scheduler.") 
-        os.system("./use_linux_scheduler " + linux_scheduler_file + " " + linux_scheduler_file + str(i) + ".results")
+        os.system("../use_linux_scheduler " + linux_scheduler_file + " " + linux_scheduler_file + str(i) + ".results")
 
         #merge results to a results_file
         os.system("./merge.py " #+ none_scheduler_file + ".results" + " none 0 2 6 9 " ifUNCOe line below as well

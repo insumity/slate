@@ -27,10 +27,6 @@
 #include "slate_utils.h"
 #include "list.h"
 
-#define CACHE_EVENT(cache,operation,result) (\
-					     (PERF_COUNT_HW_CACHE_ ## cache) | \
-					     (PERF_COUNT_HW_CACHE_OP_ ## operation << 8) | \
-					     (PERF_COUNT_HW_CACHE_RESULT_ ## result << 16))
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
 
@@ -250,25 +246,6 @@ typedef struct {
   communication_slot* slots;
   pin_data** pin;
 } check_slots_args;
-
-typedef struct {
-  int instructions;
-  int cycles; // not affected by frequency scaling
-
-  int l1i_cache_read_accesses;
-  int l1i_cache_write_accesses;
-  int l1d_cache_read_accesses;
-  int l1d_cache_write_accesses;
-  int l1i_cache_read_misses;
-  int l1i_cache_write_misses;
-  int l1d_cache_read_misses;
-  int l1d_cache_write_misses;
-
-  int ll_cache_read_accesses;
-  int ll_cache_write_accesses;
-  int ll_cache_read_misses;
-  int ll_cache_write_misses;
-} hw_counters_fd;
 
 void* check_slots(void* dt) {
   check_slots_args* args = (check_slots_args *) dt;
@@ -496,74 +473,6 @@ void* wait_for_process_async(void* pro)
 	  
   processes_finished++;
   return NULL;
-}
-
-// Given "line" that is of a format "POLICY program parameters" returns the program
-// as a 2D char array and the policy
-typedef struct {
-  char* policy;
-  int num_id;
-  char **program;
-  int start_time_ms;
-} read_line_output;
-
-read_line_output read_line(char* line)
-{
-  read_line_output result;
-  
-  int program_cnt = 0;
-  char tmp_line[300];
-  char* policy = malloc(100);
-
-  if (line[strlen(line) - 1] == '\n') {
-    line[strlen(line) - 1 ] = '\0'; // remove new line character
-  }
-  strcpy(tmp_line, line);
-  int first_time = 1;
-  char* word = strtok(line, " ");
-  result.start_time_ms = atoi(word);
-  printf("The start time is: %d\n", result.start_time_ms);
-  word = strtok(NULL, " ");
-  result.num_id = atoi(word);
-  printf("The num id is: %d\n", result.num_id);
-  word = strtok(NULL, " ");
-  while (word != NULL)  {
-    if (first_time) {
-      first_time = 0;
-      strcpy(policy, word);
-    }
-    else {
-      program_cnt++;
-    }
-    word = strtok(NULL, " ");
-  }
-
-  char** program = malloc(sizeof(char *) * (program_cnt + 1));
-  first_time = 1;
-  program_cnt = 0;
-  word = strtok(tmp_line, " ");
-  strtok(NULL, " "); // skip the start time
-  word = strtok(NULL, " "); // skip the number id
-
-
-  while (word != NULL)  {
-
-    if (first_time) {
-      first_time = 0;
-    }
-    else {
-      program[program_cnt] = malloc(sizeof(char) * 200);
-      strcpy(program[program_cnt], word);
-      program_cnt++;
-    }
-    word = strtok(NULL, " ");
-  }
-
-  program[program_cnt] = NULL;
-  result.program = program;
-  result.policy = policy;
-    
-  return result;
 }
 
 communication_slot* initialize_slots() {

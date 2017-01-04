@@ -1,3 +1,0 @@
-0	40858	10.779718	MCTOP_ALLOC_BW_ROUND_ROBIN_CORES	link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6
-1	40870	7.933641	MCTOP_ALLOC_BW_ROUND_ROBIN_CORES	link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 9
-2	40892	12.914256	MCTOP_ALLOC_BW_ROUND_ROBIN_CORES	link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 5

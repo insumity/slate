@@ -77,7 +77,7 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
   pe.config = perf_event_config;
   pe.disabled = 1;
   pe.exclude_kernel = 0;
-  //pe.inherit = 1;
+  /*pe.inherit = 1;*/
   
   /*pe.exclude_hv = 1; */
 
@@ -123,5 +123,66 @@ long long read_perf_counter(int fd)
     perror("read failed\n");
   }
   return count;
+}
+
+// Given "line" that is of a format "POLICY program parameters" returns the program
+// as a 2D char array and the policy
+read_line_output read_line(char* line)
+{
+  read_line_output result;
+  
+  int program_cnt = 0;
+  char tmp_line[300];
+  char* policy = malloc(100);
+
+  if (line[strlen(line) - 1] == '\n') {
+    line[strlen(line) - 1 ] = '\0'; // remove new line character
+  }
+  strcpy(tmp_line, line);
+  int first_time = 1;
+  char* word = strtok(line, " ");
+  result.start_time_ms = atoi(word);
+  printf("The start time is: %d\n", result.start_time_ms);
+  word = strtok(NULL, " ");
+  result.num_id = atoi(word);
+  printf("The num id is: %d\n", result.num_id);
+  word = strtok(NULL, " ");
+  while (word != NULL)  {
+    if (first_time) {
+      first_time = 0;
+      strcpy(policy, word);
+    }
+    else {
+      program_cnt++;
+    }
+    word = strtok(NULL, " ");
+  }
+
+  char** program = malloc(sizeof(char *) * (program_cnt + 1));
+  first_time = 1;
+  program_cnt = 0;
+  word = strtok(tmp_line, " ");
+  strtok(NULL, " "); // skip the start time
+  word = strtok(NULL, " "); // skip the number id
+
+
+  while (word != NULL)  {
+
+    if (first_time) {
+      first_time = 0;
+    }
+    else {
+      program[program_cnt] = malloc(sizeof(char) * 200);
+      strcpy(program[program_cnt], word);
+      program_cnt++;
+    }
+    word = strtok(NULL, " ");
+  }
+
+  program[program_cnt] = NULL;
+  result.program = program;
+  result.policy = policy;
+    
+  return result;
 }
 
