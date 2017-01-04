@@ -150,60 +150,77 @@ void* calculate_IPC_every(void* time_in_ms)
 }
 
 
+typedef struct {
+  char* policy;
+  int num_id;
+  char **program;
+  int start_time_ms;
+} read_line_output;
 
-char** read_line(char* line, char* policy, int* num_id)
+read_line_output read_line(char* line)
 {
-    int program_cnt = 0;
-    char tmp_line[300];
+  read_line_output result;
+  
+  int program_cnt = 0;
+  char tmp_line[300];
+  char* policy = malloc(100);
 
-    if (line[strlen(line) - 1] == '\n') {
-      line[strlen(line) - 1 ] = '\0'; // remove new line character
+  if (line[strlen(line) - 1] == '\n') {
+    line[strlen(line) - 1 ] = '\0'; // remove new line character
+  }
+  strcpy(tmp_line, line);
+  int first_time = 1;
+  char* word = strtok(line, " ");
+  result.start_time_ms = atoi(word);
+  printf("The start time is: %d\n", result.start_time_ms);
+  word = strtok(NULL, " ");
+  result.num_id = atoi(word);
+  printf("The num id is: %d\n", result.num_id);
+  word = strtok(NULL, " ");
+  while (word != NULL)  {
+    if (first_time) {
+      first_time = 0;
+      strcpy(policy, word);
     }
-    strcpy(tmp_line, line);
-    int first_time = 1;
-    char* word = strtok(line, " ");
-    *num_id = atoi(word);
-    printf("The num id is: %d\n", *num_id);
+    else {
+      program_cnt++;
+    }
     word = strtok(NULL, " ");
-    while (word != NULL)  {
-      if (first_time) {
-	first_time = 0;
-	strcpy(policy, word);
-      }
-      else {
-	program_cnt++;
-      }
-      word = strtok(NULL, " ");
+  }
+
+  char** program = malloc(sizeof(char *) * (program_cnt + 1));
+  first_time = 1;
+  program_cnt = 0;
+  word = strtok(tmp_line, " ");
+  strtok(NULL, " "); // skip the start time
+  word = strtok(NULL, " "); // skip the number id
+
+
+  while (word != NULL)  {
+
+    if (first_time) {
+      first_time = 0;
     }
-
-    char** program = malloc(sizeof(char *) * (program_cnt + 1));
-    first_time = 1;
-    program_cnt = 0;
-    word = strtok(tmp_line, " ");
-    strtok(NULL, " "); // skip the number
-    while (word != NULL)  {
-
-      if (first_time) {
-	first_time = 0;
-      }
-      else {
-	program[program_cnt] = malloc(sizeof(char) * 200);
-	strcpy(program[program_cnt], word);
-	program_cnt++;
-      }
-      word = strtok(NULL, " ");
+    else {
+      program[program_cnt] = malloc(sizeof(char) * 200);
+      strcpy(program[program_cnt], word);
+      program_cnt++;
     }
+    word = strtok(NULL, " ");
+  }
 
-    program[program_cnt] = NULL;
-
-    return program;
+  program[program_cnt] = NULL;
+  result.program = program;
+  result.policy = policy;
+    
+  return result;
 }
-
 
 typedef struct {
   char **program;
   char* id;
   FILE* fp;
+  int start_time_ms;
 } thread_args;
 
 void* execute_process(void* arg)
@@ -214,33 +231,34 @@ void* execute_process(void* arg)
   char* id = a->id;
   FILE* fp = a->fp;
   struct timespec start, end;
+
+  usleep(a->start_time_ms * 1000); // important to sleep before getting start time
   clock_gettime(CLOCK_MONOTONIC, &start);
 
-  	hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
+  hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
 
-	
   pid_t pid = fork();
   if (pid == 0) {
     execv(program[0], program); // SPPEND TWO HOURS ON this, if you use execve instead with envp = {NULL} it doesn't work
     perror("Couldn't run execv\n");
   }
-	cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-	cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-	cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-	cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
+  cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+  cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
+  cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
+  cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
 
-	start_perf_reading(cnt2->instructions);
-	start_perf_reading(cnt2->cycles);
-	start_perf_reading(cnt2->ll_cache_read_accesses);
-	start_perf_reading(cnt2->ll_cache_read_misses);
+  start_perf_reading(cnt2->instructions);
+  start_perf_reading(cnt2->cycles);
+  start_perf_reading(cnt2->ll_cache_read_accesses);
+  start_perf_reading(cnt2->ll_cache_read_misses);
 
 
-	calculate_data* cd = malloc(sizeof(calculate_data));
-	cd->program = atoi(a->id);
-	cd->time = 100;
-	cd->cnts = cnt2;
-	//pthread_t foo;
-	//pthread_create(&foo, NULL, calculate_IPC_every, cd);
+  calculate_data* cd = malloc(sizeof(calculate_data));
+  cd->program = atoi(a->id);
+  cd->time = 100;
+  cd->cnts = cnt2;
+  //pthread_t foo;
+  //pthread_create(&foo, NULL, calculate_IPC_every, cd);
 
   int status;
   waitpid(pid, &status, 0);
@@ -252,7 +270,6 @@ void* execute_process(void* arg)
   long long ll_cache_read_accesses = read_perf_counter(cnt2->ll_cache_read_accesses);
   long long ll_cache_read_misses = read_perf_counter(cnt2->ll_cache_read_misses);
 
-  
   double *elapsed = malloc(sizeof(double));
   *elapsed = (end.tv_sec - start.tv_sec);
   *elapsed += (end.tv_nsec - start.tv_nsec) / 1000000000.0;
@@ -269,6 +286,10 @@ void* execute_process(void* arg)
 
 int main(int argc, char* argv[])
 {
+  if (argc != 3) {
+    fprintf(stderr, "./use_linux_scheduler input_file output_file");
+    return EXIT_FAILURE;
+  }
   FILE* fp = fopen(argv[1], "r");
   FILE* outfp = fopen(argv[2], "w");
   char line[300];
@@ -280,16 +301,20 @@ int main(int argc, char* argv[])
       continue; // the line is commented
     }
 
-    char policy[100];
-    int num_id;
-    char** program = read_line(line, policy, &num_id);
+    read_line_output result = read_line(line);
+    int num_id = result.num_id;
+    int start_time_ms = result.start_time_ms;
+    char* policy = result.policy;
+    char** program = result.program;
     line[0] = '\0';
 
     thread_args * args = malloc(sizeof(thread_args));
-    args->program= program;
+    args->program = program;
     args->id = malloc(sizeof(char) * 100);
     args->fp = outfp;
+    args->start_time_ms = start_time_ms;
     sprintf(args->id, "%d", num_id);
+
     int res = pthread_create(&threads[programs], NULL, execute_process, args);
     programs++;
   }

@@ -28,10 +28,12 @@ def create_scheduler_file(to_scheduler_function, file_name):
             if line[0] == '#':
                     continue
             words = line.split(' ')
-            policy = words[0]
-            program = words[1:]
+            start_time_ms = words[0]
+            print("The starting time is: " + start_time_ms)
+            policy = words[1]
+            program = words[2:]
             str_ex = str(ex) + " "
-            f.write(str_ex + to_scheduler_function(policy, program))
+            f.write(start_time_ms + " " + str_ex + to_scheduler_function(policy, program))
             ex = ex + 1
             f.write('\n')
     f.close()

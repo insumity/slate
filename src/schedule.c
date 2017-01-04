@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <semaphore.h>
+#include <time.h>
 
 #include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
@@ -498,52 +499,70 @@ void* wait_for_process_async(void* pro)
 
 // Given "line" that is of a format "POLICY program parameters" returns the program
 // as a 2D char array and the policy
-char** read_line(char* line, char* policy, int* num_id)
+typedef struct {
+  char* policy;
+  int num_id;
+  char **program;
+  int start_time_ms;
+} read_line_output;
+
+read_line_output read_line(char* line)
 {
-    int program_cnt = 0;
-    char tmp_line[300];
+  read_line_output result;
+  
+  int program_cnt = 0;
+  char tmp_line[300];
+  char* policy = malloc(100);
 
-    if (line[strlen(line) - 1] == '\n') {
-      line[strlen(line) - 1 ] = '\0'; // remove new line character
+  if (line[strlen(line) - 1] == '\n') {
+    line[strlen(line) - 1 ] = '\0'; // remove new line character
+  }
+  strcpy(tmp_line, line);
+  int first_time = 1;
+  char* word = strtok(line, " ");
+  result.start_time_ms = atoi(word);
+  printf("The start time is: %d\n", result.start_time_ms);
+  word = strtok(NULL, " ");
+  result.num_id = atoi(word);
+  printf("The num id is: %d\n", result.num_id);
+  word = strtok(NULL, " ");
+  while (word != NULL)  {
+    if (first_time) {
+      first_time = 0;
+      strcpy(policy, word);
     }
-    strcpy(tmp_line, line);
-    int first_time = 1;
-    char* word = strtok(line, " ");
-    *num_id = atoi(word);
-    printf("The num id is: %d\n", *num_id);
+    else {
+      program_cnt++;
+    }
     word = strtok(NULL, " ");
-    while (word != NULL)  {
-      if (first_time) {
-	first_time = 0;
-	strcpy(policy, word);
-      }
-      else {
-	program_cnt++;
-      }
-      word = strtok(NULL, " ");
+  }
+
+  char** program = malloc(sizeof(char *) * (program_cnt + 1));
+  first_time = 1;
+  program_cnt = 0;
+  word = strtok(tmp_line, " ");
+  strtok(NULL, " "); // skip the start time
+  word = strtok(NULL, " "); // skip the number id
+
+
+  while (word != NULL)  {
+
+    if (first_time) {
+      first_time = 0;
     }
-
-    char** program = malloc(sizeof(char *) * (program_cnt + 1));
-    first_time = 1;
-    program_cnt = 0;
-    word = strtok(tmp_line, " ");
-    strtok(NULL, " "); // skip the number
-    while (word != NULL)  {
-
-      if (first_time) {
-	first_time = 0;
-      }
-      else {
-	program[program_cnt] = malloc(sizeof(char) * 200);
-	strcpy(program[program_cnt], word);
-	program_cnt++;
-      }
-      word = strtok(NULL, " ");
+    else {
+      program[program_cnt] = malloc(sizeof(char) * 200);
+      strcpy(program[program_cnt], word);
+      program_cnt++;
     }
+    word = strtok(NULL, " ");
+  }
 
-    program[program_cnt] = NULL;
-
-    return program;
+  program[program_cnt] = NULL;
+  result.program = program;
+  result.policy = policy;
+    
+  return result;
 }
 
 communication_slot* initialize_slots() {
@@ -760,6 +779,34 @@ void* find_best_policy(void* data, pin_data** pin)
   return NULL;
 }
 
+// we need first to sleep (based on start_time_ms) and then start the timing of the process
+// so, we cannot just fork in the main function
+typedef struct {
+  process* p;
+  char** program;
+  int start_time_ms;
+} execute_process_args;
+
+void* execute_process(void* dt) {
+  execute_process_args* args = (execute_process_args*) dt;
+  
+  usleep(args->start_time_ms * 1000);
+
+  char**program = args->program;
+  clock_gettime(CLOCK_MONOTONIC, (args->p)->start);
+  pid_t pid = fork();
+
+  if (pid == 0) {
+    char* envp[1] = {NULL};
+    time_t seconds  = time(NULL);
+    printf("About to start executing program with %d: %ld\n", result.num_id, seconds);
+    execve(program[0], program, envp);
+    printf("== %s\n", program[0]);
+    perror("execve didn't work");
+    exit(1);
+  }
+}
+
 int main(int argc, char* argv[]) {
 
   if (argc != 3) {
@@ -839,9 +886,12 @@ int main(int argc, char* argv[]) {
     }
 
     processes++;
-    char policy[100];
-    int num_id;
-    char** program = read_line(line, policy, &num_id);
+
+    read_line_output result = read_line(line);
+    int num_id = result.num_id;
+    int start_time_ms = result.start_time_ms;
+    char* policy = result.policy;
+    char** program = result.program;
     line[0] = '\0';
 
     mctop_alloc_policy pol;
@@ -898,14 +948,27 @@ int main(int argc, char* argv[]) {
       z++;
     }
 
-    clock_gettime(CLOCK_MONOTONIC, p->start);
-    pid_t pid = fork();      
 
-    if (pid == 0) {
-      char* envp[1] = {NULL};
-      execve(program[0], program, envp);
-      perror("execve didn't work"); 
-    }
+    execute_process_args args;
+    args->p = p;
+    args->start_time_ms = result.start_time_ms;
+    args->program = program;
+    pthread_t execute_process_thread;
+    pthread_create(&execute_process_thread, NULL, execute_process, &args);
+    
+    /* clock_gettime(CLOCK_MONOTONIC, p->start); */
+    /* pid_t pid = fork(); */
+
+    /* if (pid == 0) { */
+    /*   char* envp[1] = {NULL}; */
+    /*   usleep(result.start_time_ms * 1000); */
+    /*   time_t seconds  = time(NULL); */
+    /*   printf("About to start executing program with %d: %ld\n", result.num_id, seconds); */
+    /*   execve(program[0], program, envp); */
+    /*   printf("== %s\n", program[0]); */
+    /*   perror("execve didn't work"); */
+    /*   exit(1); */
+    /* } */
 
     pid_t* pt_pid = malloc(sizeof(pid_t));
     *pt_pid = pid;
@@ -940,7 +1003,7 @@ int main(int argc, char* argv[]) {
     start_perf_reading(cnt2->ll_cache_read_misses);
 
     if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0)  {
-      usleep(6000 * 1000); // wait 200ms
+      usleep(200 * 1000); // wait 200ms
       find_best_policy(pt_pid, pin);
     }
 
