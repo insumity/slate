@@ -51,7 +51,6 @@ void H_init(pin_data** pin, mctop_t* topo) {
   for (int i = 0; i < state.total_hwcs; ++i) {
     socket_t* socket = mctop_hwcid_get_socket(state.topo, i);
     void* socket_vd = (void*) socket;
-    printf("Socket: %p\n", socket_vd);
     if (list_get_value(state.used_sockets, socket_vd, compare_voids) == NULL) {
       list_add(state.used_sockets, socket_vd, create_list());
     }
@@ -72,14 +71,12 @@ void H_new_process(pid_t pid, int policy) {
 
 int H_get_hwc(pid_t pid, int* ret_node) {
 
-  printf("%ld\n", (long)pid);
   void* policy_pt;
   do {
     policy_pt = list_get_value(state.policy_per_pid, &pid, compare_pids);
     usleep(5000);
   } while (policy_pt == NULL);
   int policy = *((int *) policy_pt);
-  printf("What's the policy mitch: %d\n", policy);
 
   int hwc;
   int cnt = 0;
@@ -91,7 +88,6 @@ int H_get_hwc(pid_t pid, int* ret_node) {
     *ret_node = node;
 
     void* socket = (void*) mctop_hwcid_get_socket(state.topo, hwc);
-    printf("Socket@#$#@$#@$#@$#@: %p\n", socket);
 
     list* lst = (list*) list_get_value(state.used_sockets, socket, compare_voids);
 
@@ -100,7 +96,6 @@ int H_get_hwc(pid_t pid, int* ret_node) {
     }
     else {
       int num_elements;
-      printf("foo is the reallyity: %ld\n", (long) pid);
       list_get_all_values(lst, &pid, compare_pids, &num_elements);
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !state.used_hwcs[hwc]) {
@@ -186,12 +181,9 @@ int H_get_hwc(pid_t pid, int* ret_node) {
 }
 
 void H_release_hwc(int hwc, pid_t pid) {
-  printf("The hwc is: %d\n", hwc);
   void* socket_vd = (void*) mctop_hwcid_get_socket(state.topo, hwc);
   list* lst = list_get_value(state.used_sockets, socket_vd, compare_voids);
   if (lst == NULL) {
-    perror("END_PTHREADS There is a missing socket from used_sockets: socket is:\n");
-    fprintf(stderr, "it is all about the %p\n", socket_vd);
     exit(1);
   }
 
@@ -200,12 +192,11 @@ void H_release_hwc(int hwc, pid_t pid) {
   void* core_vd = (void*) mctop_hwcid_get_core(state.topo, hwc);
   lst = list_get_value(state.used_cores, core_vd, compare_voids);
   if (lst == NULL) {
-    perror("END_PTHREADS There is a missing core from used_cores");
+    perror("h_release_hwc There is a missing core from used_cores");
     exit(1);
   }
   list_remove(lst, &pid, compare_pids);
 	
   state.used_hwcs[hwc] = false;
-
 }
 

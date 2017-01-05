@@ -1,5 +1,5 @@
 
-cc = gcc -g -Wall -I./include
+cc = gcc -g -Wall -pedantic -I./include
 objects = heuristic.o ticket.o list.o slate_utils.o schedule.o
 
 

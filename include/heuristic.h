@@ -3,6 +3,16 @@
 
 #define CONCAT(a, b) a##b
 
+typedef struct {
+  void (*init)();
+  void (*new_process)(pid_t pid, int policy);
+  int (*get_hwc)(pid_t pid, int* node);
+  void (*release_hwc)(int hwc, pid_t pid);
+
+  sem_t lock;
+} heuristic_t;
+heuristic_t h;
+
 
 void CONCAT(H, _init)(pin_data** pin, mctop_t* topo);
 		     void H_new_process(pid_t pid, int policy);
