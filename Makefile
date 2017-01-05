@@ -1,10 +1,15 @@
 
 cc = gcc -g -Wall -I./include
-objects = ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o
+objects = ticket.o list.o slate_utils.o schedule.o
 
-all: $(objects) 
-	gcc slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lpthread
-	gcc list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -g -o schedule -lmctop -lpthread -lnuma -lrt
+
+all: schedule use_linux_scheduler
+
+schedule: $(objects)
+	$(cc) list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt
+
+use_linux_scheduler: use_linux_scheduler.o slate_utils.o
+	$(cc) slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lpthread
 
 ticket.o: src/ticket.c include/ticket.h
 	$(cc) -c src/ticket.c -lpthread
