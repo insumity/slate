@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     read_line_output result = read_line(line);
     int num_id = result.num_id;
     int start_time_ms = result.start_time_ms;
-    char* policy = result.policy;
+    //char* policy = result.policy;
     char** program = result.program;
     line[0] = '\0';
 
@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     args->start_time_ms = start_time_ms;
     sprintf(args->id, "%d", num_id);
 
-    int res = pthread_create(&threads[programs], NULL, execute_process, args);
+    pthread_create(&threads[programs], NULL, execute_process, args);
     programs++;
   }
 

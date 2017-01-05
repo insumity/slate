@@ -1,15 +1,26 @@
-all:
-	gcc -g -Wall -I./include -c src/ticket.c -lpthread 
-	gcc -g -I./include -c src/list.c -o list.o -Wall
-	gcc -g -I./include -c src/slate_utils.c -o slate_utils.o -Wall
-	gcc -g -I./include -c src/schedule.c -o schedule.o -Wall -std=gnu99
 
-	gcc -g -I./include  -c src/use_linux_scheduler.c -o use_linux_scheduler.o 
+cc = gcc -g -Wall -I./include
+objects = ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o
+
+all: $(objects) 
 	gcc slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lpthread
-
 	gcc list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -g -o schedule -lmctop -lpthread -lnuma -lrt
 
-	rm -f *.o
+ticket.o: src/ticket.c include/ticket.h
+	$(cc) -c src/ticket.c -lpthread
 
+list.o: src/list.c include/list.h
+	$(cc) -c src/list.c -o list.o
+
+slate_utils.o: src/slate_utils.c include/slate_utils.h
+	$(cc) -c src/slate_utils.c -o slate_utils.o
+
+schedule.o: src/schedule.c
+	$(cc) -c src/schedule.c -o schedule.o -std=gnu99
+
+use_linux_scheduler.o: src/use_linux_scheduler.c
+	$(cc)  -c src/use_linux_scheduler.c -o use_linux_scheduler.o 
+
+.PHONY: clean
 clean:
-	rm -f schedule use_linux_scheduler *.o
+	rm -f schedule use_linux_scheduler $(objects)
