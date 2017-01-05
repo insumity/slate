@@ -10,6 +10,8 @@ import math
 
 run_programs_concurrently = True
 ITERATIONS=5
+HEURISTIC = "NONE"
+
 GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -58,7 +60,7 @@ def execute_one_by_one(scheduler_file, output_file):
         f.flush()
         print("The file that was used is: " + f.name);
         f.close()
-        os.system("../schedule " + f.name + " " + f.name + ".results")
+        os.system("../schedule " + f.name + " " + f.name + ".results" + " " + HEURISTIC)
         os.system("cat " + f.name + ".results >> " + output_file)
         os.remove(file_name)
         os.remove(file_name + ".results")
@@ -86,9 +88,9 @@ def execute_linux_one_by_one(scheduler_file, output_file):
 if run_programs_concurrently:
     for i in range(ITERATIONS):
         print("Going to the slate scheduler.") 
-        os.system("../schedule " + slate_scheduler_file + " " + slate_scheduler_file + str(i) + ".results")
+        os.system("../schedule " + slate_scheduler_file + " " + slate_scheduler_file + str(i) + ".results" + " " + HEURISTIC)
         #print("Going to the none-slate scheduler.")
-        #os.system("../schedule " + none_scheduler_file + " " + none_scheduler_file + str(i) + ".results")
+        #os.system("../schedule " + none_scheduler_file + " " + none_scheduler_file + str(i) + ".results" + " " + HEURISTIC)
         print("Going to the Linux scheduler.") 
         os.system("../use_linux_scheduler " + linux_scheduler_file + " " + linux_scheduler_file + str(i) + ".results")
 
