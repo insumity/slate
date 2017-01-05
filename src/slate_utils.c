@@ -186,3 +186,11 @@ read_line_output read_line(char* line)
   return result;
 }
 
+int compare_pids(void* p1, void* p2) {
+  return *((unsigned int *) p1) == *((unsigned int *) p2);
+}
+
+int compare_voids(void* p1, void* p2) {
+  return p1 == p2;
+}
+

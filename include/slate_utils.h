@@ -44,5 +44,7 @@ typedef struct {
   int ll_cache_write_misses;
 } hw_counters_fd;
 
+int compare_pids(void* p1, void* p2);
+int compare_voids(void* p1, void* p2);
 
 #endif

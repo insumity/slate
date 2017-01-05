@@ -50,15 +50,6 @@ typedef struct {
   int policy;
 } communication_slot;
 
-int compare_pids(void* p1, void* p2) {
-  return *((unsigned int *) p1) == *((unsigned int *) p2);
-}
-
-int compare_voids(void* p1, void* p2) {
-  return p1 == p2;
-}
-
-
 typedef struct {
   int core;
   int node;
@@ -170,7 +161,7 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
     }
     else {
       int num_elements;
-      void** data = list_get_all_values(lst, &pid, compare_pids, &num_elements);
+      list_get_all_values(lst, &pid, compare_pids, &num_elements);
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !used_hwcs[hwc]) {
 	  sem_post(&(get_hwc_lock));
@@ -198,7 +189,7 @@ int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo,
     }
     else {
       int num_elements;
-      void** data = list_get_all_values(lst, &pid, compare_pids, &num_elements);
+      list_get_all_values(lst, &pid, compare_pids, &num_elements);
       int all_elements = list_elements(lst);
       if (num_elements == all_elements && !used_hwcs[hwc]) {
 	  sem_post(&(get_hwc_lock));
@@ -559,7 +550,7 @@ void print_counters(void* key, void *data)
   long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
   long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
  
-  printf("pid: %ld = instructions: %lld ... cycles: %lld, %lf\n", *((pid_t *) key), instructions, cycles,
+  printf("pid: %ld = instructions: %lld ... cycles: %lld, %lf\n", (long) (*((pid_t *) key)), instructions, cycles,
 	 ((double) instructions) / cycles );
   printf("LLC_read_accesses: %lld, LLC_read_misses: %lld, %lf\n", ll_cache_read_accesses, ll_cache_read_misses,
 	 1 - ((double) ll_cache_read_misses / ll_cache_read_accesses));
@@ -725,7 +716,7 @@ void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_d
 
 void print_pid(void *dt)
 {
-  printf("%lld ", *((pid_t *) dt));
+  printf("%ld ", (long)(*((pid_t *) dt)));
 }
 
 void print_stuff(void* key, void* data) 
@@ -880,9 +871,9 @@ int main(int argc, char* argv[]) {
   
   // mctop_print(topo);
   size_t num_nodes = mctop_get_num_nodes(topo);
-  size_t num_cores = mctop_get_num_cores(topo);
+  //size_t num_cores = mctop_get_num_cores(topo);
   size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
-  size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
+  //size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
   size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
 
   total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
@@ -904,7 +895,9 @@ int main(int argc, char* argv[]) {
 
   
   used_hwcs = malloc(sizeof(bool) * total_hwcs);
-  memset(used_hwcs, false, total_hwcs);
+  for (int i = 0; i < total_hwcs; ++i) {
+    used_hwcs[i] = false;
+  }
 
   
   used_cores = create_list();
@@ -978,7 +971,7 @@ int main(int argc, char* argv[]) {
 
     execute_process_args args;
     args.p = p;
-    args.start_time_ms = result.start_time_ms;
+    args.start_time_ms = start_time_ms;
     args.program = program;
     pthread_t execute_process_thread;
     pthread_create(&execute_process_thread, NULL, execute_process, &args);
@@ -1071,7 +1064,7 @@ int main(int argc, char* argv[]) {
       find_best_policy(pt_pid, pin);
     }
 
-    printf("Added %ld to list with processes\n", (long long) (*pt_pid));
+    printf("Added %lld to list with processes\n", (long long) (*pt_pid));
   }
 
 
