@@ -624,7 +624,7 @@ void *injected_start_routine(void *injected_arg)
       //const unsigned long int f = 1 << slot->node;
       //      set_mempolicy(MPOL_PREFERRED, &f, 63);
 
-      printf("I got scheduled where I always wanted at core: %d and at node: %d\n", slot->core, slot->node);
+      printf("Scheduled at core: %d and at node: %d\n", slot->core, slot->node);
 
       release_lock(index, slots);
       break;

@@ -1,18 +1,20 @@
 
 cc = gcc -g -Wall -pedantic -I./include
-objects = heuristic.o ticket.o list.o slate_utils.o schedule.o
-
+objects = heuristic.o heuristicX.o ticket.o list.o slate_utils.o schedule.o
 
 all: schedule use_linux_scheduler
 
 schedule: $(objects)
-	$(cc) heuristic.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt
+	$(cc) heuristic.o heuristicX.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt
 
 use_linux_scheduler: use_linux_scheduler.o slate_utils.o
 	$(cc) slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lmctop -lpthread -lnuma
 
-heuristic.o: src/heuristic.c
+heuristic.o: src/heuristic.c include/heuristic.h
 	$(cc) -c src/heuristic.c 
+
+heuristicX.o: src/heuristicX.c include/heuristicX.h
+	$(cc) -c src/heuristicX.c 
 
 ticket.o: src/ticket.c include/ticket.h
 	$(cc) -c src/ticket.c -lpthread

@@ -26,13 +26,14 @@
 #include "ticket.h"
 #include "slate_utils.h"
 #include "list.h"
+
 #include "heuristic.h"
+#include "heuristicX.h"
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
 
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define NUM_SLOTS 10
-
 
 mctop_t* topo;
 
@@ -44,6 +45,16 @@ typedef struct {
   pid_t tid, pid;
   used_by used;
 } communication_slot;
+
+typedef struct {
+  void (*init)();
+  void (*new_process)(pid_t pid, int policy);
+  int (*get_hwc)(pid_t pid, int* node);
+  void (*release_hwc)(int hwc, pid_t pid);
+
+  sem_t lock;
+} heuristic_t;
+heuristic_t h;
 
 void initialize_lock(int i, communication_slot* slots)
 {
@@ -452,16 +463,33 @@ int main(int argc, char* argv[]) {
   communication_slot* slots = initialize_slots();
   pin_data** pin = initialize_pin_data(topo);
 
-  
-  h.init = H_init;
-  h.new_process = H_new_process;
-  h.get_hwc = H_get_hwc;
-  h.release_hwc = H_release_hwc;
-  h.init(pin, topo);
-  if (sem_init(&(h.lock), 0, 1)) {
-    perror("couldn't create lock for heuristic");
+  if (strcmp(heuristic, "NORMAL") == 0) {
+    h.init = H_init;
+    h.new_process = H_new_process;
+    h.get_hwc = H_get_hwc;
+    h.release_hwc = H_release_hwc;
+    h.init(pin, topo);
+    if (sem_init(&(h.lock), 0, 1)) {
+      perror("couldn't create lock for heuristic");
+      return EXIT_FAILURE;
+    }
+  }
+  else if (strcmp(heuristic, "X") == 0) {
+    h.init = HX_init;
+    h.new_process = HX_new_process;
+    h.get_hwc = HX_get_hwc;
+    h.release_hwc = HX_release_hwc;
+    h.init(pin, topo);
+    if (sem_init(&(h.lock), 0, 1)) {
+      perror("couldn't create lock for heuristic");
+      return EXIT_FAILURE;
+    }
+  }
+  else {
+    fprintf(stderr, "heuristic can only be \"NORMAL\" or \"X\"\n");
     return EXIT_FAILURE;
   }
+    
 
 
   // create a thread to check for new slots
