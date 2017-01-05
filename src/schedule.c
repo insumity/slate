@@ -26,18 +26,23 @@
 #include "ticket.h"
 #include "slate_utils.h"
 #include "list.h"
-
+#include "heuristic.h"
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
 
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
 #define NUM_SLOTS 10
 
+typedef struct {
+  void (*init)();
+  void (*new_process)(pid_t pid, int policy);
+  int (*get_hwc)(pid_t pid, int* node);
+  void (*release_hwc)(int hwc, pid_t pid);
+} heuristic_t;
+heuristic_t h;
 
 
 char* heuristic;
-
-
 mctop_t* topo;
 
 typedef enum {NONE, SCHEDULER, START_PTHREADS, END_PTHREADS} used_by;
@@ -49,66 +54,6 @@ typedef struct {
   used_by used;
   int policy;
 } communication_slot;
-
-typedef struct {
-  int core;
-  int node;
-} pin_data;
-
-pin_data create_pin_data(int core, int node) {
-  pin_data tmp;
-  tmp.core = core;
-  tmp.node = node;
-  return tmp;
-}
-
-pin_data** initialize_pin_data(mctop_t* topo) {
-
-  size_t num_nodes = mctop_get_num_nodes(topo);
-  size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
-  size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
-  size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
-
-  size_t total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
-  pin_data** pin = malloc(sizeof(pin_data*) * MCTOP_ALLOC_NUM);
-  for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
-    pin[i] = malloc(sizeof(pin_data) * total_hwcs);
-  }
-
-  for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
-
-    mctop_alloc_policy pol = i;
-    /* this policy does not contain any hardware contexts */
-    if (i == MCTOP_ALLOC_NONE) {
-      pol = i + 1; // the hardware contexts are always skipped actually
-      // only done so we can measure cost of communication between slate and glibc
-    }
-
-    int n_config = -1;
-    // Depending on the policy, n_config (3rd parameter of mctop_alloc_create) has different semantics.
-    if (pol == MCTOP_ALLOC_MIN_LAT_HWCS || pol == MCTOP_ALLOC_MIN_LAT_CORES_HWCS || pol == MCTOP_ALLOC_MIN_LAT_CORES) {
-      n_config = num_hwc_per_socket;
-    }
-    else {
-      n_config = num_nodes;
-    }
-    assert(n_config != -1);
-
-    //printf("%d: ", pol);
-    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, n_config, pol);
-    for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
-      {
-	uint hwc = alloc->hwcs[hwc_i];
-	mctop_hwcid_get_local_node(topo, hwc);
-	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
-	//	printf("%d, ", hwc);
-      }
-    //printf("\n\n");
-    mctop_alloc_free(alloc);
-  }
-
-  return pin;
-}
 
 void initialize_lock(int i, communication_slot* slots)
 {
@@ -138,95 +83,9 @@ list* used_sockets; // contains (socket, true) if one of the hwcs of one core of
 list* running_pids;
 volatile pid_t* hwcs_used_by_pid; 
 
-// returns chosen node as well
-sem_t get_hwc_lock;
-int get_hwc(pin_data** pin, int policy, pid_t pid, int* ret_node, mctop_t* topo, int total_hwcs) {
 
-  sem_wait(&(get_hwc_lock));
-
-  int cnt = 0;
-
-  // go through all the sockets first and see if there is one with no running process
-  while (cnt < total_hwcs) {
-    pin_data pd = pin[policy][cnt];
-    int hwc = pd.core;
-    int node = pd.node;
-    *ret_node = node;
-
-    void* socket = (void*) mctop_hwcid_get_socket(topo, hwc);
-    list* lst = (list*) list_get_value(used_sockets, socket, compare_voids);
-    if (lst == NULL) {
-      sem_post(&(get_hwc_lock));
-      return hwc;
-    }
-    else {
-      int num_elements;
-      list_get_all_values(lst, &pid, compare_pids, &num_elements);
-      int all_elements = list_elements(lst);
-      if (num_elements == all_elements && !used_hwcs[hwc]) {
-	  sem_post(&(get_hwc_lock));
-	return hwc;
-      }
-    }
-
-    cnt++;
-  }
-
-  // go through all the cores next and see if there is one with no running process
-  cnt = 0;
-
-  while (cnt < total_hwcs) {
-    pin_data pd = pin[policy][cnt];
-    int hwc = pd.core;
-    int node = pd.node;
-    *ret_node = node;
-
-    void* core = (void*) mctop_hwcid_get_core(topo, hwc);
-    list* lst = (list*) list_get_value(used_cores, core, compare_voids);
-    if (lst == NULL) {
-        sem_post(&(get_hwc_lock));
-      return hwc;
-    }
-    else {
-      int num_elements;
-      list_get_all_values(lst, &pid, compare_pids, &num_elements);
-      int all_elements = list_elements(lst);
-      if (num_elements == all_elements && !used_hwcs[hwc]) {
-	  sem_post(&(get_hwc_lock));
-	return hwc;
-      }
-    }
-
-    cnt++;
-  }
-
-
-  // go through all the hwcs
-  cnt = 0;
-  while (cnt < total_hwcs) {
-    pin_data pd = pin[policy][cnt];
-    int hwc = pd.core;
-    int node = pd.node;
-    *ret_node = node;
-
-    if (!used_hwcs[hwc]) {
-        sem_post(&(get_hwc_lock));
-      return hwc;
-    }
-
-    cnt++;
-  }
-
-  // just return first hwc TODO... go random instead of always [0]
-  cnt = 0;
-  pin_data pd = pin[policy][cnt];
-  int hwc = pd.core;
-  int node = pd.node;
-  *ret_node = node;
-  sem_post(&(get_hwc_lock));
-  return hwc;
-}
-
+int get_hwc_and_schedule(heuristic_t h, pid_t pid, bool schedule, int* node);
+void release_hwc(heuristic_t h, pid_t pid, int hwc);
 
 size_t total_hwcs;
 typedef struct {
@@ -253,7 +112,7 @@ void* check_slots(void* dt) {
 
 	int times = 0;
       back: ;
-      void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
+	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
       if (policy == NULL) {
 	  usleep(5000); // 5ms
 	  times++;
@@ -262,9 +121,9 @@ void* check_slots(void* dt) {
 	    exit(-1);
 	  }
 	  goto back;
-	}
+	  }
 
-	int pol = *((int *) policy);
+	  int pol = *((int *) policy);
 
 	/* int cnt = 0; */
 	/* pin_data pd = pin[pol][cnt]; */
@@ -284,29 +143,13 @@ void* check_slots(void* dt) {
 	/* } */
 
 	int node;
-	int core = get_hwc(pin, pol, pid, &node, topo, total_hwcs);
+	int core = get_hwc_and_schedule(h, pid, false, &node);
+
+	//int core = get_hwc(pin, pol, pid, &node, topo, total_hwcs);
 
 	slot->node = node;
 	slot->core = core;
 	slot->policy = pol;
-
-	void* socket_vd = (void*) mctop_hwcid_get_socket(topo, core);
-	list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
-	if (lst == NULL) {
-	  perror("There is a missing socket from used_sockets");
-	  exit(1);
-	}
-	list_add(lst, pt_pid, NULL);
-
-	void* core_vd = (void*) mctop_hwcid_get_core(topo, core);
-	lst = list_get_value(used_cores, core_vd, compare_voids);
-	if (lst == NULL) {
-	  perror("There is a missing core from used_cores");
-	  exit(1);
-	}
-	list_add(lst, pt_pid, NULL);
-
-	used_hwcs[core] = true;
 
 	pid_t* pt_tid = malloc(sizeof(pid_t));
 	*pt_tid = slot->tid;
@@ -321,33 +164,8 @@ void* check_slots(void* dt) {
 	//cnt2->ll_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, WRITE, ACCESS));
 	cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
 	cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-
-	// doesn't support
-	//cnt2->l1i_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, ACCESS));
-	//printf("I'm good\n");
 	cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-	//cnt2->l1d_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, READ, ACCESS));
-	
-	//cnt2->l1i_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, MISS));
-	//printf("I'm good\n");
 	cnt2->ll_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
-	//cnt2->l1i_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, READ, MISS));
-	//printf("I'm good\ns");
-	/*cnt2->l1i_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, ACCESS));
-	printf("I'm good\n");
-	cnt2->l1d_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, ACCESS));
-	printf("I'm good\n");
-	cnt2->l1i_cache_write_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1I, WRITE, MISS));
-	printf("I'm good\n");
-	cnt2->l1d_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, READ, MISS));
-	printf("I'm good\n");
-	cnt2->l1d_cache_write_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(L1D, WRITE, MISS));
-	printf("I'm good\n");
-	cnt2->ll_cache_write_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, WRITE, ACCESS));
-	printf("I'm good\n");
-	cnt2->ll_cache_write_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, WRITE, MISS));
-	printf("I'm good\n");*/
-	
 
 	printf("about to add counters to the list.\n");
 	list_add(fd_counters_per_pid, (void*) pt_tid, (void*) cnt2);
@@ -366,31 +184,13 @@ void* check_slots(void* dt) {
       }
       else if (slot->used == END_PTHREADS) {
 	// find the hwc this thread was using ...
-	int* hwc = ((int *) list_get_value(hwcs_per_pid, (void *) &slot->tid, compare_pids));
+	int* hwc = ((int *) list_get_value(hwcs_per_pid, (void *) &(slot->tid), compare_pids));
 	if (hwc == NULL) {
 	  fprintf(stderr, "Couldn't find the hwc this process is using: %ld\n", (long int) (slot->tid));
 	  exit(-1);
 	}
 
-	void* socket_vd = (void*) mctop_hwcid_get_socket(topo, *hwc);
-	list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
-	if (lst == NULL) {
-	  perror("END_PTHREADS There is a missing socket from used_sockets");
-	  exit(1);
-	}
-
-	pid_t* pt_pid = &(slot->pid);
-	list_remove(lst, pt_pid, compare_pids);
-
-	void* core_vd = (void*) mctop_hwcid_get_core(topo, *hwc);
-	lst = list_get_value(used_cores, core_vd, compare_voids);
-	if (lst == NULL) {
-	  perror("END_PTHREADS There is a missing core from used_cores");
-	  exit(1);
-	}
-	list_remove(lst, pt_pid, compare_pids);
-	
-	used_hwcs[*hwc] = false;
+	release_hwc(h, slot->tid, *hwc);	
 
 	slot->used = NONE;
       }
@@ -408,7 +208,7 @@ typedef struct {
   char* program;
 } process;
 
-void reschedule_on_exit(pin_data** pin);
+//void reschedule_on_exit(pin_data** pin);
 
 FILE* results_fp;
 volatile int processes_finished = 0;
@@ -424,31 +224,16 @@ void* wait_for_process_async(void* pro)
 
   int hwc = *((int *) list_get_value(hwcs_per_pid, (void *) pid, compare_pids));
 
-  void* socket_vd = (void*) mctop_hwcid_get_socket(topo, hwc);
-  list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
-  if (lst == NULL) {
-    perror("wait_for_process_async There is a missing socket from used_sockets");
-    exit(1);
-  }
+  release_hwc(h, *pid, hwc);
 
-  list_remove(lst, pid, compare_pids);
-
-  void* core_vd = (void*) mctop_hwcid_get_core(topo, hwc);
-  lst = list_get_value(used_cores, core_vd, compare_voids);
-  if (lst == NULL) {
-    perror("END_PTHREADS There is a missing core from used_cores");
-    exit(1);
-  }
-  list_remove(lst, pid, compare_pids);
-  used_hwcs[hwc] = false;
-
+  
   list_remove(running_pids, pid, compare_pids);
   
   // FIXME
   if (strcmp(heuristic, "NONE") != 0) {
     pin_data** pin = initialize_pin_data(topo);
 
-    reschedule_on_exit(pin);
+    //reschedule_on_exit(pin);
   }
   
 
@@ -591,6 +376,30 @@ void unschedule(pid_t pid, int core)
   used_hwcs[core] = false;
 }
 
+// returns chosen node as well
+sem_t global_lock;
+int get_hwc_and_schedule(heuristic_t h, pid_t pid, bool schedule, int* node) {
+  sem_wait(&global_lock);
+
+  int hwc = h.get_hwc(pid, node);
+
+  if (schedule) {
+    // TODO schedule thread ... NOW mitch!!!
+    //    shced_set_affinity();
+    //set_mem_affinity();
+  }
+
+  sem_post(&global_lock);
+  return hwc;
+}
+
+
+void release_hwc(heuristic_t h, pid_t pid, int hwc) {
+  sem_wait(&global_lock);
+  h.release_hwc(hwc, pid);
+  sem_post(&global_lock);
+}
+
 void schedule(pid_t pid, int core, int node)
 {
   pid_t* pid_pt = malloc(sizeof(pid_t));
@@ -628,7 +437,9 @@ void schedule(pid_t pid, int core, int node)
 
   list_add(hwcs_per_pid, (void *) pid_pt, (void *) pt_core);
 }
-void reschedule_for_process(pin_data** pin, int policy, pid_t pid) {
+
+
+/*void reschedule_for_process(pin_data** pin, int policy, pid_t pid) {
   int node;
   int core = get_hwc(pin, policy, pid, &node, topo, total_hwcs);
 
@@ -647,10 +458,10 @@ void reschedule_for_process(pin_data** pin, int policy, pid_t pid) {
     unschedule(tid, previous_core);
     schedule(tid, core, node);
   }
-}
+  } */
 
 
-void reschedule_on_exit(pin_data** pin) {
+/*void reschedule_on_exit(pin_data** pin) {
 
   struct node* tmp = running_pids->head;
 
@@ -662,10 +473,9 @@ void reschedule_on_exit(pin_data** pin) {
 
     tmp = tmp->next;
   }
-}
+  }*/
 
-
-
+/*
 void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_data** pin,
 		int* used_threads)
 {
@@ -711,8 +521,7 @@ void reschedule(int policy, int number_of_threads, pid_t pid, void** tids, pin_d
       return;
      }
   }
-
-}
+  } */
 
 void print_pid(void *dt)
 {
@@ -724,7 +533,7 @@ void print_stuff(void* key, void* data)
   printf("%p: and something that is :%p\n", key, data);
 }
 
-void* find_best_policy(void* data, pin_data** pin)
+/*void* find_best_policy(void* data, pin_data** pin)
 {
   pid_t* pid = (pid_t*) data;
   hw_counters_fd* dt = list_get_value(fd_counters_per_pid, pid, compare_pids);
@@ -788,7 +597,7 @@ void* find_best_policy(void* data, pin_data** pin)
       }
       printf("Policy: %d, IPC: %lf\n", i, IPC);
 
-      reschedule(i, number_of_threads, *pid, tids, pin, used_threads);
+      //reschedule(i, number_of_threads, *pid, tids, pin, used_threads);
     }
     printf("%d: Best policy is: %d\n", k, best_policy);
     //usleep(731 * 1000);
@@ -801,11 +610,11 @@ void* find_best_policy(void* data, pin_data** pin)
       used_hwcs[used_threads[l]] = false;
     }
 
-    reschedule(best_policy, number_of_threads, *pid, tids, pin, used_threads);
+    //    reschedule(best_policy, number_of_threads, *pid, tids, pin, used_threads);
   }
 
   return NULL;
-}
+  }*/
 
 // we need first to sleep (based on start_time_ms) and then start the timing of the process
 // so, we cannot just fork in the main function
@@ -849,7 +658,7 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  if (sem_init(&(get_hwc_lock), 0, 1)) {
+  if (sem_init(&(global_lock), 0, 1)) {
     perror("couldn't create lock for get_hwc");
     return EXIT_FAILURE;
   }
@@ -857,11 +666,12 @@ int main(int argc, char* argv[]) {
 
   strcpy(heuristic, argv[3]);
   
-  policy_per_process = create_list();
   hwcs_per_pid = create_list();
   fd_counters_per_pid = create_list();
   tids_per_pid = create_list();
   running_pids = create_list();
+
+  policy_per_process = create_list();
 
   topo = mctop_load(NULL);
   if (!topo)   {
@@ -882,6 +692,14 @@ int main(int argc, char* argv[]) {
   communication_slot* slots = initialize_slots();
   pin_data** pin = initialize_pin_data(topo);
 
+  
+  h.init = H_init;
+  h.new_process = H_new_process;
+  h.get_hwc = H_get_hwc;
+  h.release_hwc = H_release_hwc;
+  h.init(pin, topo);
+
+
   // create a thread to check for new slots
   pthread_t check_slots_thread;
   check_slots_args* args = malloc(sizeof(check_slots_args));
@@ -893,34 +711,10 @@ int main(int argc, char* argv[]) {
   pthread_t check_counters_thread;
   pthread_create(&check_counters_thread, NULL, check_counters, args);
 
-  
   used_hwcs = malloc(sizeof(bool) * total_hwcs);
   for (int i = 0; i < total_hwcs; ++i) {
     used_hwcs[i] = false;
   }
-
-  
-  used_cores = create_list();
-  for (int i = 0; i < total_hwcs; ++i) {
-    hwc_gs_t* core = mctop_hwcid_get_core(topo, i);
-    void* core_vd = (void*) core;
-    if (list_get_value(used_cores, core_vd, compare_voids) == NULL) {
-      list_add(used_cores, core_vd, create_list());
-    }
-  }
-  //  list_traverse(used_cores, print_stuff);
-
-  used_sockets = create_list();
-  for (int i = 0; i < total_hwcs; ++i) {
-    socket_t* socket = mctop_hwcid_get_socket(topo, i);
-    void* socket_vd = (void*) socket;
-    if (list_get_value(used_sockets, socket_vd, compare_voids) == NULL) {
-      list_add(used_sockets, socket_vd, create_list());
-    }
-  }
-  //  list_traverse(used_sockets, print_stuff);
-
-  
 
   char line[300];
   FILE* fp = fopen(argv[1], "r");
@@ -994,26 +788,9 @@ int main(int argc, char* argv[]) {
     printf("Added policy in the list: %d\n", *pt_pol);
 
 
+    h.new_process(pid, pol);
     int node;
-    int core = get_hwc(pin, pol, pid, &node, topo, total_hwcs);
-    printf("Chosen core: %d\n", core);
-    void* socket_vd = (void*) mctop_hwcid_get_socket(topo, core);
-    list* lst = list_get_value(used_sockets, socket_vd, compare_voids);
-    if (lst == NULL) {
-      perror("There is a missing socket from used_sockets");
-      exit(1);
-    }
-    list_add(lst, pt_pid, NULL);
-
-    void* core_vd = (void*) mctop_hwcid_get_core(topo, core);
-    lst = list_get_value(used_cores, core_vd, compare_voids);
-    if (lst == NULL) {
-      perror("There is a missing core from used_cores");
-      exit(1);
-    }
-    list_add(lst, pt_pid, NULL);
-
-    used_hwcs[core] = true;
+    int core = get_hwc_and_schedule(h, pid, false, &node);
 
     cpu_set_t st;
     CPU_ZERO(&st);
@@ -1061,7 +838,7 @@ int main(int argc, char* argv[]) {
 
     if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0)  {
       usleep(200 * 1000); // wait 200ms
-      find_best_policy(pt_pid, pin);
+      //find_best_policy(pt_pid, pin);
     }
 
     printf("Added %lld to list with processes\n", (long long) (*pt_pid));

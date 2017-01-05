@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <linux/perf_event.h>
 #include <asm/unistd.h>
+#include <mctop.h>
 
 mctop_alloc_policy get_policy(char* policy) {
   mctop_alloc_policy pol;
@@ -193,4 +194,60 @@ int compare_pids(void* p1, void* p2) {
 int compare_voids(void* p1, void* p2) {
   return p1 == p2;
 }
+
+pin_data create_pin_data(int core, int node) {
+  pin_data tmp;
+  tmp.core = core;
+  tmp.node = node;
+  return tmp;
+}
+
+pin_data** initialize_pin_data(mctop_t* topo) {
+
+  size_t num_nodes = mctop_get_num_nodes(topo);
+  size_t num_cores_per_socket = mctop_get_num_cores_per_socket(topo);
+  size_t num_hwc_per_socket = mctop_get_num_hwc_per_socket(topo);
+  size_t num_hwc_per_core = mctop_get_num_hwc_per_core(topo);
+
+  size_t total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
+  pin_data** pin = malloc(sizeof(pin_data*) * MCTOP_ALLOC_NUM);
+  for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
+    pin[i] = malloc(sizeof(pin_data) * total_hwcs);
+  }
+
+  for (int i = 0; i < MCTOP_ALLOC_NUM; ++i) {
+
+    mctop_alloc_policy pol = i;
+    /* this policy does not contain any hardware contexts */
+    if (i == MCTOP_ALLOC_NONE) {
+      pol = i + 1; // the hardware contexts are always skipped actually
+      // only done so we can measure cost of communication between slate and glibc
+    }
+
+    int n_config = -1;
+    // Depending on the policy, n_config (3rd parameter of mctop_alloc_create) has different semantics.
+    if (pol == MCTOP_ALLOC_MIN_LAT_HWCS || pol == MCTOP_ALLOC_MIN_LAT_CORES_HWCS || pol == MCTOP_ALLOC_MIN_LAT_CORES) {
+      n_config = num_hwc_per_socket;
+    }
+    else {
+      n_config = num_nodes;
+    }
+    assert(n_config != -1);
+
+    //printf("%d: ", pol);
+    mctop_alloc_t* alloc = mctop_alloc_create(topo, total_hwcs, n_config, pol);
+    for (uint hwc_i = 0; hwc_i < alloc->n_hwcs; hwc_i++)
+      {
+	uint hwc = alloc->hwcs[hwc_i];
+	mctop_hwcid_get_local_node(topo, hwc);
+	pin[i][hwc_i] = create_pin_data(hwc, mctop_hwcid_get_local_node(topo, hwc));
+	//	printf("%d, ", hwc);
+      }
+    //printf("\n\n");
+    mctop_alloc_free(alloc);
+  }
+
+  return pin;
+}
+
 
