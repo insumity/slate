@@ -1,3 +1,4 @@
+
 /* Copyright (C) 2002-2016 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
    Contributed by Ulrich Drepper <drepper@redhat.com>, 2002.
@@ -66,7 +67,6 @@ typedef struct {
   ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
-  int policy;
 } communication_slot;
 
 void acquire_lock(int i, communication_slot* slots);
@@ -612,7 +612,7 @@ void *injected_start_routine(void *injected_arg)
       slot->used = NONE;
       slot->tid = tid;
 
-      if (slot->policy == 0) { // MCTOP_ALLOC_NONE
+      if (slot->core == -1) { // means it uses MCTOP_ALLOC_NONE
 	release_lock(index, slots);
 	break;
       }

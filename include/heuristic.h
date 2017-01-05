@@ -1,4 +1,5 @@
 #include <mctop.h>
+#include <semaphore.h>
 #include "slate_utils.h"
 
 #define CONCAT(a, b) a##b

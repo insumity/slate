@@ -78,6 +78,11 @@ int H_get_hwc(pid_t pid, int* ret_node) {
   } while (policy_pt == NULL);
   int policy = *((int *) policy_pt);
 
+  if (policy == MCTOP_ALLOC_NONE) {
+    *ret_node = -1;
+    return -1;
+  }
+
   int hwc;
   int cnt = 0;
   // go through all the sockets first and see if there is one with no running process
@@ -181,6 +186,11 @@ int H_get_hwc(pid_t pid, int* ret_node) {
 }
 
 void H_release_hwc(int hwc, pid_t pid) {
+
+  if (hwc == -1) {
+    return;
+  }
+  
   void* socket_vd = (void*) mctop_hwcid_get_socket(state.topo, hwc);
   list* lst = list_get_value(state.used_sockets, socket_vd, compare_voids);
   if (lst == NULL) {

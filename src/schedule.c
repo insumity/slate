@@ -43,7 +43,6 @@ typedef struct {
   ticketlock_t lock;
   pid_t tid, pid;
   used_by used;
-  //int policy;
 } communication_slot;
 
 void initialize_lock(int i, communication_slot* slots)
@@ -99,26 +98,10 @@ void* check_slots(void* dt) {
 	pid_t* pt_pid = malloc(sizeof(pid_t));
 	*pt_pid = pid;
 
-	int times = 0;
-      back: ;
-	void* policy = list_get_value(policy_per_process, (void *) pt_pid, compare_pids);
-      if (policy == NULL) {
-	  usleep(5000); // 5ms
-	  times++;
-	  if (times == 5) {
-	    fprintf(stderr, "Couldn't find policy of specific process with pid: %ld\n", *(long int*) (pt_pid));
-	    exit(-1);
-	  }
-	  goto back;
-	  }
-
-	  int pol = *((int *) policy);
-
 	int node;
 	int core = get_hwc_and_schedule(h, pid, false, &node);
 	slot->node = node;
 	slot->core = core;
-	slot->policy = pol;
 
 	pid_t* pt_tid = malloc(sizeof(pid_t));
 	*pt_tid = slot->tid;
@@ -257,7 +240,6 @@ communication_slot* initialize_slots() {
     slot->tid = 0;
     slot->pid = 0;
     slot->used = NONE;
-    slot->policy = MCTOP_ALLOC_NONE;
   }
 
   return slots;
@@ -295,6 +277,11 @@ int get_hwc_and_schedule(heuristic_t h, pid_t pid, bool schedule, int* node) {
   int hwc = h.get_hwc(pid, node);
 
   if (schedule) {
+    if (hwc == -1) {
+      fprintf(stderr, "Trying to schedule to wrong process. Policy is probably MCTOP_ALLOC_NONE\n");
+      exit(-1);
+    }
+    
     cpu_set_t st;
     CPU_ZERO(&st);
     CPU_SET(hwc, &st);
@@ -445,7 +432,6 @@ int main(int argc, char* argv[]) {
   tids_per_pid = create_list();
   running_pids = create_list();
 
-  policy_per_process = create_list();
 
   topo = mctop_load(NULL);
   if (!topo)   {
@@ -552,12 +538,11 @@ int main(int argc, char* argv[]) {
     
     int* pt_pol = malloc(sizeof(int));
     *pt_pol = pol;
-    list_add(policy_per_process, pt_pid, pt_pol);
-    printf("Added policy in the list: %d\n", *pt_pol);
 
 
     h.new_process(pid, pol);
     int core, node;
+    core = node = -1;
     if (pol != MCTOP_ALLOC_NONE) {
       core = get_hwc_and_schedule(h, pid, true, &node);
     }
