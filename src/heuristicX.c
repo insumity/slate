@@ -16,7 +16,8 @@ typedef struct {
   list* used_sockets;
   list* used_cores;
   bool* used_hwcs;
-  
+
+  sem_t* lock;
 } HX_global_state;
 
 HX_global_state state;
@@ -56,10 +57,18 @@ void HX_init(pin_data** pin, mctop_t* topo) {
     }
   }
 
+  state.lock = malloc(sizeof(sem_t));
+  if (sem_init(state.lock, 0, 1)) {
+    perror("couldn't create lock for state\n");
+  }
+
+}
+
+sem_t* HX_get_lock() {
+  return state.lock;
 }
 
 void HX_new_process(pid_t pid, int policy) {
-
   pid_t* pid_pt = malloc(sizeof(pid_t));
   *pid_pt = pid;
 
@@ -70,7 +79,6 @@ void HX_new_process(pid_t pid, int policy) {
 }
 
 int HX_get_hwc(pid_t pid, int* ret_node) {
-
   void* policy_pt;
   do {
     policy_pt = list_get_value(state.policy_per_pid, &pid, compare_pids);
@@ -156,16 +164,12 @@ int HX_get_hwc(pid_t pid, int* ret_node) {
     cnt++;
   }
 
-
-
-
   // just return first hwc TODO... go random instead of always [0]
   cnt = 0;
   pin_data pd = state.pin[policy][cnt];
   hwc = pd.core;
   int node = pd.node;
   *ret_node = node;
-
 
   // update global state
  end: ;
@@ -192,8 +196,9 @@ int HX_get_hwc(pid_t pid, int* ret_node) {
 }
 
 void HX_release_hwc(int hwc, pid_t pid) {
-
+  sem_wait(state.lock);
   if (hwc == -1) {
+    sem_post(state.lock);
     return;
   }
   
@@ -214,5 +219,6 @@ void HX_release_hwc(int hwc, pid_t pid) {
   list_remove(lst, &pid, compare_pids);
 	
   state.used_hwcs[hwc] = false;
+  sem_post(state.lock);
 }
 

@@ -48,11 +48,10 @@ typedef struct {
 
 typedef struct {
   void (*init)();
+  sem_t* (*get_lock)();
   void (*new_process)(pid_t pid, int policy);
   int (*get_hwc)(pid_t pid, int* node);
   void (*release_hwc)(int hwc, pid_t pid);
-
-  sem_t lock;
 } heuristic_t;
 heuristic_t h;
 
@@ -197,7 +196,7 @@ void* wait_for_process_async(void* pro)
   long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
   long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
 
- back:
+ back: ;
   current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
   if (current_id != NULL) {
     fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
@@ -283,7 +282,7 @@ void print_counters(void* key, void *data)
 
 // returns chosen node as well
 int get_hwc_and_schedule(heuristic_t h, pid_t pid, bool schedule, int* node) {
-  sem_wait(&h.lock);
+  sem_wait(h.get_lock());
 
   int hwc = h.get_hwc(pid, node);
 
@@ -306,15 +305,15 @@ int get_hwc_and_schedule(heuristic_t h, pid_t pid, bool schedule, int* node) {
     //perror("mempolicy didn't work\n");
   }
 
-  sem_post(&h.lock);
+  sem_post(h.get_lock());
   return hwc;
 }
 
 
 void release_hwc(heuristic_t h, pid_t pid, int hwc) {
-  sem_wait(&h.lock);
+  //sem_wait(&h.lock);
   h.release_hwc(hwc, pid);
-  sem_post(&h.lock);
+  //sem_post(&h.lock);
 }
 
 void schedule(pid_t pid, int core, int node)
@@ -465,25 +464,19 @@ int main(int argc, char* argv[]) {
 
   if (strcmp(heuristic, "NORMAL") == 0) {
     h.init = H_init;
+    h.get_lock = H_get_lock;
     h.new_process = H_new_process;
     h.get_hwc = H_get_hwc;
     h.release_hwc = H_release_hwc;
     h.init(pin, topo);
-    if (sem_init(&(h.lock), 0, 1)) {
-      perror("couldn't create lock for heuristic");
-      return EXIT_FAILURE;
-    }
   }
   else if (strcmp(heuristic, "X") == 0) {
     h.init = HX_init;
+    h.get_lock = HX_get_lock;
     h.new_process = HX_new_process;
     h.get_hwc = HX_get_hwc;
     h.release_hwc = HX_release_hwc;
     h.init(pin, topo);
-    if (sem_init(&(h.lock), 0, 1)) {
-      perror("couldn't create lock for heuristic");
-      return EXIT_FAILURE;
-    }
   }
   else {
     fprintf(stderr, "heuristic can only be \"NORMAL\" or \"X\"\n");
@@ -554,7 +547,7 @@ int main(int argc, char* argv[]) {
 
     void* resulty;
     if (pthread_join(execute_process_thread, &resulty) != 0) {
-      perror("SHIT hit the fan\n");
+      perror("The execute_proess_thread failed when on return");
       exit(-1);
     }
 

@@ -1,6 +1,8 @@
 #include <unistd.h>
 #include <mctop.h>
 #include <stdbool.h>
+#include <semaphore.h>
+
 #include "heuristic.h"
 #include "list.h"
 
@@ -16,7 +18,8 @@ typedef struct {
   list* used_sockets;
   list* used_cores;
   bool* used_hwcs;
-  
+
+  sem_t* lock;
 } H_global_state;
 
 H_global_state state;
@@ -56,10 +59,17 @@ void H_init(pin_data** pin, mctop_t* topo) {
     }
   }
 
+  state.lock = malloc(sizeof(sem_t));
+  if (sem_init(state.lock, 0, 1)) {
+    perror("couldn't create lock for state\n");
+  }
+}
+
+sem_t* H_get_lock() {
+  return state.lock;
 }
 
 void H_new_process(pid_t pid, int policy) {
-
   pid_t* pid_pt = malloc(sizeof(pid_t));
   *pid_pt = pid;
 
@@ -70,7 +80,6 @@ void H_new_process(pid_t pid, int policy) {
 }
 
 int H_get_hwc(pid_t pid, int* ret_node) {
-
   void* policy_pt;
   do {
     policy_pt = list_get_value(state.policy_per_pid, &pid, compare_pids);
@@ -182,12 +191,14 @@ int H_get_hwc(pid_t pid, int* ret_node) {
   list_add(lst, pid_pt, NULL);
 
   state.used_hwcs[hwc] = true;
+
   return hwc;
 }
 
 void H_release_hwc(int hwc, pid_t pid) {
-
+  sem_wait(state.lock);
   if (hwc == -1) {
+    sem_post(state.lock);
     return;
   }
   
@@ -208,5 +219,6 @@ void H_release_hwc(int hwc, pid_t pid) {
   list_remove(lst, &pid, compare_pids);
 	
   state.used_hwcs[hwc] = false;
+  sem_post(state.lock);
 }
 
