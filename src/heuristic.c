@@ -14,6 +14,7 @@ typedef struct {
   int total_hwcs;
 
   list* policy_per_pid;
+  list* hwcs_per_pid;
   
   list* used_sockets;
   list* used_cores;
@@ -34,6 +35,8 @@ void H_init(pin_data** pin, mctop_t* topo) {
   state.total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
 
   state.policy_per_pid = create_list();
+  state.hwcs_per_pid = create_list();
+  
   state.used_sockets = create_list();
   state.used_cores = create_list();
 
@@ -79,7 +82,12 @@ void H_new_process(pid_t pid, int policy) {
   list_add(state.policy_per_pid, pid_pt, policy_pt);
 }
 
-int H_get_hwc(pid_t pid, int* ret_node) {
+void H_process_exit(pid_t pid) {
+  //list_remove(state.hwcs_per_pid, &pid, compare_pids);
+}
+
+
+int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
   void* policy_pt;
   do {
     policy_pt = list_get_value(state.policy_per_pid, &pid, compare_pids);
@@ -89,6 +97,15 @@ int H_get_hwc(pid_t pid, int* ret_node) {
 
   if (policy == MCTOP_ALLOC_NONE) {
     *ret_node = -1;
+
+        int* tmp = malloc(sizeof(int));
+    *tmp = -1;
+
+    pid_t* tid_pt = malloc(sizeof(pid_t));
+    *tid_pt = tid;
+    
+    list_add(state.hwcs_per_pid, tid_pt, tmp);
+
     return -1;
   }
 
@@ -192,11 +209,23 @@ int H_get_hwc(pid_t pid, int* ret_node) {
 
   state.used_hwcs[hwc] = true;
 
+  int*n = malloc(sizeof(int));
+  *n = hwc;
+
+  pid_t* tid_pt = malloc(sizeof(pid_t));
+  *tid_pt = tid;
+
+  list_add(state.hwcs_per_pid, tid_pt, n);
+
+  
   return hwc;
 }
 
-void H_release_hwc(int hwc, pid_t pid) {
+void H_release_hwc(pid_t pid) {
   sem_wait(state.lock);
+
+  int hwc = *((int *) list_get_value(state.hwcs_per_pid, &pid, compare_pids));
+  
   if (hwc == -1) {
     sem_post(state.lock);
     return;
@@ -219,6 +248,9 @@ void H_release_hwc(int hwc, pid_t pid) {
   list_remove(lst, &pid, compare_pids);
 	
   state.used_hwcs[hwc] = false;
+  
+list_remove(state.hwcs_per_pid, &pid, compare_pids);
+
   sem_post(state.lock);
 }
 

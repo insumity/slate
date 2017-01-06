@@ -1,18 +1,25 @@
+#define _GNU_SOURCE
 #include <unistd.h>
 #include <mctop.h>
 #include <stdbool.h>
+#include <sched.h>
 #include "heuristic.h"
 #include "list.h"
 
 #define CONCAT(a, b) a##b
 
+// WHEN A PROCESS / THREAD leaves it removes the tids from tids_per_pid
+// as well as hwcs_per_pid ... so that's the reason reschedule is not finding anythin
 typedef struct {
   pin_data** pin;
   mctop_t* topo;
   int total_hwcs;
 
-  list* policy_per_pid;
+  list* running_pids;
+  list* hwcs_per_pid;
+  list* tids_per_pid;
   
+  list* policy_per_pid;
   list* used_sockets;
   list* used_cores;
   bool* used_hwcs;
@@ -32,8 +39,13 @@ void HX_init(pin_data** pin, mctop_t* topo) {
   state.total_hwcs = num_nodes * num_cores_per_socket * num_hwc_per_core;
 
   state.policy_per_pid = create_list();
+  state.hwcs_per_pid = create_list();
+  state.tids_per_pid = create_list();
+
   state.used_sockets = create_list();
   state.used_cores = create_list();
+
+  state.running_pids = create_list();
 
   state.used_hwcs = malloc(sizeof(bool) * state.total_hwcs);
   for (int i = 0; i < state.total_hwcs; ++i) {
@@ -76,9 +88,20 @@ void HX_new_process(pid_t pid, int policy) {
   *policy_pt = policy;
     
   list_add(state.policy_per_pid, pid_pt, policy_pt);
+  list_add(state.running_pids, pid_pt, NULL);
 }
 
-int HX_get_hwc(pid_t pid, int* ret_node) {
+void reschedule_on_exit(pid_t pid);
+
+void HX_process_exit(pid_t pid) {
+  list_remove(state.running_pids, &pid, compare_pids);
+  //list_remove(state.hwcs_per_pid, &pid, compare_pids);
+
+  reschedule_on_exit(pid);
+}
+
+
+int HX_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
   void* policy_pt;
   do {
     policy_pt = list_get_value(state.policy_per_pid, &pid, compare_pids);
@@ -88,6 +111,14 @@ int HX_get_hwc(pid_t pid, int* ret_node) {
 
   if (policy == MCTOP_ALLOC_NONE) {
     *ret_node = -1;
+
+    int* tmp = malloc(sizeof(int));
+    *tmp = -1;
+
+    pid_t* tid_pt = malloc(sizeof(pid_t));
+    *tid_pt = tid;
+    
+    list_add(state.hwcs_per_pid, tid_pt, tmp);
     return -1;
   }
 
@@ -95,9 +126,6 @@ int HX_get_hwc(pid_t pid, int* ret_node) {
   int cnt = 0;
 
   // go through all the hwcs
-
-  return 5;
-  
   cnt = 0;
   while (cnt < state.total_hwcs) {
     pin_data pd = state.pin[policy][cnt];
@@ -111,65 +139,6 @@ int HX_get_hwc(pid_t pid, int* ret_node) {
 
     cnt++;
   }
-
-  // go through all the cores next and see if there is one with no running process
-  cnt = 0;
-
-  while (cnt < state.total_hwcs) {
-    pin_data pd = state.pin[policy][cnt];
-    hwc = pd.core;
-    int node = pd.node;
-    *ret_node = node;
-
-    void* core = (void*) mctop_hwcid_get_core(state.topo, hwc);
-    list* lst = (list*) list_get_value(state.used_cores, core, compare_voids);
-    if (lst == NULL) {
-      goto end;
-    }
-    else {
-      int num_elements;
-      list_get_all_values(lst, &pid, compare_pids, &num_elements);
-      int all_elements = list_elements(lst);
-      if (num_elements == all_elements && !state.used_hwcs[hwc]) {
-	goto end;
-      }
-    }
-
-    cnt++;
-  }
-
-    // go through all the sockets first and see if there is one with no running process
-  while (cnt < state.total_hwcs) {
-    pin_data pd = state.pin[policy][cnt];
-    hwc = pd.core;
-    int node = pd.node;
-    *ret_node = node;
-
-    void* socket = (void*) mctop_hwcid_get_socket(state.topo, hwc);
-
-    list* lst = (list*) list_get_value(state.used_sockets, socket, compare_voids);
-
-    if (lst == NULL) {
-      goto end;
-    }
-    else {
-      int num_elements;
-      list_get_all_values(lst, &pid, compare_pids, &num_elements);
-      int all_elements = list_elements(lst);
-      if (num_elements == all_elements && !state.used_hwcs[hwc]) {
-	goto end;
-      }
-    }
-
-    cnt++;
-  }
-
-  // just return first hwc TODO... go random instead of always [0]
-  cnt = 0;
-  pin_data pd = state.pin[policy][cnt];
-  hwc = pd.core;
-  int node = pd.node;
-  *ret_node = node;
 
   // update global state
  end: ;
@@ -192,11 +161,117 @@ int HX_get_hwc(pid_t pid, int* ret_node) {
   list_add(lst, pid_pt, NULL);
 
   state.used_hwcs[hwc] = true;
+
+  int*n = malloc(sizeof(int));
+  *n = hwc;
+
+  pid_t* tid_pt = malloc(sizeof(pid_t));
+  *tid_pt = tid;
+  
+  list_add(state.hwcs_per_pid, tid_pt, n);
+
+  pid_t* parent_pid = malloc(sizeof(pid_t));
+  *parent_pid = getppid();
+
+  if (pid != tid) {
+    list_add(state.tids_per_pid, pid_pt, tid_pt);
+  }
+
   return hwc;
 }
 
-void HX_release_hwc(int hwc, pid_t pid) {
+void pin(pid_t pid, int core, int node)
+{
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(core, &set);
+
+  if (sched_setaffinity(pid, sizeof(cpu_set_t), &set) != 0) {
+    perror("sched affinity inside pin didn't work. Coudld be that process has " \
+	   "already terminated.");
+    exit(1);
+  }
+}
+
+void HX_release_hwc_no_lock(pid_t pid) {
+
+  int hwc = *((int *) list_get_value(state.hwcs_per_pid, &pid, compare_pids));
+  
+  if (hwc == -1) {
+    return;
+  }
+  
+  void* socket_vd = (void*) mctop_hwcid_get_socket(state.topo, hwc);
+  list* lst = list_get_value(state.used_sockets, socket_vd, compare_voids);
+  if (lst == NULL) {
+    exit(1);
+  }
+
+  list_remove(lst, &pid, compare_pids);
+
+  void* core_vd = (void*) mctop_hwcid_get_core(state.topo, hwc);
+  lst = list_get_value(state.used_cores, core_vd, compare_voids);
+  if (lst == NULL) {
+    perror("h_release_hwc There is a missing core from used_cores");
+    exit(1);
+  }
+  list_remove(lst, &pid, compare_pids);
+	
+  state.used_hwcs[hwc] = false;
+  list_remove(state.hwcs_per_pid, &pid, compare_pids);
+}
+
+void reschedule_for_process(pid_t pid) {
+  int previous_core = *(int *) list_get_value(state.hwcs_per_pid, &pid, compare_pids);
+  HX_release_hwc_no_lock(pid);
+  
+  int node;
+  int core = HX_get_hwc(pid, pid, &node);
+
+  pin(pid, core, node);
+  
+  int num_elements;
+  void** tids = list_get_all_values(state.tids_per_pid, &pid, compare_pids, &num_elements);
+
+  for (int i = 0; i < num_elements; ++i) {
+    pid_t tid = *((pid_t *) tids[i]);
+    previous_core = *(int *) list_get_value(state.hwcs_per_pid, &tid, compare_pids);
+    HX_release_hwc_no_lock(tid);
+
+    core = HX_get_hwc(pid, tid, &node);
+
+    pin(tid, core, node);
+    printf("Rescheduling from %d to %d\n", previous_core, core);
+  }
+} 
+
+void reschedule_on_exit(pid_t in_pid) {
   sem_wait(state.lock);
+  struct node* tmp = (state.running_pids)->head;
+
+  while (tmp != NULL) {
+    pid_t* pid = (pid_t *) tmp->key;
+
+    if (*pid != in_pid) {
+      reschedule_for_process(*pid);
+      break; // just reschedule one process
+    }
+
+    tmp = tmp->next;
+  }
+
+  sem_post(state.lock);
+}
+
+void HX_release_hwc(pid_t pid) {
+  sem_wait(state.lock);
+  int* hwc_pt = (int *) list_get_value(state.hwcs_per_pid, &pid, compare_pids);
+  if (hwc_pt == NULL) {
+    perror("(pid, hwc) was already removed from hwcs_per_pid");
+    exit(1);
+  }
+  int hwc = *hwc_pt;
+
   if (hwc == -1) {
     sem_post(state.lock);
     return;
@@ -219,6 +294,8 @@ void HX_release_hwc(int hwc, pid_t pid) {
   list_remove(lst, &pid, compare_pids);
 	
   state.used_hwcs[hwc] = false;
+  list_remove(state.hwcs_per_pid, &pid, compare_pids);
+
   sem_post(state.lock);
 }
 
