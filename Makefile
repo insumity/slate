@@ -1,6 +1,6 @@
 
 cc = gcc -g -Wall -pedantic -I./include
-objects = heuristic.o heuristicX.o ticket.o list.o slate_utils.o schedule.o
+objects = heuristic.o heuristicX.o ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o
 
 all: schedule use_linux_scheduler
 
@@ -28,9 +28,9 @@ slate_utils.o: src/slate_utils.c include/slate_utils.h
 schedule.o: src/schedule.c
 	$(cc) -c src/schedule.c -o schedule.o -std=gnu99
 
-use_linux_scheduler.o: src/use_linux_scheduler.c
-	$(cc)  -c src/use_linux_scheduler.c -o use_linux_scheduler.o 
+use_linux_scheduler.o: src/use_linux_scheduler.c slate_utils.o
+	$(cc) -c src/use_linux_scheduler.c -o use_linux_scheduler.o 
 
 .PHONY: clean
 clean:
-	rm -f schedule use_linux_scheduler $(objects)
+	rm -f schedule use_linux_scheduler $(objects) 
