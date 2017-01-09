@@ -63,11 +63,14 @@ void acquire_lock(int i, communication_slot* slots);
 
 void release_lock(int i, communication_slot* slots);
 
-
 void
 __pthread_exit (void *value)
 {
-  //clock_t start = clock();
+  struct timespec start, finish;
+  double elapsed;
+
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
   int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -86,6 +89,7 @@ __pthread_exit (void *value)
   int found_slot = 0;
   while(found_slot != 1) {
     int k;
+    usleep(5 * 1000);
     for (k = 0; k < NUM_SLOTS; ++k) {
       acquire_lock(k, slots);
       //printf("I'm here in pthread_exit() before closing a thread:%d ...\n", k);
@@ -95,7 +99,6 @@ __pthread_exit (void *value)
 	b->used = END_PTHREADS;
 	b->tid = syscall(__NR_gettid);
 	b->pid = getpid();
-	//printf("A thread with tid %ld and ppid %ld is closing in pthread_exit() ... kill it\n", (long) b->tid, (long) getpid());
 	found_slot = 1;
       }
 
@@ -107,9 +110,10 @@ __pthread_exit (void *value)
   }
   close(fd);
 
-  //clock_t end = clock();
-  //double time = (double) (end - start) / CLOCKS_PER_SEC;
-  //printf("Time spent in exit: %lf\n", time);
+  clock_gettime(CLOCK_MONOTONIC, &finish);
+  elapsed = (finish.tv_sec - start.tv_sec);
+  elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+  printf("Extra time spent in pthread_exit: %lf\n", elapsed);
 
   THREAD_SETMEM (THREAD_SELF, result, value);
   __do_cancel ();

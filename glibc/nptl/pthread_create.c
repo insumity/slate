@@ -561,7 +561,10 @@ void *injected_start_routine(void *injected_arg)
   /* process calling pthread_create */
   long int tid = syscall(__NR_gettid);
 
-  //clock_t start = clock();
+  struct timespec start, finish;
+  double elapsed;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+  
   int fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
     fprintf(stderr, "Couldnt' open file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
@@ -578,11 +581,12 @@ void *injected_start_routine(void *injected_arg)
     fprintf(stderr, "main mmap failed for file %s: %s\n", SLOTS_FILE_NAME, strerror(errno));
   }
 
-  
+
+  int sleeping = 5;
   int found_slot = 0, index = -1;
   while(found_slot != 1) {
     int k;
-
+    usleep(sleeping * 1000);
     for (k = 0; k < NUM_SLOTS; ++k) {
       acquire_lock(k, slots);
       communication_slot* slot = &slots[k];
@@ -605,7 +609,9 @@ void *injected_start_routine(void *injected_arg)
     }
   }
 
+  sleeping = 13;
   while (1) {
+    usleep(sleeping * 1000);
     acquire_lock(index, slots);
     communication_slot* slot = &slots[index];
     if (slot->used == SCHEDULER) {
@@ -613,16 +619,18 @@ void *injected_start_routine(void *injected_arg)
       slot->tid = tid;
 
       if (slot->core == -1) { // means it uses MCTOP_ALLOC_NONE
+	printf("mpikame edo\n");
 	release_lock(index, slots);
 	break;
       }
+      
       cpu_set_t set;
       CPU_ZERO(&set);
       CPU_SET(slot->core, &set);
       sched_setaffinity(tid, sizeof(cpu_set_t), &set);
 
-      //const unsigned long int f = 1 << slot->node;
-      //      set_mempolicy(MPOL_PREFERRED, &f, 63);
+      // const unsigned long int f = 1 << slot->node;
+      // set_mempolicy(MPOL_PREFERRED, &f, 63);
 
       printf("Scheduled at core: %d and at node: %d\n", slot->core, slot->node);
 
@@ -634,12 +642,16 @@ void *injected_start_routine(void *injected_arg)
 
   close(fd);
 
-  //clock_t end = clock();
-  //double time_spent = (double) (end - start) / CLOCKS_PER_SEC;
-  //printf("Time spent: %lf\n", time_spent);
+  clock_gettime(CLOCK_MONOTONIC, &finish);
+  elapsed = (finish.tv_sec - start.tv_sec);
+  elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+  printf("Time spent on pthread create: %lf\n", elapsed);
   void** tmp = injected_arg;
   void *(*f) (void*) = tmp[0];
   void* result = f(tmp[1]);
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
 
   fd = open(SLOTS_FILE_NAME, O_RDWR);
   if (fd == -1) {
@@ -680,7 +692,13 @@ void *injected_start_routine(void *injected_arg)
   }
 
   close(fd);
-  free(tmp); 
+  free(tmp);
+
+  clock_gettime(CLOCK_MONOTONIC, &finish);
+  elapsed = (finish.tv_sec - start.tv_sec);
+  elapsed += (finish.tv_nsec - start.tv_nsec) / 1000000000.0;
+
+  printf("Time spend on the second part of pthread_create: %lf\n", elapsed);
   
   return result;
 }
