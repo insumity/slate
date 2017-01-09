@@ -13,7 +13,7 @@
 
 mctop_alloc_policy get_policy(char* policy);
 
-int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config);
+int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader);
 void close_perf(int fd);
 void start_perf_reading(int fd);
 void reset_perf_counter(int fd);

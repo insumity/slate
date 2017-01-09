@@ -67,7 +67,7 @@ static int perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
 					     (PERF_COUNT_HW_CACHE_RESULT_ ## result << 16))
 
 
-int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
+int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader)
 {
   struct perf_event_attr pe;
   int fd;
@@ -78,11 +78,10 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config)
   pe.config = perf_event_config;
   pe.disabled = 1;
   pe.exclude_kernel = 0;
-  /*pe.inherit = 1;*/
-  
-  /*pe.exclude_hv = 1; */
+  pe.inherit = 1;
+  /*pe.exclude_hv = 1;*/
 
-  fd = perf_event_open(&pe, pid, -1, -1, 0);
+  fd = perf_event_open(&pe, pid, -1, leader, 0);
   if (fd == -1) {
     fprintf(stderr, "Error opening leader %lld\n", pe.config);
     perror("");
@@ -102,10 +101,13 @@ void start_perf_reading(int fd)
   int ret = ioctl(fd, PERF_EVENT_IOC_RESET, 0);
   if (ret == -1) {
     perror("ioctl failed\n");
+    exit(EXIT_FAILURE);
+
   }
   ret = ioctl(fd, PERF_EVENT_IOC_ENABLE, 0);
   if (ret == -1) {
     perror("ioctl failed\n");
+    exit(EXIT_FAILURE);
   }
 }
 
@@ -122,6 +124,7 @@ long long read_perf_counter(int fd)
   int ret = read(fd, &count, sizeof(long long));
   if (ret == -1) {
     perror("read failed\n");
+    exit(EXIT_FAILURE);
   }
   return count;
 }
