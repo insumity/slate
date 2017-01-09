@@ -78,12 +78,18 @@ void H_new_process(pid_t pid, int policy) {
 
   int* policy_pt = malloc(sizeof(int));
   *policy_pt = policy;
-    
+
+  if (policy == MCTOP_ALLOC_NONE) {
+    int* tmp = malloc(sizeof(int));
+    *tmp = -1;
+    list_add(state.hwcs_per_pid, pid_pt, tmp);
+  }
+  
   list_add(state.policy_per_pid, pid_pt, policy_pt);
 }
 
 void H_process_exit(pid_t pid) {
-  //list_remove(state.hwcs_per_pid, &pid, compare_pids);
+  //list_remove(state.hwcs_per_pid, &pid, compare_pids); // already done by leave_process
 }
 
 
@@ -98,7 +104,7 @@ int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
   if (policy == MCTOP_ALLOC_NONE) {
     *ret_node = -1;
 
-        int* tmp = malloc(sizeof(int));
+    int* tmp = malloc(sizeof(int));
     *tmp = -1;
 
     pid_t* tid_pt = malloc(sizeof(pid_t));
@@ -119,7 +125,6 @@ int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
     *ret_node = node;
 
     void* socket = (void*) mctop_hwcid_get_socket(state.topo, hwc);
-
     list* lst = (list*) list_get_value(state.used_sockets, socket, compare_voids);
 
     if (lst == NULL) {
@@ -162,7 +167,6 @@ int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
 
     cnt++;
   }
-
 
   // go through all the hwcs
   cnt = 0;
@@ -223,7 +227,6 @@ int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
 
 void H_release_hwc(pid_t pid) {
   sem_wait(state.lock);
-
   int hwc = *((int *) list_get_value(state.hwcs_per_pid, &pid, compare_pids));
   
   if (hwc == -1) {
@@ -249,7 +252,7 @@ void H_release_hwc(pid_t pid) {
 	
   state.used_hwcs[hwc] = false;
   
-list_remove(state.hwcs_per_pid, &pid, compare_pids);
+  list_remove(state.hwcs_per_pid, &pid, compare_pids);
 
   sem_post(state.lock);
 }

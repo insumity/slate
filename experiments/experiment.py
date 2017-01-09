@@ -17,7 +17,7 @@ def to_none_scheduler(policy, program):
     return "MCTOP_ALLOC_NONE" + " " + LINK_SCRIPT_FILE + " " + glibc_build_directory + " " + str.join(' ', program)
 
 def to_linux_scheduler(policy, program):
-    return "LINUX_SCHEDULER" + " " + str.join(' ', program)
+    return "LINUX_SCHEDULER" + " " + LINK_SCRIPT_FILE + " " + "/home/kantonia/GLIBC_NORMAL/glibc-build/" + " " + str.join(' ', program)
 
 def create_scheduler_file(to_scheduler_function, file_name):
     f = open(file_name, 'w')
@@ -38,6 +38,6 @@ def create_scheduler_file(to_scheduler_function, file_name):
             f.write('\n')
     f.close()
 
-create_scheduler_file(to_none_scheduler, none_scheduler_file)
+#create_scheduler_file(to_none_scheduler, none_scheduler_file)
 create_scheduler_file(to_slate_scheduler, slate_scheduler_file)
 create_scheduler_file(to_linux_scheduler, linux_scheduler_file)

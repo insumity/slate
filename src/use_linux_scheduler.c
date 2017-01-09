@@ -81,10 +81,11 @@ void* execute_process(void* arg)
     execv(program[0], program); // SPPEND TWO HOURS ON this, if you use execve instead with envp = {NULL} it doesn't work
     perror("Couldn't run execv\n");
   }
-  cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-  cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-  cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-  cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
+  int leader = -1;
+  leader = cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, leader);
+  cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, leader);
+  cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS), leader);
+  cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS), leader);
 
   start_perf_reading(cnt2->instructions);
   start_perf_reading(cnt2->cycles);
@@ -153,6 +154,10 @@ int main(int argc, char* argv[])
     args->fp = outfp;
     args->start_time_ms = start_time_ms;
     sprintf(args->id, "%d", num_id);
+
+    struct timeval tm;
+    gettimeofday(&tm, NULL);
+    printf("time: %lu\n", tm.tv_usec);
 
     pthread_create(&threads[programs], NULL, execute_process, args);
     programs++;

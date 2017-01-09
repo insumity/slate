@@ -90,9 +90,13 @@ void* check_slots(void* dt) {
   check_slots_args* args = (check_slots_args *) dt;
   communication_slot* slots = args->slots;
 
+
+  int sleeping = 20;
   while (true) {
-    usleep(SLEEPING_TIME_IN_MICROSECONDS);
-    for (int i = 0; i < NUM_SLOTS; ++i) {
+    usleep(sleeping * 1000);
+    int j = rand() % NUM_SLOTS;
+    bool first_time = true;
+    for (int i = j; first_time || i != j; ) {
       acquire_lock(i, slots);
       communication_slot* slot = slots + i;
 
@@ -104,17 +108,21 @@ void* check_slots(void* dt) {
 	pid_t* pt_tid = malloc(sizeof(pid_t));
 	*pt_tid = slot->tid;
 
-	int node;
-	int core = get_hwc_and_schedule(h, pid, *pt_tid, false, &node);
+	//int core = get_hwc_and_schedule(h, pid, *pt_tid, false, &node);
+	int core = -1; // FIXME
+	int node = -1;
 	slot->node = node;
 	slot->core = core;
+
+	printf("The core is: %d and the node as well: %d\n", core, node);
 
 	int* pt_core = malloc(sizeof(int));
 	*pt_core = core;
 
 	list_add(tids_per_pid, (void *) pt_pid, (void *) pt_tid);
 
-	hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
+	/* Was slowing things down ...
+	  hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
 	cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
 	cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
 	cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
@@ -125,16 +133,20 @@ void* check_slots(void* dt) {
 	start_perf_reading(cnt2->instructions);
 	start_perf_reading(cnt2->cycles);
 	start_perf_reading(cnt2->ll_cache_read_accesses);
-	start_perf_reading(cnt2->ll_cache_read_misses);
+	start_perf_reading(cnt2->ll_cache_read_misses); */
 	
 	slot->used = SCHEDULER;
       }
       else if (slot->used == END_PTHREADS) {
-	release_hwc(h, slot->tid);	
+	printf("mpika edo ... kapoios teleiose!!\n");
+	release_hwc(h, slot->tid);
 	slot->used = NONE;
       }
 
+      
       release_lock(i, slots);
+      first_time = false;
+      i = (i + 1) % NUM_SLOTS;
     }
   }
 }
@@ -174,6 +186,7 @@ void* wait_for_process_async(void* pro)
   long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
   long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
 
+  /*
  back: ;
   current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
   if (current_id != NULL) {
@@ -189,6 +202,7 @@ void* wait_for_process_async(void* pro)
       goto back;
     }
   }
+  */
 
   double elapsed = (finish->tv_sec - start->tv_sec);
   elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
@@ -233,31 +247,6 @@ communication_slot* initialize_slots() {
   return slots;
 }
 
-void print_counters(void* key, void *data)
-{
-  hw_counters_fd* dt = (hw_counters_fd*) data;
-  long long int instructions = read_perf_counter(dt->instructions);
-  long long int cycles = read_perf_counter(dt->cycles);
-
-  //long long int cache_accesses = read_perf_counter(dt->cache_accesses);
-  //loang long int cache_misses = read_perf_counter(dt->cache_misses);
-
-  if (0) {
-    reset_perf_counter(dt->instructions);
-    reset_perf_counter(dt->cycles);
-    //reset_perf_counter(dt->cache_accesses);
-    //reset_perf_counter(dt->cache_misses);
-  }
-
-  long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
-  long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
- 
-  printf("pid: %ld = instructions: %lld ... cycles: %lld, %lf\n", (long) (*((pid_t *) key)), instructions, cycles,
-	 ((double) instructions) / cycles );
-  printf("LLC_read_accesses: %lld, LLC_read_misses: %lld, %lf\n", ll_cache_read_accesses, ll_cache_read_misses,
-	 1 - ((double) ll_cache_read_misses / ll_cache_read_accesses));
-}
-
 // returns chosen node as well
 int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int* node) {
   sem_wait(h.get_lock());
@@ -274,7 +263,7 @@ int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int
     CPU_SET(hwc, &st);
     
     if (sched_setaffinity(pid, sizeof(cpu_set_t), &st)) {
-	perror("sched_setaffinity!\n");
+	perror("sched_setaffinitpy!\n");
      }
     // TODO ... we don't use mempolicy anymore
     //unsigned long num = 1 << pin[pol][cnt].node;
@@ -297,6 +286,7 @@ typedef struct {
   process* p;
   char** program;
   int start_time_ms;
+  int policy;
 } execute_process_args;
 
 void* execute_process(void* dt) {
@@ -318,11 +308,49 @@ void* execute_process(void* dt) {
 
   pid_t* pid_pt = malloc(sizeof(pid_t));
   *pid_pt = pid;
-  pthread_exit(pid_pt);
+
+  int pol = args->policy;
+  int* pt_pol = malloc(sizeof(int));
+  *pt_pol = pol;
+
+  h.new_process(pid, pol);
+  int core, node;
+  core = node = -1;
+  if (pol != MCTOP_ALLOC_NONE) {
+    core = get_hwc_and_schedule(h, pid, pid, true, &node);
+  }
+  else {
+    ;
+  }
+
+  int *pt_core = malloc(sizeof(int));
+  *pt_core = core;
+
+  process*p = args->p;
+  pthread_t* pt = malloc(sizeof(pthread_t));
+  p->pid = pid_pt;
+
+  pthread_create(pt, NULL, wait_for_process_async, p);
+
+
+  hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
+  int leader = cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, -1);
+  cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, leader);
+  cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS), leader);
+  cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS), leader);
+
+  list_add(fd_counters_per_pid, (void*) pid_pt, (void*) cnt2);
+  start_perf_reading(cnt2->instructions);
+  start_perf_reading(cnt2->cycles);
+  start_perf_reading(cnt2->ll_cache_read_accesses);
+  start_perf_reading(cnt2->ll_cache_read_misses);
+
+  printf("Added %lld to list with processes\n", (long long) (*pid_pt));
+  return NULL;
 }
 
 int main(int argc, char* argv[]) {
-
+  srand(time(NULL));
   char* heuristic = malloc(100);
   
   if (argc != 4) {
@@ -344,7 +372,6 @@ int main(int argc, char* argv[]) {
   
   communication_slot* slots = initialize_slots();
   pin_data** pin = initialize_pin_data(topo);
-
   if (strcmp(heuristic, "NORMAL") == 0) {
     h.init = H_init;
     h.get_lock = H_get_lock;
@@ -366,10 +393,8 @@ int main(int argc, char* argv[]) {
   else {
     fprintf(stderr, "heuristic can only be \"NORMAL\" or \"X\"\n");
     return EXIT_FAILURE;
-  }
-    
-
-
+  } 
+   
   // create a thread to check for new slots
   pthread_t check_slots_thread;
   check_slots_args* args = malloc(sizeof(check_slots_args));
@@ -396,7 +421,6 @@ int main(int argc, char* argv[]) {
 
     mctop_alloc_policy pol = get_policy(policy);
 
-
     process* p = malloc(sizeof(process));
     p->pid = malloc(sizeof(pid_t));
     p->start = malloc(sizeof(struct timespec));
@@ -417,61 +441,17 @@ int main(int argc, char* argv[]) {
       z++;
     }
 
-
-    execute_process_args args;
-    args.p = p;
-    args.start_time_ms = start_time_ms;
-    args.program = program;
+    execute_process_args* args = malloc(sizeof(execute_process_args));
+    args->p = p;
+    args->start_time_ms = start_time_ms;
+    args->program = program;
+    args->policy = pol;
     pthread_t execute_process_thread;
-    pthread_create(&execute_process_thread, NULL, execute_process, &args);
 
-    void* resulty;
-    if (pthread_join(execute_process_thread, &resulty) != 0) {
-      perror("The execute_proess_thread failed when on return");
-      exit(-1);
-    }
-
-    pid_t pid = *((pid_t *) resulty);
-    pid_t* pt_pid = malloc(sizeof(pid_t));
-    *pt_pid = pid;
-
-    
-    int* pt_pol = malloc(sizeof(int));
-    *pt_pol = pol;
-
-
-    h.new_process(pid, pol);
-    int core, node;
-    core = node = -1;
-    if (pol != MCTOP_ALLOC_NONE) {
-      core = get_hwc_and_schedule(h, pid, pid, true, &node);
-    }
-    else {
-      ;
-    }
-
-    int *pt_core = malloc(sizeof(int));
-    *pt_core = core;
-
-    pthread_t* pt = malloc(sizeof(pthread_t));
-    p->pid = pt_pid;
-    pthread_create(pt, NULL, wait_for_process_async, p);
-
-
-    hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
-    cnt2->instructions = open_perf(*pt_pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-    cnt2->cycles = open_perf(*pt_pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-    cnt2->ll_cache_read_accesses = open_perf(*pt_pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-    cnt2->ll_cache_read_misses = open_perf(*pt_pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
-
-
-    list_add(fd_counters_per_pid, (void*) pt_pid, (void*) cnt2);
-    start_perf_reading(cnt2->instructions);
-    start_perf_reading(cnt2->cycles);
-    start_perf_reading(cnt2->ll_cache_read_accesses);
-    start_perf_reading(cnt2->ll_cache_read_misses);
-
-    printf("Added %lld to list with processes\n", (long long) (*pt_pid));
+    struct timeval tm;
+    gettimeofday(&tm, NULL);
+    printf("time: %lu:%lu\n", tm.tv_sec, tm.tv_usec);
+    pthread_create(&execute_process_thread, NULL, execute_process, args);
   }
 
 

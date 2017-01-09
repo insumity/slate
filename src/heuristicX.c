@@ -86,6 +86,13 @@ void HX_new_process(pid_t pid, int policy) {
 
   int* policy_pt = malloc(sizeof(int));
   *policy_pt = policy;
+  
+  if (policy == MCTOP_ALLOC_NONE) {
+    int* tmp = malloc(sizeof(int));
+    *tmp = -1;
+    list_add(state.hwcs_per_pid, pid_pt, tmp);
+  }
+
     
   list_add(state.policy_per_pid, pid_pt, policy_pt);
   list_add(state.running_pids, pid_pt, NULL);
@@ -115,9 +122,17 @@ int HX_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
     int* tmp = malloc(sizeof(int));
     *tmp = -1;
 
+    pid_t* pid_pt = malloc(sizeof(pid_t));
+    *pid_pt = pid;
+
+    
     pid_t* tid_pt = malloc(sizeof(pid_t));
     *tid_pt = tid;
     
+    if (pid != *tid_pt) {
+      list_add(state.tids_per_pid, pid_pt, tid_pt);
+    }
+
     list_add(state.hwcs_per_pid, tid_pt, tmp);
     return -1;
   }
@@ -169,9 +184,6 @@ int HX_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
   *tid_pt = tid;
   
   list_add(state.hwcs_per_pid, tid_pt, n);
-
-  pid_t* parent_pid = malloc(sizeof(pid_t));
-  *parent_pid = getppid();
 
   if (pid != tid) {
     list_add(state.tids_per_pid, pid_pt, tid_pt);
