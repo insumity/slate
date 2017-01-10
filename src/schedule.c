@@ -90,13 +90,13 @@ void* check_slots(void* dt) {
   check_slots_args* args = (check_slots_args *) dt;
   communication_slot* slots = args->slots;
 
-
   int sleeping = 20;
   while (true) {
     usleep(sleeping * 1000);
     int j = rand() % NUM_SLOTS;
     bool first_time = true;
     for (int i = j; first_time || i != j; ) {
+
       acquire_lock(i, slots);
       communication_slot* slot = slots + i;
 
@@ -121,18 +121,18 @@ void* check_slots(void* dt) {
 	list_add(tids_per_pid, (void *) pt_pid, (void *) pt_tid);
 
 	/* Was slowing things down ...
-	  hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
-	cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-	cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-	cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-	cnt2->ll_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
+	   hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
+	   cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
+	   cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
+	   cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
+	   cnt2->ll_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
 
-	list_add(fd_counters_per_pid, (void*) pt_tid, (void*) cnt2);
+	   list_add(fd_counters_per_pid, (void*) pt_tid, (void*) cnt2);
 	
-	start_perf_reading(cnt2->instructions);
-	start_perf_reading(cnt2->cycles);
-	start_perf_reading(cnt2->ll_cache_read_accesses);
-	start_perf_reading(cnt2->ll_cache_read_misses); */
+	   start_perf_reading(cnt2->instructions);
+	   start_perf_reading(cnt2->cycles);
+	   start_perf_reading(cnt2->ll_cache_read_accesses);
+	   start_perf_reading(cnt2->ll_cache_read_misses); */
 	
 	slot->used = SCHEDULER;
       }
@@ -140,7 +140,6 @@ void* check_slots(void* dt) {
 	release_hwc(h, slot->tid);
 	slot->used = NONE;
       }
-
       
       release_lock(i, slots);
       first_time = false;
@@ -158,7 +157,7 @@ typedef struct {
 } process;
 
 FILE* results_fp;
-volatile int processes_finished = 0;
+//volatile int processes_finished = 0;
 void* wait_for_process_async(void* pro)
 {
   process* p = (process *) pro;
@@ -183,6 +182,7 @@ void* wait_for_process_async(void* pro)
   long long int cycles = read_perf_counter(dt->cycles);
   long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
   long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
+
 
   /*
  back: ;
@@ -210,7 +210,7 @@ void* wait_for_process_async(void* pro)
 	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
 	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
 	  
-  processes_finished++;
+  //processes_finished++;
   return NULL;
 }
 
@@ -299,9 +299,8 @@ void* execute_process(void* dt) {
   pid_t pid = fork();
 
   if (pid == 0) {
-    char* envp[1] = {NULL};
-    sleep(5);
-    execve(program[0], program, envp);
+    //char* envp[1] = {NULL};
+    execv(program[0], program);
     printf("== %s\n", program[0]);
     perror("execve didn't work");
     exit(1);
@@ -332,7 +331,8 @@ void* execute_process(void* dt) {
   pthread_t* pt = malloc(sizeof(pthread_t));
   p->pid = pid_pt;
 
-  pthread_create(pt, NULL, wait_for_process_async, p);
+  //pthread_create(pt, NULL, wait_for_process_async, p);
+  
 
   hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
   int leader = cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, -1);
@@ -347,6 +347,65 @@ void* execute_process(void* dt) {
   start_perf_reading(cnt2->ll_cache_read_misses);
 
   printf("Added %lld to list with processes\n", (long long) (*pid_pt));
+
+  {
+  struct timespec *start = p->start;
+  pid_t* pid = p->pid;
+  int status;
+
+  printf("BLOCK .. waiting for process to FINISH\n");
+  waitpid(*pid, &status, 0);
+
+  h.process_exit(*pid);
+  release_hwc(h, *pid);
+
+  struct timespec *finish = malloc(sizeof(struct timespec));
+  clock_gettime(CLOCK_MONOTONIC, finish);
+
+  pid_t* current_id = pid;
+  
+  void* fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
+  hw_counters_fd* dt = (hw_counters_fd*) fd_counters;
+
+  /* long long int instructions = read_perf_counter(dt->instructions); */
+  /* long long int cycles = read_perf_counter(dt->cycles); */
+  /* long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses); */
+  /* long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses); */
+
+  long long int instructions = 0;
+  long long int cycles = 1;
+  long long ll_cache_read_accesses = 5;
+  long long ll_cache_read_misses = 10;
+
+  /*
+    back: ;
+    current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
+    if (current_id != NULL) {
+    fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
+    if (fd_counters != NULL) {
+    dt = (hw_counters_fd*) fd_counters;
+    instructions += read_perf_counter(dt->instructions);
+    cycles += read_perf_counter(dt->cycles);
+
+    ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
+    ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
+    list_remove(tids_per_pid, (void *) pid, compare_pids);
+    current_id = pid;
+    goto back;
+    }
+    }
+  */
+
+  double elapsed = (finish->tv_sec - start->tv_sec);
+  elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
+  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
+	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
+	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
+	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
+	  
+  //processes_finished++;
+}
+
   return NULL;
 }
 
@@ -405,13 +464,14 @@ int main(int argc, char* argv[]) {
 
   char line[300];
   FILE* fp = fopen(argv[1], "r");
-  volatile int processes = 0;
+  pthread_t threads[100];
+  int programs = 0;
   while (fgets(line, 300, fp)) {
     if (line[0] == '#') {
       continue; // the line is commented
     }
 
-    processes++;
+    //processes++;
 
     read_line_output result = read_line(line);
     int num_id = result.num_id;
@@ -447,18 +507,20 @@ int main(int argc, char* argv[]) {
     args->start_time_ms = start_time_ms;
     args->program = program;
     args->policy = pol;
-    pthread_t execute_process_thread;
 
     struct timeval tm;
     gettimeofday(&tm, NULL);
     printf("time: %lu:%lu\n", tm.tv_sec, tm.tv_usec);
-    pthread_create(&execute_process_thread, NULL, execute_process, args);
+    pthread_create(&threads[programs], NULL, execute_process, args);
+    programs++;
   }
 
-
-  while (processes != processes_finished) {
-    sleep(1);
+  int i;
+  for (i = 0; i < programs; ++i) {
+    void* result;
+    pthread_join(threads[i], &result);
   }
+
 
   mctop_free(topo);
   

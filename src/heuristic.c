@@ -83,8 +83,13 @@ void H_new_process(pid_t pid, int policy) {
     int* tmp = malloc(sizeof(int));
     *tmp = -1;
     list_add(state.hwcs_per_pid, pid_pt, tmp);
+    list_add(state.policy_per_pid, pid_pt, policy_pt);
+    return;
   }
-  
+
+  int* tmp = malloc(sizeof(int));
+  *tmp = -2;
+  list_add(state.hwcs_per_pid, pid_pt, tmp);
   list_add(state.policy_per_pid, pid_pt, policy_pt);
 }
 
@@ -94,6 +99,13 @@ void H_process_exit(pid_t pid) {
 
 
 int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
+
+  /* void* tmp_pt = list_get_value(state.hwcs_per_pid, &pid, compare_pids); */
+  /* if (tmp_pt != NULL && *(int *) tmp_pt == -2) { */
+  /*   list_remove(state.hwcs_per_pid, &pid, compare_pids); */
+  /* } */
+
+  
   void* policy_pt;
   do {
     policy_pt = list_get_value(state.policy_per_pid, &pid, compare_pids);

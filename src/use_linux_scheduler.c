@@ -21,40 +21,6 @@ typedef struct {
   hw_counters_fd* cnts;
 } calculate_data;
 
-void* calculate_IPC_every(void* time_in_ms)
-{
-  calculate_data* dt = (calculate_data *) time_in_ms;
-  int program = dt->program;
-
-  char program_str[30];
-  sprintf(program_str, "%d", program);
-  
-  FILE* fp = fopen(program_str, "w");
-  
-  int every = dt->time;
-  hw_counters_fd* fd = dt->cnts;
-  
-  long instructions = 0;
-  long cycles = 0;
-
-  int i = 0;
-  while (1) {
-    usleep(every * 1000);
-
-    long long int new_instructions = read_perf_counter(fd->instructions);
-    long long int new_cycles = read_perf_counter(fd->cycles);
-
-    long long inst = new_instructions - instructions;
-    long long cycl = new_cycles - cycles;
-    fprintf(fp, "%d\t%d\t%lf\n", i, program, inst / ((double) cycl));
-    fflush(fp);
-    i++;
-    
-    instructions = new_instructions;
-    cycles = new_cycles;
-  }
-}
-
 typedef struct {
   char **program;
   char* id;
