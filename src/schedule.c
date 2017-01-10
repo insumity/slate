@@ -108,9 +108,8 @@ void* check_slots(void* dt) {
 	pid_t* pt_tid = malloc(sizeof(pid_t));
 	*pt_tid = slot->tid;
 
-	//int core = get_hwc_and_schedule(h, pid, *pt_tid, false, &node);
-	int core = -1; // FIXME
 	int node = -1;
+	int core = get_hwc_and_schedule(h, pid, *pt_tid, false, &node);
 	slot->node = node;
 	slot->core = core;
 
@@ -138,7 +137,6 @@ void* check_slots(void* dt) {
 	slot->used = SCHEDULER;
       }
       else if (slot->used == END_PTHREADS) {
-	printf("mpika edo ... kapoios teleiose!!\n");
 	release_hwc(h, slot->tid);
 	slot->used = NONE;
       }
@@ -195,6 +193,7 @@ void* wait_for_process_async(void* pro)
       dt = (hw_counters_fd*) fd_counters;
       instructions += read_perf_counter(dt->instructions);
       cycles += read_perf_counter(dt->cycles);
+
       ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
       ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
       list_remove(tids_per_pid, (void *) pid, compare_pids);
@@ -250,6 +249,7 @@ communication_slot* initialize_slots() {
 // returns chosen node as well
 int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int* node) {
   sem_wait(h.get_lock());
+
   int hwc = h.get_hwc(pid, tid, node);
 
   if (schedule) {
@@ -300,6 +300,7 @@ void* execute_process(void* dt) {
 
   if (pid == 0) {
     char* envp[1] = {NULL};
+    sleep(5);
     execve(program[0], program, envp);
     printf("== %s\n", program[0]);
     perror("execve didn't work");
@@ -314,6 +315,7 @@ void* execute_process(void* dt) {
   *pt_pol = pol;
 
   h.new_process(pid, pol);
+
   int core, node;
   core = node = -1;
   if (pol != MCTOP_ALLOC_NONE) {
@@ -331,7 +333,6 @@ void* execute_process(void* dt) {
   p->pid = pid_pt;
 
   pthread_create(pt, NULL, wait_for_process_async, p);
-
 
   hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
   int leader = cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, -1);

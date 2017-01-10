@@ -13,13 +13,11 @@ list* create_list() {
 }
 
 void list_add(list* l, void* key, void* data) {
-  struct node *head = l->head;
-  
   struct node *tmp = malloc(sizeof(struct node));
   sem_wait(&(l->lock));
   tmp->key = key;
   tmp->data = data;
-  tmp->next = head;
+  tmp->next = l->head;
 
   l->head = tmp;
   sem_post(&(l->lock));

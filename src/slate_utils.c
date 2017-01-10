@@ -76,10 +76,18 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader)
   pe.type = type;
   pe.size = sizeof(struct perf_event_attr);
   pe.config = perf_event_config;
-  pe.disabled = 1;
-  pe.exclude_kernel = 0;
   pe.inherit = 1;
-  /*pe.exclude_hv = 1;*/
+  pe.disabled = 1;
+
+  pe.exclude_user = 0;
+  pe.exclude_kernel = 0;
+  pe.exclude_idle = 0;
+
+  pe.inherit_stat = 1;
+  pe.exclude_callchain_kernel = 0;
+  pe.exclude_callchain_user = 0;
+
+  pe.exclude_hv = 1;
 
   fd = perf_event_open(&pe, pid, -1, leader, 0);
   if (fd == -1) {
