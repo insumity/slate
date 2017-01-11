@@ -29,6 +29,9 @@
 
 #include "heuristic.h"
 #include "heuristicX.h"
+#include "heuristic_MCTOP.h"
+#include "heuristic_greedy.h"
+#include "heuristic_split.h"
 
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
@@ -157,16 +160,15 @@ typedef struct {
 } process;
 
 FILE* results_fp;
-//volatile int processes_finished = 0;
-void* wait_for_process_async(void* pro)
+/*void* wait_for_process_async(void* pro)
 {
   process* p = (process *) pro;
   struct timespec *start = p->start;
   pid_t* pid = p->pid;
   int status;
 
-  waitpid(*pid, &status, 0);
 
+  waitpid(*pid, &status, 0);
   h.process_exit(*pid);
   release_hwc(h, *pid);
 
@@ -183,8 +185,6 @@ void* wait_for_process_async(void* pro)
   long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
   long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
 
-
-  /*
  back: ;
   current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
   if (current_id != NULL) {
@@ -201,7 +201,6 @@ void* wait_for_process_async(void* pro)
       goto back;
     }
   }
-  */
 
   double elapsed = (finish->tv_sec - start->tv_sec);
   elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
@@ -210,9 +209,8 @@ void* wait_for_process_async(void* pro)
 	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
 	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
 	  
-  //processes_finished++;
   return NULL;
-}
+}*/
 
 communication_slot* initialize_slots() {
   int fd = open(SLOTS_FILE_NAME, O_CREAT | O_RDWR, 0777);
@@ -349,62 +347,58 @@ void* execute_process(void* dt) {
   printf("Added %lld to list with processes\n", (long long) (*pid_pt));
 
   {
-  struct timespec *start = p->start;
-  pid_t* pid = p->pid;
-  int status;
+    struct timespec *start = p->start;
+    pid_t* pid = p->pid;
+    int status;
 
-  printf("BLOCK .. waiting for process to FINISH\n");
-  waitpid(*pid, &status, 0);
+    printf("BLOCK .. waiting for process to FINISH\n");
+    waitpid(*pid, &status, 0);
+    printf(" A process just finished!!!!!\n");
 
-  h.process_exit(*pid);
-  release_hwc(h, *pid);
 
-  struct timespec *finish = malloc(sizeof(struct timespec));
-  clock_gettime(CLOCK_MONOTONIC, finish);
+    h.process_exit(*pid);
+    release_hwc(h, *pid);
 
-  pid_t* current_id = pid;
+    struct timespec *finish = malloc(sizeof(struct timespec));
+    clock_gettime(CLOCK_MONOTONIC, finish);
+
+    pid_t* current_id = pid;
   
-  void* fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
-  hw_counters_fd* dt = (hw_counters_fd*) fd_counters;
+    void* fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
+    hw_counters_fd* dt = (hw_counters_fd*) fd_counters;
 
-  /* long long int instructions = read_perf_counter(dt->instructions); */
-  /* long long int cycles = read_perf_counter(dt->cycles); */
-  /* long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses); */
-  /* long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses); */
+    long long int instructions = read_perf_counter(dt->instructions);
+    long long int cycles = read_perf_counter(dt->cycles);
+    long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
+    long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
 
-  long long int instructions = 0;
-  long long int cycles = 1;
-  long long ll_cache_read_accesses = 5;
-  long long ll_cache_read_misses = 10;
+    /*
+      back: ;
+      current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
+      if (current_id != NULL) {
+      fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
+      if (fd_counters != NULL) {
+      dt = (hw_counters_fd*) fd_counters;
+      instructions += read_perf_counter(dt->instructions);
+      cycles += read_perf_counter(dt->cycles);
 
-  /*
-    back: ;
-    current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
-    if (current_id != NULL) {
-    fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
-    if (fd_counters != NULL) {
-    dt = (hw_counters_fd*) fd_counters;
-    instructions += read_perf_counter(dt->instructions);
-    cycles += read_perf_counter(dt->cycles);
+      ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
+      ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
+      list_remove(tids_per_pid, (void *) pid, compare_pids);
+      current_id = pid;
+      goto back;
+      }
+      }
+    */
 
-    ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
-    ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
-    list_remove(tids_per_pid, (void *) pid, compare_pids);
-    current_id = pid;
-    goto back;
-    }
-    }
-  */
-
-  double elapsed = (finish->tv_sec - start->tv_sec);
-  elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
-  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
-	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
-	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
-	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
+    double elapsed = (finish->tv_sec - start->tv_sec);
+    elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
+    fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
+	    "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
+	    instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
+	    1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
 	  
-  //processes_finished++;
-}
+  }
 
   return NULL;
 }
@@ -448,6 +442,33 @@ int main(int argc, char* argv[]) {
     h.process_exit = HX_process_exit;
     h.get_hwc = HX_get_hwc;
     h.release_hwc = HX_release_hwc;
+    h.init(pin, topo);
+  }
+  else if (strcmp(heuristic, "MCTOP") == 0) {
+    h.init = HMCTOP_init;
+    h.get_lock = HMCTOP_get_lock;
+    h.new_process = HMCTOP_new_process;
+    h.process_exit = HMCTOP_process_exit;
+    h.get_hwc = HMCTOP_get_hwc;
+    h.release_hwc = HMCTOP_release_hwc;
+    h.init(pin, topo);
+  }
+  else if (strcmp(heuristic, "GREEDY") == 0) {
+    h.init = HGREEDY_init;
+    h.get_lock = HGREEDY_get_lock;
+    h.new_process = HGREEDY_new_process;
+    h.process_exit = HGREEDY_process_exit;
+    h.get_hwc = HGREEDY_get_hwc;
+    h.release_hwc = HGREEDY_release_hwc;
+    h.init(pin, topo);
+  }
+  else if (strcmp(heuristic, "SPLIT") == 0) {
+    h.init = HSPLIT_init;
+    h.get_lock = HSPLIT_get_lock;
+    h.new_process = HSPLIT_new_process;
+    h.process_exit = HSPLIT_process_exit;
+    h.get_hwc = HSPLIT_get_hwc;
+    h.release_hwc = HSPLIT_release_hwc;
     h.init(pin, topo);
   }
   else {

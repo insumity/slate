@@ -2,8 +2,8 @@
 #include <unistd.h>
 #include <mctop.h>
 #include <stdbool.h>
-#include <sched.h>
 #include "heuristic.h"
+#include "slate_utils.h"
 #include "list.h"
 
 #define CONCAT(a, b) a##b
@@ -73,7 +73,6 @@ void HX_init(pin_data** pin, mctop_t* topo) {
   if (sem_init(state.lock, 0, 1)) {
     perror("couldn't create lock for state\n");
   }
-
 }
 
 sem_t* HX_get_lock() {
@@ -91,9 +90,15 @@ void HX_new_process(pid_t pid, int policy) {
     int* tmp = malloc(sizeof(int));
     *tmp = -1;
     list_add(state.hwcs_per_pid, pid_pt, tmp);
+    list_add(state.policy_per_pid, pid_pt, policy_pt);
+    return;
+ 
   }
 
-    
+  
+  int* tmp = malloc(sizeof(int));
+  *tmp = -2;
+  list_add(state.hwcs_per_pid, pid_pt, tmp);
   list_add(state.policy_per_pid, pid_pt, policy_pt);
   list_add(state.running_pids, pid_pt, NULL);
 }
@@ -192,19 +197,6 @@ int HX_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
   return hwc;
 }
 
-void pin(pid_t pid, int core, int node)
-{
-  cpu_set_t set;
-  CPU_ZERO(&set);
-  CPU_SET(core, &set);
-
-  if (sched_setaffinity(pid, sizeof(cpu_set_t), &set) != 0) {
-    perror("sched affinity inside pin didn't work. Coudld be that process has " \
-	   "already terminated.");
-    exit(1);
-  }
-}
-
 void HX_release_hwc_no_lock(pid_t pid) {
 
   int hwc = *((int *) list_get_value(state.hwcs_per_pid, &pid, compare_pids));
@@ -294,7 +286,6 @@ void HX_release_hwc(pid_t pid) {
   if (lst == NULL) {
     exit(1);
   }
-
   list_remove(lst, &pid, compare_pids);
 
   void* core_vd = (void*) mctop_hwcid_get_core(state.topo, hwc);

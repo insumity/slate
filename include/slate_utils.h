@@ -58,5 +58,7 @@ int compare_voids(void* p1, void* p2);
 pin_data create_pin_data(int core, int node);
 pin_data** initialize_pin_data(mctop_t* topo);
 
+void pin(pid_t pid, int core, int node);
+
 
 #endif

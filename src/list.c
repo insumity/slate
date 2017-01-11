@@ -39,6 +39,30 @@ void list_traverse(list* l, void (*print_value)(void*, void *)) {
   sem_post(&(l->lock));
 }
 
+void* list_get_nth(list* l, int n) {
+  sem_wait(&(l->lock));
+
+  if (l->head == NULL) {
+    sem_post(&(l->lock));
+    return NULL;
+  }
+
+  int cnt = 0;
+  struct node *tmp = l->head;
+  while (tmp != NULL) {
+    if (cnt == n) {
+      sem_post(&(l->lock));
+      return tmp->key;
+    }
+    cnt++;
+    tmp = tmp->next;
+  }
+  sem_post(&(l->lock));
+
+  return NULL;
+}
+
+
 int list_remove(list* l, void* key, int (*compare)(void*, void*)) {
   sem_wait(&(l->lock));
   if (l->head == NULL) {

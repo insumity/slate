@@ -1,12 +1,27 @@
+#define _GNU_SOURCE
 #include "slate_utils.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sched.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <linux/perf_event.h>
 #include <asm/unistd.h>
 #include <mctop.h>
+
+void pin(pid_t pid, int core, int node)
+{
+  cpu_set_t set;
+  CPU_ZERO(&set);
+  CPU_SET(core, &set);
+
+  if (sched_setaffinity(pid, sizeof(cpu_set_t), &set) != 0) {
+    perror("sched affinity inside pin didn't work. Coudld be that process has " \
+	   "already terminated.");
+    exit(1);
+  }
+}
 
 mctop_alloc_policy get_policy(char* policy) {
   mctop_alloc_policy pol;
@@ -76,14 +91,14 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader)
   pe.type = type;
   pe.size = sizeof(struct perf_event_attr);
   pe.config = perf_event_config;
-  pe.inherit = 0;
+  pe.inherit = 1;
   pe.disabled = 1;
 
   pe.exclude_user = 0;
   pe.exclude_kernel = 0;
   pe.exclude_idle = 0;
 
-  pe.inherit_stat = 0;
+  pe.inherit_stat = 1;
   pe.exclude_callchain_kernel = 0;
   pe.exclude_callchain_user = 0;
 

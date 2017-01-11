@@ -31,4 +31,7 @@ void** list_get_all_values(list* l, void* key, int (*compare)(void*, void*), int
 
 int list_elements(list* l);
 
+void* list_get_nth(list *l, int n);
+
+
 #endif
