@@ -117,26 +117,13 @@ void* check_slots(void* dt) {
 	slot->node = node;
 	slot->core = core;
 
+
 	printf("The core is: %d and the node as well: %d\n", core, node);
 
 	int* pt_core = malloc(sizeof(int));
 	*pt_core = core;
 
 	list_add(tids_per_pid, (void *) pt_pid, (void *) pt_tid);
-
-	/* Was slowing things down ...
-	   hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
-	   cnt2->instructions = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS);
-	   cnt2->cycles = open_perf(*pt_tid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES);
-	   cnt2->ll_cache_read_accesses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS));
-	   cnt2->ll_cache_read_misses = open_perf(*pt_tid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS));
-
-	   list_add(fd_counters_per_pid, (void*) pt_tid, (void*) cnt2);
-	
-	   start_perf_reading(cnt2->instructions);
-	   start_perf_reading(cnt2->cycles);
-	   start_perf_reading(cnt2->ll_cache_read_accesses);
-	   start_perf_reading(cnt2->ll_cache_read_misses); */
 	
 	slot->used = SCHEDULER;
       }
@@ -161,57 +148,6 @@ typedef struct {
 } process;
 
 FILE* results_fp;
-/*void* wait_for_process_async(void* pro)
-{
-  process* p = (process *) pro;
-  struct timespec *start = p->start;
-  pid_t* pid = p->pid;
-  int status;
-
-
-  waitpid(*pid, &status, 0);
-  h.process_exit(*pid);
-  release_hwc(h, *pid);
-
-  struct timespec *finish = malloc(sizeof(struct timespec));
-  clock_gettime(CLOCK_MONOTONIC, finish);
-
-  pid_t* current_id = pid;
-  
-  void* fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
-  hw_counters_fd* dt = (hw_counters_fd*) fd_counters;
-
-  long long int instructions = read_perf_counter(dt->instructions);
-  long long int cycles = read_perf_counter(dt->cycles);
-  long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
-  long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
-
- back: ;
-  current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
-  if (current_id != NULL) {
-    fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
-    if (fd_counters != NULL) {
-      dt = (hw_counters_fd*) fd_counters;
-      instructions += read_perf_counter(dt->instructions);
-      cycles += read_perf_counter(dt->cycles);
-
-      ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
-      ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
-      list_remove(tids_per_pid, (void *) pid, compare_pids);
-      current_id = pid;
-      goto back;
-    }
-  }
-
-  double elapsed = (finish->tv_sec - start->tv_sec);
-  elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
-  fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
-	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
-	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
-	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
-	  
-  return NULL;
-}*/
 
 communication_slot* initialize_slots() {
   int fd = open(SLOTS_FILE_NAME, O_CREAT | O_RDWR, 0777);
@@ -330,8 +266,6 @@ void* execute_process(void* dt) {
   pthread_t* pt = malloc(sizeof(pthread_t));
   p->pid = pid_pt;
 
-  //pthread_create(pt, NULL, wait_for_process_async, p);
-  
 
   hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
   int leader = cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, -1);
@@ -372,25 +306,6 @@ void* execute_process(void* dt) {
     long long int cycles = read_perf_counter(dt->cycles);
     long long ll_cache_read_accesses = read_perf_counter(dt->ll_cache_read_accesses);
     long long ll_cache_read_misses = read_perf_counter(dt->ll_cache_read_misses);
-
-    /*
-      back: ;
-      current_id = (pid_t *) list_get_value(tids_per_pid, (void *) current_id, compare_pids);
-      if (current_id != NULL) {
-      fd_counters = list_get_value(fd_counters_per_pid, (void *) current_id, compare_pids);
-      if (fd_counters != NULL) {
-      dt = (hw_counters_fd*) fd_counters;
-      instructions += read_perf_counter(dt->instructions);
-      cycles += read_perf_counter(dt->cycles);
-
-      ll_cache_read_accesses += read_perf_counter(dt->ll_cache_read_accesses);
-      ll_cache_read_misses += read_perf_counter(dt->ll_cache_read_misses);
-      list_remove(tids_per_pid, (void *) pid, compare_pids);
-      current_id = pid;
-      goto back;
-      }
-      }
-    */
 
     double elapsed = (finish->tv_sec - start->tv_sec);
     elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
@@ -542,7 +457,6 @@ int main(int argc, char* argv[]) {
 
     struct timeval tm;
     gettimeofday(&tm, NULL);
-    printf("time: %lu:%lu\n", tm.tv_sec, tm.tv_usec);
     pthread_create(&threads[programs], NULL, execute_process, args);
     programs++;
   }
@@ -552,7 +466,6 @@ int main(int argc, char* argv[]) {
     void* result;
     pthread_join(threads[i], &result);
   }
-
 
   mctop_free(topo);
   
