@@ -1,11 +1,11 @@
 
 cc = gcc -g -Wall -pedantic -I./include
-objects = heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o
+objects = heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o
 
 all: schedule use_linux_scheduler
 
 schedule: $(objects)
-	$(cc) heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt
+	$(cc) heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt
 
 use_linux_scheduler: use_linux_scheduler.o slate_utils.o
 	$(cc) slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lmctop -lpthread -lnuma
@@ -24,6 +24,9 @@ heuristic_greedy.o: src/heuristic_greedy.c include/heuristic_greedy.h
 
 heuristic_split.o: src/heuristic_split.c include/heuristic_split.h
 	$(cc) -c src/heuristic_split.c 
+
+heuristic_rr_lat.o: src/heuristic_rr_lat.c include/heuristic_rr_lat.h
+	$(cc) -c src/heuristic_rr_lat.c 
 
 ticket.o: src/ticket.c include/ticket.h
 	$(cc) -c src/ticket.c -lpthread

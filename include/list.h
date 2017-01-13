@@ -33,5 +33,6 @@ int list_elements(list* l);
 
 void* list_get_nth(list *l, int n);
 
+void list_remove_all_data(list* l, void* data, int (*compare)(void*, void*));
 
 #endif

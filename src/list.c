@@ -93,6 +93,33 @@ int list_remove(list* l, void* key, int (*compare)(void*, void*)) {
   return 0;
 }
 
+void list_remove_all_data(list* l, void* data, int (*compare)(void*, void*)) {
+  sem_wait(&(l->lock));
+
+  while (l->head != NULL && compare(l->head->data, data)) {
+    l->head = l->head->next;
+  }
+
+  if (l->head == NULL) {
+    sem_post(&(l->lock));
+    return;
+  }
+
+  struct node* prev = l->head;
+  struct node* curr = l->head->next;
+
+  while (curr != NULL) {
+    if (compare(curr->data, data)) {
+      prev->next = curr->next;
+    }
+    prev = curr;
+    curr = curr->next;
+  }
+  
+  sem_post(&(l->lock));
+  return;
+}
+
 void* list_get_value(list* l, void* key, int (*compare)(void*, void*)) {
   sem_wait(&(l->lock));
   if (l->head == NULL) {

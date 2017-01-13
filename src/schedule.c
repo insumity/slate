@@ -32,6 +32,7 @@
 #include "heuristic_MCTOP.h"
 #include "heuristic_greedy.h"
 #include "heuristic_split.h"
+#include "heuristic_rr_lat.h"
 
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
@@ -471,8 +472,18 @@ int main(int argc, char* argv[]) {
     h.release_hwc = HSPLIT_release_hwc;
     h.init(pin, topo);
   }
+  else if (strcmp(heuristic, "RRLAT") == 0) {
+    h.init = HRRLAT_init;
+    h.get_lock = HRRLAT_get_lock;
+    h.new_process = HRRLAT_new_process;
+    h.process_exit = HRRLAT_process_exit;
+    h.get_hwc = HRRLAT_get_hwc;
+    h.release_hwc = HRRLAT_release_hwc;
+    h.init(pin, topo);
+  }
+
   else {
-    fprintf(stderr, "heuristic can only be \"NORMAL\" or \"X\"\n");
+    fprintf(stderr, "heuristic can only be \"NORMAL\" or \"X\", or \"GREEDY\", \"SPLIT\", or \"RRLAT\"\n");
     return EXIT_FAILURE;
   } 
    
