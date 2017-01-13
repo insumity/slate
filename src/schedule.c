@@ -409,11 +409,11 @@ int main(int argc, char* argv[]) {
   args->pin = pin;
   pthread_create(&check_slots_thread, NULL, check_slots, args);
 
-  char line[300];
+  char line[1000];
   FILE* fp = fopen(argv[1], "r");
   pthread_t threads[100];
   int programs = 0;
-  while (fgets(line, 300, fp)) {
+  while (fgets(line, 1000, fp)) {
     if (line[0] == '#') {
       continue; // the line is commented
     }
@@ -435,7 +435,7 @@ int main(int argc, char* argv[]) {
     p->policy = malloc(sizeof(char) * 100);
     p->policy[0] = '\0';
     strcpy(p->policy, policy);
-    p->program = malloc(sizeof(char) * 300);
+    p->program = malloc(sizeof(char) * 400);
     p->program[0] = '\0';
     p->num_id = num_id;
 

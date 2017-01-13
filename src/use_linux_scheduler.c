@@ -98,11 +98,11 @@ int main(int argc, char* argv[])
   }
   FILE* fp = fopen(argv[1], "r");
   FILE* outfp = fopen(argv[2], "w");
-  char line[300];
+  char line[1000];
   pthread_t threads[100]; // up to 100 applications
   int programs = 0;
   
-  while (fgets(line, 300, fp)) {
+  while (fgets(line, 1000, fp)) {
     if (line[0] == '#') {
       continue; // the line is commented
     }

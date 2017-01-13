@@ -159,7 +159,7 @@ read_line_output read_line(char* line)
   read_line_output result;
   
   int program_cnt = 0;
-  char tmp_line[300];
+  char tmp_line[1000];
   char* policy = malloc(100);
 
   if (line[strlen(line) - 1] == '\n') {
@@ -169,11 +169,10 @@ read_line_output read_line(char* line)
   int first_time = 1;
   char* word = strtok(line, " ");
   result.start_time_ms = atoi(word);
-  printf("The start time is: %d\n", result.start_time_ms);
   word = strtok(NULL, " ");
   result.num_id = atoi(word);
-  printf("The num id is: %d\n", result.num_id);
   word = strtok(NULL, " ");
+
   while (word != NULL)  {
     if (first_time) {
       first_time = 0;
@@ -185,6 +184,7 @@ read_line_output read_line(char* line)
     word = strtok(NULL, " ");
   }
 
+
   char** program = malloc(sizeof(char *) * (program_cnt + 1));
   first_time = 1;
   program_cnt = 0;
@@ -192,14 +192,13 @@ read_line_output read_line(char* line)
   strtok(NULL, " "); // skip the start time
   word = strtok(NULL, " "); // skip the number id
 
-
   while (word != NULL)  {
 
     if (first_time) {
       first_time = 0;
     }
     else {
-      program[program_cnt] = malloc(sizeof(char) * 200);
+      program[program_cnt] = malloc(sizeof(char) * 400);
       strcpy(program[program_cnt], word);
       program_cnt++;
     }
