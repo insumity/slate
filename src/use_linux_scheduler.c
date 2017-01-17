@@ -12,8 +12,13 @@
 #include <linux/perf_event.h>
 #include <asm/unistd.h>
 #include <stdint.h>
+#include <papi.h>
 
 #include "slate_utils.h"
+
+#define PAPI_ENABLED
+//#define PAPI_MULTIPLEX
+
 
 typedef struct {
   int program;
@@ -40,41 +45,87 @@ void* execute_process(void* arg)
   usleep(a->start_time_ms * 1000); // important to sleep before getting start time
   clock_gettime(CLOCK_MONOTONIC, &start);
 
+  #ifdef PAPI_ENABLED
+  int retval;
+  int event_set = PAPI_NULL;
+  retval = PAPI_create_eventset(&event_set);
+  retval = PAPI_assign_eventset_component(event_set, 0);
+
+
+#ifdef PAPI_MULTIPLEX
+  retval = PAPI_set_multiplex(event_set);
+  if (retval != PAPI_OK) {
+    perror("couldn't set multiplexing\n");
+    exit(1);
+  }
+#endif
+  
+  PAPI_option_t opt;
+  memset(&opt, 0x0, sizeof (PAPI_option_t) );
+  opt.inherit.inherit = PAPI_INHERIT_ALL;
+  opt.inherit.eventset = event_set;
+  if ((retval = PAPI_set_opt(PAPI_INHERIT, &opt)) != PAPI_OK) {
+    perror("no!\n");
+  }
+  
+  //retval = PAPI_add_event(event_set, PAPI_TOT_INS);
+  //retval = PAPI_add_event(event_set, PAPI_TOT_CYC);
+  retval = PAPI_add_event(event_set, PAPI_L3_TCA);
+  if (retval != PAPI_OK) {
+    printf("Couldn't add L3_TCA\n");
+    exit(1);
+  }
+  retval = PAPI_add_event(event_set, PAPI_L3_TCM);
+  if (retval != PAPI_OK) {
+    printf("Couldn't add L3_TCM\n");
+    exit(1);
+  }
+
+  if (PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:LOCAL_DRAM") != PAPI_OK ) {
+    printf("Something wrong is going here\n");
+    exit(1);
+  }
+
+  if (PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_DRAM") != PAPI_OK ) {
+    printf("Something wrong is going here\n");
+    exit(1);
+  }
+#endif
+
   pid_t pid = fork();
   if (pid == 0) {
     execv(program[0], program); // SPPEND TWO HOURS ON this, if you use execve instead with envp = {NULL} it doesn't work
     perror("Couldn't run execv\n");
   }
 
+  #ifdef PAPI_ENABLED
+  retval = PAPI_start(event_set);
+  retval = PAPI_attach(event_set, ( unsigned long ) pid);
+#endif
+
   
-  uint64_t INSTRUCTIONS = 0x00C0;
-  uint64_t CYCLES = 0x013C;
-  uint64_t CACHE_LLC_HITS = 0x4F2E;
-  uint64_t CACHE_LLC_MISSES = 0x412E;
-  uint64_t events[4] = {INSTRUCTIONS, CYCLES, CACHE_LLC_HITS, CACHE_LLC_MISSES};
-  hw_counters* counters = create_counters(pid, 4, events);
-  start_counters(*counters);
-  
-
-
-  calculate_data* cd = malloc(sizeof(calculate_data));
-  cd->program = atoi(a->id);
-  cd->time = 100;
-  cd->cnts = counters;
-  //pthread_t foo;
-  //pthread_create(&foo, NULL, calculate_IPC_every, cd);
-
   int status;
   waitpid(pid, &status, 0);
 
   clock_gettime(CLOCK_MONOTONIC, &end);
+long long results[5] = {0};
+#ifdef PAPI_ENABLED
+    retval = PAPI_stop(event_set, results);
+    retval = PAPI_cleanup_eventset(event_set);
+    retval = PAPI_destroy_eventset(&event_set);
+#endif
 
-  long long results[4];
-  read_counters(*counters, results);
-  long long int instructions = results[0];
-  long long int cycles = results[1];
-  long long ll_cache_read_accesses = results[2];
-  long long ll_cache_read_misses = results[3];
+    long long ll_cache_read_accesses = 1;
+    long long ll_cache_read_misses = 2;
+    long long retired_local_dram = 0;
+    long long retired_remote_dram = 3;
+#ifdef PAPI_ENABLED
+    ll_cache_read_accesses = results[0];
+    ll_cache_read_misses = results[1];
+    retired_local_dram = results[2];
+    retired_remote_dram = results[3];
+#endif
+
 
   double *elapsed = malloc(sizeof(double));
   *elapsed = (end.tv_sec - start.tv_sec);
@@ -82,8 +133,10 @@ void* execute_process(void* arg)
   fprintf(fp, "%s\t%ld\t%lf\tprogram\t" \
 	  "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n",
 	  id, (long) syscall(SYS_gettid), *elapsed,
-	  instructions, cycles, (((double) instructions) / cycles), ll_cache_read_accesses, ll_cache_read_misses,
-	  1 - ((double) ll_cache_read_misses / (ll_cache_read_misses + ll_cache_read_accesses)));
+ll_cache_read_accesses, ll_cache_read_misses,
+	  ((double) ll_cache_read_misses / (ll_cache_read_accesses)),
+	  	    retired_local_dram, retired_remote_dram, retired_local_dram / ((double) retired_remote_dram + retired_local_dram)
+	  );
 	  
 
   return elapsed;
@@ -92,6 +145,27 @@ void* execute_process(void* arg)
 
 int main(int argc, char* argv[])
 {
+#ifdef PAPI_ENABLED
+  // papi stuff
+  int retval = PAPI_library_init(PAPI_VER_CURRENT);
+  if (retval != PAPI_VER_CURRENT) {
+    perror("couldn't initialize library\n");
+    exit(1);
+  }
+
+#ifdef PAPI_MULTIPLEX
+  retval = PAPI_multiplex_init();
+  if (retval != PAPI_OK) {
+    perror("couldn't enable multiplexing\n");
+    exit(1);
+  }
+#endif
+  
+#endif
+  
+
+
+  
   if (argc != 3) {
     fprintf(stderr, "./use_linux_scheduler input_file output_file");
     return EXIT_FAILURE;
@@ -112,6 +186,7 @@ int main(int argc, char* argv[])
     int start_time_ms = result.start_time_ms;
     //char* policy = result.policy;
     char** program = result.program;
+    printf("num: %d, start_time: %d, progr: %d\n", num_id, start_time_ms, program);
     line[0] = '\0';
 
     thread_args * args = malloc(sizeof(thread_args));

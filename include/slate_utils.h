@@ -5,6 +5,8 @@
 #include <mctop_alloc.h>
 #include <stdint.h>
 
+#define MCTOP_ALLOC_SLATE
+
 #define CONCAT(a, b) a##b
 #define CACHE_EVENT(cache,operation,result) (\
 					     (PERF_COUNT_HW_CACHE_ ## cache) | \

@@ -97,7 +97,7 @@ hw_counters* create_counters(pid_t pid, int counters, uint64_t* raw_event_codes)
   res->counters_fd[0] = open_one_perf(pid, PERF_TYPE_RAW, raw_event_codes[0], -1);
 
   for (int i = 1; i < counters; ++i) {
-    res->counters_fd[i] = open_one_perf(pid, PERF_TYPE_RAW, raw_event_codes[i], -1);//res->counters_fd[0]);
+    res->counters_fd[i] = open_one_perf(pid, PERF_TYPE_RAW, raw_event_codes[i], -1);// res->counters_fd[0]);
   }
 
   return res;
@@ -131,25 +131,25 @@ int open_one_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int lead
   pe.inherit = 1;
 
   if (leader == -1) {
-    pe.disabled = 1;
+    pe.disabled = 0;
   }
   else {
     pe.disabled = 0;
   }
 
-  pe.enable_on_exec = 1;
+  pe.enable_on_exec = 0;
   pe.exclude_user = 0;
   pe.exclude_kernel = 0;
   pe.exclude_idle = 0;
 
-  
-  pe.inherit_stat = 0;
+  pe.inherit_stat = 1;
   pe.exclude_callchain_kernel = 0;
   pe.exclude_callchain_user = 0;
 
   pe.exclude_hv = 1;
 
-  fd = perf_event_open(&pe, pid, -1, leader, PERF_FLAG_FD_CLOEXEC);
+  //fd = perf_event_open(&pe, pid, -1, leader, PERF_FLAG_FD_CLOEXEC);
+  fd = perf_event_open(&pe, pid, -1, leader, 0);
 
   if (fd == -1) {
     fprintf(stderr, "Error opening leader %lld\n", pe.config);
@@ -189,11 +189,12 @@ void reset_perf_counter(int fd) {
 
 long long read_perf_counter(int fd)
 {
-  int ret = ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
-  if (ret == -1) {
-    perror("ioctl failed\n");
-    exit(EXIT_FAILURE);
-  }
+  int ret;
+  /* ret = ioctl(fd, PERF_EVENT_IOC_DISABLE, 0); */
+  /* if (ret == -1) { */
+  /*   perror("ioctl failed\n"); */
+  /*   exit(EXIT_FAILURE); */
+  /* } */
 
   long long count = 0;
   ret = read(fd, &count, sizeof(long long));
