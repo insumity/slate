@@ -82,7 +82,44 @@ static int perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
 					     (PERF_COUNT_HW_CACHE_RESULT_ ## result << 16))
 
 
-int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader)
+int open_one_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader);
+
+
+hw_counters* create_counters(pid_t pid, int counters, uint64_t* raw_event_codes) {
+  if (counters > 5) {
+    printf("Cannot open more than 4 counters\n");
+    exit(EXIT_FAILURE);
+  }
+
+  hw_counters* res = malloc(sizeof(hw_counters));
+  res->number_of_counters = counters;
+  
+  res->counters_fd[0] = open_one_perf(pid, PERF_TYPE_RAW, raw_event_codes[0], -1);
+
+  for (int i = 1; i < counters; ++i) {
+    res->counters_fd[i] = open_one_perf(pid, PERF_TYPE_RAW, raw_event_codes[i], -1);//res->counters_fd[0]);
+  }
+
+  return res;
+}
+
+void start_counters(hw_counters cnts) {
+  int counters = cnts.number_of_counters;
+  for (int i = 0; i < counters; ++i) {
+    start_perf_reading(cnts.counters_fd[i]);
+  }
+}
+
+void read_counters(hw_counters cnts, long long* results) {
+  int counters = cnts.number_of_counters;
+
+  for (int i = 0; i < counters; i++) {
+    results[i] = read_perf_counter(cnts.counters_fd[i]);
+  }
+}
+
+
+int open_one_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader)
 {
   struct perf_event_attr pe;
   int fd;
@@ -92,19 +129,28 @@ int open_perf(pid_t pid, uint32_t type, uint64_t perf_event_config, int leader)
   pe.size = sizeof(struct perf_event_attr);
   pe.config = perf_event_config;
   pe.inherit = 1;
-  pe.disabled = 1;
 
+  if (leader == -1) {
+    pe.disabled = 1;
+  }
+  else {
+    pe.disabled = 0;
+  }
+
+  pe.enable_on_exec = 1;
   pe.exclude_user = 0;
   pe.exclude_kernel = 0;
   pe.exclude_idle = 0;
 
-  pe.inherit_stat = 1;
+  
+  pe.inherit_stat = 0;
   pe.exclude_callchain_kernel = 0;
   pe.exclude_callchain_user = 0;
 
   pe.exclude_hv = 1;
 
-  fd = perf_event_open(&pe, pid, -1, leader, 0);
+  fd = perf_event_open(&pe, pid, -1, leader, PERF_FLAG_FD_CLOEXEC);
+
   if (fd == -1) {
     fprintf(stderr, "Error opening leader %lld\n", pe.config);
     perror("");
@@ -143,8 +189,14 @@ void reset_perf_counter(int fd) {
 
 long long read_perf_counter(int fd)
 {
+  int ret = ioctl(fd, PERF_EVENT_IOC_DISABLE, 0);
+  if (ret == -1) {
+    perror("ioctl failed\n");
+    exit(EXIT_FAILURE);
+  }
+
   long long count = 0;
-  int ret = read(fd, &count, sizeof(long long));
+  ret = read(fd, &count, sizeof(long long));
   if (ret == -1) {
     perror("read failed\n");
     exit(EXIT_FAILURE);

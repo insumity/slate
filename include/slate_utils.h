@@ -33,9 +33,9 @@ typedef struct {
 
 read_line_output read_line(char* line);
 
-typedef struct {
+/*typedef struct {
   int instructions;
-  int cycles; // not affected by frequency scaling
+  int ref_cycles; // not affected by frequency scaling
 
   int l1i_cache_read_accesses;
   int l1i_cache_write_accesses;
@@ -50,7 +50,17 @@ typedef struct {
   int ll_cache_write_accesses;
   int ll_cache_read_misses;
   int ll_cache_write_misses;
-} hw_counters_fd;
+  } hw_counters_fd; */
+
+typedef struct {
+  int number_of_counters;
+  int counters_fd[6];
+} hw_counters;
+
+hw_counters* create_counters(pid_t pid, int counters, uint64_t* raw_event_codes);
+void start_counters(hw_counters cnts);
+void read_counters(hw_counters cnts, long long* results);
+
 
 int compare_pids(void* p1, void* p2);
 int compare_voids(void* p1, void* p2);

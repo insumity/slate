@@ -18,7 +18,7 @@
 typedef struct {
   int program;
   int time;
-  hw_counters_fd* cnts;
+  hw_counters* cnts;
 } calculate_data;
 
 typedef struct {
@@ -40,29 +40,27 @@ void* execute_process(void* arg)
   usleep(a->start_time_ms * 1000); // important to sleep before getting start time
   clock_gettime(CLOCK_MONOTONIC, &start);
 
-  hw_counters_fd* cnt2 = malloc(sizeof(hw_counters_fd));
-
   pid_t pid = fork();
   if (pid == 0) {
     execv(program[0], program); // SPPEND TWO HOURS ON this, if you use execve instead with envp = {NULL} it doesn't work
     perror("Couldn't run execv\n");
   }
-  int leader = -1;
-  leader = cnt2->instructions = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, leader);
-  cnt2->cycles = open_perf(pid, PERF_TYPE_HARDWARE, PERF_COUNT_HW_REF_CPU_CYCLES, leader);
-  cnt2->ll_cache_read_accesses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, ACCESS), leader);
-  cnt2->ll_cache_read_misses = open_perf(pid, PERF_TYPE_HW_CACHE, CACHE_EVENT(LL, READ, MISS), leader);
 
-  start_perf_reading(cnt2->instructions);
-  start_perf_reading(cnt2->cycles);
-  start_perf_reading(cnt2->ll_cache_read_accesses);
-  start_perf_reading(cnt2->ll_cache_read_misses);
+  
+  uint64_t INSTRUCTIONS = 0x00C0;
+  uint64_t CYCLES = 0x013C;
+  uint64_t CACHE_LLC_HITS = 0x4F2E;
+  uint64_t CACHE_LLC_MISSES = 0x412E;
+  uint64_t events[4] = {INSTRUCTIONS, CYCLES, CACHE_LLC_HITS, CACHE_LLC_MISSES};
+  hw_counters* counters = create_counters(pid, 4, events);
+  start_counters(*counters);
+  
 
 
   calculate_data* cd = malloc(sizeof(calculate_data));
   cd->program = atoi(a->id);
   cd->time = 100;
-  cd->cnts = cnt2;
+  cd->cnts = counters;
   //pthread_t foo;
   //pthread_create(&foo, NULL, calculate_IPC_every, cd);
 
@@ -71,10 +69,12 @@ void* execute_process(void* arg)
 
   clock_gettime(CLOCK_MONOTONIC, &end);
 
-  long long int instructions = read_perf_counter(cnt2->instructions);
-  long long int cycles = read_perf_counter(cnt2->cycles);
-  long long ll_cache_read_accesses = read_perf_counter(cnt2->ll_cache_read_accesses);
-  long long ll_cache_read_misses = read_perf_counter(cnt2->ll_cache_read_misses);
+  long long results[4];
+  read_counters(*counters, results);
+  long long int instructions = results[0];
+  long long int cycles = results[1];
+  long long ll_cache_read_accesses = results[2];
+  long long ll_cache_read_misses = results[3];
 
   double *elapsed = malloc(sizeof(double));
   *elapsed = (end.tv_sec - start.tv_sec);

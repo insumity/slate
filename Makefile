@@ -5,7 +5,7 @@ objects = heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic
 all: schedule use_linux_scheduler
 
 schedule: $(objects)
-	$(cc) heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt
+	$(cc) heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt -lpapi
 
 use_linux_scheduler: use_linux_scheduler.o slate_utils.o
 	$(cc) slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lmctop -lpthread -lnuma
