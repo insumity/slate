@@ -40,9 +40,16 @@ LD_PRELOAD="/lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libselinux.s
 LD_PRELOAD="/lib/x86_64-linux-gnu/libacl.so.1 /lib/x86_64-linux-gnu/libselinux.so.1 /lib/x86_64-linux-gnu/libattr.so.1 /lib/x86_64-linux-gnu/libpcre.so.3 /usr/lib/x86_64-linux-gnu/libstdc++.so.6 /lib/x86_64-linux-gnu/libgcc_s.so.1" ./testrun.sh /localhome/kantonia/METIS_local/wc /localhome/kantonia/METIS_local/300MB_1M_Keys.txt -p 6 
 
 
+
+ MIN_LAT_HWCS ... taskset ... time perf stat -e instructions -e cycles taskset 0x111111000000111111  /localhome/kantonia/slate/benchmarks/metis/ob
+j/app/wc /localhome/kantonia/slate/benchmarks/metis/data/wc/300MB_1M_Keys.txt -p 12
+
+
 TODO
 
 
 1) glibc should only open once the communication slots file, not once per thread creation.
    Possible problems: How do you guarantee it's opened only once? Even if you put a sem_t in glibc, how do you guarantee it's only initialized once? Furthermore, when do you close the file? 
 perf stat -e L1-dcache-load-misses -e L1-dcache-loads -e L1-dcache-store-misses -e L1-dcache-stores -e L1-icache-load-misses -e LLC-loads -e LLC-load-misses -e LLC-store-misses -e LLC-stores -e cache-misses  -e cache-references -e stalled-cycles-frontend ./a.out 
+
+
