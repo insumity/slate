@@ -25,6 +25,10 @@ typedef struct {
 
 H_global_state state;
 
+void H_reschedule(pid_t pid, int new_policy) {
+
+}
+
 void H_init(pin_data** pin, mctop_t* topo) {
   state.pin = pin;
   state.topo = topo;
@@ -127,6 +131,7 @@ int H_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
     return -1;
   }
 
+  
   int hwc;
   int cnt = 0;
   // go through all the sockets first and see if there is one with no running process

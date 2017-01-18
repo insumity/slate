@@ -19,7 +19,7 @@
 #include <fcntl.h>
 #include <semaphore.h>
 #include <time.h>
-#include <papi.h>
+#include <numaif.h>
 
 #include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
@@ -27,6 +27,8 @@
 #include "ticket.h"
 #include "slate_utils.h"
 #include "list.h"
+
+#include "papi.h"
 
 #include "heuristic.h"
 #include "heuristicX.h"
@@ -62,8 +64,19 @@ typedef struct {
 
   int (*get_hwc)(pid_t pid, pid_t tid, int* node);
   void (*release_hwc)(pid_t pid);
+
+  void (*reschedule)(pid_t pid, int new_policy);
 } heuristic_t;
 heuristic_t h;
+
+double fo(long long ll_cache_read_accesses, long long ll_cache_read_misses,
+	  long long retired_local_dram, long long retired_remote_dram) {
+  double LLC = ll_cache_read_misses / ((double) ll_cache_read_accesses);
+  double local = retired_local_dram / (retired_local_dram + (double) retired_remote_dram);
+
+  return LLC * local * 2.2 + LLC * (1.0 - local) * 6.0;
+}
+
 
 void initialize_lock(int i, communication_slot* slots)
 {
@@ -244,7 +257,6 @@ void* execute_process(void* dt) {
   retval = PAPI_create_eventset(&event_set);
   retval = PAPI_assign_eventset_component(event_set, 0);
 
-
 #ifdef PAPI_MULTIPLEX
   retval = PAPI_set_multiplex(event_set);
   if (retval != PAPI_OK) {
@@ -259,8 +271,9 @@ void* execute_process(void* dt) {
   opt.inherit.eventset = event_set;
   if ((retval = PAPI_set_opt(PAPI_INHERIT, &opt)) != PAPI_OK) {
     perror("no!\n");
+    exit(1);
   }
-  
+
   //retval = PAPI_add_event(event_set, PAPI_TOT_INS);
   //retval = PAPI_add_event(event_set, PAPI_TOT_CYC);
   retval = PAPI_add_event(event_set, PAPI_L3_TCA);
@@ -275,14 +288,15 @@ void* execute_process(void* dt) {
   }
 
   if (PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:LOCAL_DRAM") != PAPI_OK ) {
-    printf("Something wrong is going here\n");
+    printf("Something wrong is going here normal\n");
     exit(1);
   }
 
   if (PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_DRAM") != PAPI_OK ) {
-    printf("Something wrong is going here\n");
+    perror("Something wrong is going here normal2\n");
     exit(1);
   }
+
 #endif
 
   pid_t pid = fork();
@@ -299,9 +313,9 @@ void* execute_process(void* dt) {
   //  uint64_t INSTRUCTIONS = 0x00C0;
   //uint64_t CYCLES = 0x003C; // those are halted cycles as well
   uint64_t CACHE_LLC_HITS = 0x4F2E;
-    uint64_t CACHE_LLC_MISSES = 0x412E; 
-    uint64_t RETIRED_LOCAL_DRAM = 0x01D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.LOCAL_DRAM
-    uint64_t RETIRED_REMOTE_DRAM = 0x10D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.REMOTE_DRAM 
+  uint64_t CACHE_LLC_MISSES = 0x412E; 
+  uint64_t RETIRED_LOCAL_DRAM = 0x01D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.LOCAL_DRAM
+  uint64_t RETIRED_REMOTE_DRAM = 0x10D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.REMOTE_DRAM 
   
   //uint64_t events[2] = {CACHE_LLC_HITS, CACHE_LLC_MISSES};RETIRED_LOCAL_DRAM, RETIRED_REMOTE_DRAM};
   uint64_t events[2] = {RETIRED_LOCAL_DRAM, RETIRED_REMOTE_DRAM};
@@ -311,45 +325,20 @@ void* execute_process(void* dt) {
   hw_counters* counters = create_counters(pid, 2, events);
   start_counters(*counters);
 #endif
-
-
-  int pol = args->policy;
-#ifdef PAPI_ENABLED
-  if (pol == MCTOP_ALLOC_SLATE) {
-    usleep(500); // wait 500ms
-  }
-  retval = PAPI_start(event_set);
-  retval = PAPI_attach(event_set, ( unsigned long ) pid);
-  if (pol == MCTOP_ALLOC_SLATE) {
-    usleep(100);
-    // and now read the counters
-    retval = PAPI_stop(event_set, results);
-    retval = PAPI_cleanup_eventset(event_set);
-    retval = PAPI_destroy_eventset(&event_set);
-
-    long long ll_cache_read_accesses = results[0];
-    long long ll_cache_read_misses = results[1];
-    long long retired_local_dram = results[2];
-    long long retired_remote_dram = results[3];
-
-    double res1 = fo(ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
-  }
-#endif
     
-
-  h.process_exit(*pid);
-  release_hwc(h, *pid);
-
-  struct timespec *finish = malloc(sizeof(struct timespec));
-  clock_gettime(CLOCK_MONOTONIC, finish);
-
-  pid_t* current_id = pid;
 
   pid_t* pid_pt = malloc(sizeof(pid_t));
   *pid_pt = pid;
-
+  
+  int pol = args->policy;
   int* pt_pol = malloc(sizeof(int));
   *pt_pol = pol;
+
+  bool was_slate = false;
+  if (pol == MCTOP_ALLOC_SLATE) {
+    pol = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
+    was_slate = true;
+  }
 
   h.new_process(pid, pol);
 
@@ -369,17 +358,133 @@ void* execute_process(void* dt) {
   pthread_t* pt = malloc(sizeof(pthread_t));
   p->pid = pid_pt;
 
+
+  /////
+#ifdef PAPI_ENABLED
+  int slate_wait = 1000 * 1000;
+  int reading_time = 250 * 1000;
+
+  if (was_slate) {
+    usleep(slate_wait);
+  }
+
+  if (was_slate) {
+    retval = PAPI_start(event_set);
+    retval = PAPI_attach(event_set, ( unsigned long ) pid);
+
+    //reset counters by reading them
+    /*long long valuesy[4];
+    retval = PAPI_read(event_set, valuesy);
+    if (retval != PAPI_OK) {
+      perror("couldn't read counters\n");
+      exit(1);
+      }*/
+    
+    usleep(reading_time * 5);
+    // and now read the counters
+    long long results[4];
+    retval = PAPI_stop(event_set, results);
+    if (retval != PAPI_OK) {
+      perror("Xcouldn't stop set\n");
+      exit(1);
+    }
+
+    /*retval = PAPI_cleanup_eventset(event_set);
+    if (retval != PAPI_OK) {
+      perror("couldn't clean up set\n");
+      exit(1);
+      }*/
+    
+    /*    retval = PAPI_destroy_eventset(&event_set);
+    if (retval != PAPI_OK) {
+      perror("couldn't destroy set\n");
+      exit(1);
+    }
+    */
+
+    long long ll_cache_read_accesses = results[0];
+    long long ll_cache_read_misses = results[1];
+    long long retired_local_dram = results[2];
+    long long retired_remote_dram = results[3];
+    double res1 = fo(ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
+    printf("1: %lld %lld %lld %lld\n", ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
+    // change policy
+    int new_policy = MCTOP_ALLOC_MIN_LAT_HWCS;
+    h.reschedule(pid, new_policy);
+    usleep(slate_wait);
+    retval = PAPI_start(event_set);
+    if (retval != PAPI_OK) {
+      printf("Something is wrong on startingg again\n");
+      exit(1);
+    }
+    /*retval = PAPI_attach(event_set, ( unsigned long ) pid);
+    if (retval != PAPI_OK) {
+      printf("Something is wrong on the attach\n");
+      exit(1);
+      }*/
+
+    usleep(reading_time);
+    // and now read the counters
+    results[0] = 0;
+    results[1] = 0;
+    results[2] = 0;
+    results[3] = 0;
+
+    retval = PAPI_stop(event_set, results);
+    ll_cache_read_accesses = results[0];
+    ll_cache_read_misses = results[1];
+    retired_local_dram = results[2];
+    retired_remote_dram = results[3];
+    printf("2: %lld %lld %lld %lld\n", ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
+
+    PAPI_option_t attach;
+    memset( &attach, 0x0, sizeof ( attach ) );
+    attach.attach.eventset = event_set;
+    attach.attach.tid = pid;
+    retval = ( PAPI_set_opt( PAPI_DETACH, &attach ) );
+    //retval = PAPI_detach(event_set, pid);
+    if (retval != PAPI_OK) {
+      printf("something is wrong with detaching: %d\n", retval);
+      printf("%d %d %d %d\n", PAPI_ESBSTR, PAPI_EINVAL, PAPI_ENOEVST, PAPI_EISRUN);
+      //exit(1);
+    }
+
+    retval = PAPI_cleanup_eventset(event_set);
+    retval = PAPI_destroy_eventset(&event_set);
+
+    PAPI_shutdown();
+      
+    double res2 = fo(ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
+    printf("RES1 is: %lf and RES: %lf\n", res1, res2);
+    if (res2 <= res1) {
+      // good!
+    }
+    else {
+      printf("\n\n\nMPIKA EDO mori ametaoniti!!!\n\n\n");
+      h.reschedule(pid, MCTOP_ALLOC_BW_ROUND_ROBIN_CORES);
+      // got back to RR CORE
+    }
+  }
+  else {
+    retval = PAPI_start(event_set);
+    retval = PAPI_attach(event_set, ( unsigned long ) pid);
+  }
+
+#endif
+  ////
+
+  
   printf("Added %lld to list with processes\n", (long long) (*pid_pt));
   {
     struct timespec *start = p->start;
     pid_t* pid = p->pid;
     int status;
 
-    printf("BLOCK .. waiting for process to FINISH\n");
+    printf("BLOCK .. waiting for process to FINIShH\n");
     waitpid(*pid, &status, 0);
     printf(" A process just finished!!!!!\n");
 
-long long results[5] = {0};
+    long long results[4] = {1, 2, 3, 4};
 #ifdef PAPI_ENABLED
     retval = PAPI_stop(event_set, results);
     retval = PAPI_cleanup_eventset(event_set);
@@ -473,7 +578,7 @@ int main(int argc, char* argv[]) {
   tids_per_pid = create_list();
 
   mctop_t* topo = mctop_load(NULL);
-  mctop_print(topo);
+  //  mctop_print(topo);
   if (!topo)   {
     fprintf(stderr, "Couldn't load topology file.\n");
     return EXIT_FAILURE;
@@ -488,6 +593,7 @@ int main(int argc, char* argv[]) {
     h.process_exit = H_process_exit;
     h.get_hwc = H_get_hwc;
     h.release_hwc = H_release_hwc;
+    h.reschedule = H_reschedule; // FIXME put this in the other ones
     h.init(pin, topo);
   }
   else if (strcmp(heuristic, "X") == 0) {
@@ -515,6 +621,7 @@ int main(int argc, char* argv[]) {
     h.process_exit = HGREEDY_process_exit;
     h.get_hwc = HGREEDY_get_hwc;
     h.release_hwc = HGREEDY_release_hwc;
+    h.reschedule = HGREEDY_reschedule; // FIXME put this in the other ones
     h.init(pin, topo);
   }
   else if (strcmp(heuristic, "SPLIT") == 0) {
@@ -535,7 +642,6 @@ int main(int argc, char* argv[]) {
     h.release_hwc = HRRLAT_release_hwc;
     h.init(pin, topo);
   }
-
   else {
     fprintf(stderr, "heuristic can only be \"NORMAL\" or \"X\", or \"GREEDY\", \"SPLIT\", or \"RRLAT\"\n");
     return EXIT_FAILURE;
@@ -566,7 +672,14 @@ int main(int argc, char* argv[]) {
     char** program = result.program;
     line[0] = '\0';
 
-    mctop_alloc_policy pol = get_policy(policy);
+    mctop_alloc_policy pol;
+
+    if (strcmp(policy, "MCTOP_ALLOC_SLATE") == 0) {
+      pol = MCTOP_ALLOC_SLATE;
+    }
+    else {
+      pol = get_policy(policy);
+    }
 
     process* p = malloc(sizeof(process));
     p->pid = malloc(sizeof(pid_t));
