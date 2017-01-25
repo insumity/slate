@@ -11,7 +11,6 @@ import math
 run_programs_concurrently = True
 ITERATIONS = 5
 
-
 GLIBC_BUILD_DIRECTORY = "/home/kantonia/GLIBC/glibc-build/"
 NONE_SCHEDULER_FILE = "none_scheduler"
 LINUX_SCHEDULER_FILE = "linux_scheduler"
@@ -56,12 +55,15 @@ def execute_one_by_one(scheduler_file, output_file):
         f = tempfile.NamedTemporaryFile(mode='w', delete=False)
         print("Line " + str(i) + " .. of file: " + get_line(scheduler_file, i))
         line = get_line(scheduler_file, i)
+        slate = "false"
+        if ("MCTOP_ALLOC_SLATE" in line):
+            slate = "true"
         f.write(line)
         file_name = f.name
         f.flush()
         print("The file that was used is: " + f.name);
         f.close()
-        os.system("../schedule " + f.name + " " + f.name + ".results" + " " + heuristic)
+        os.system("../schedule " + f.name + " " + f.name + ".results" + " " + heuristic + " " + slate)
         os.system("cat " + f.name + ".results >> " + output_file)
         os.remove(file_name)
         os.remove(file_name + ".results")
@@ -257,7 +259,7 @@ with open(experiment_name + "/merged_results" + str(0), 'r') as csvfile:
         stdlinux[id]['LLC'] = math.sqrt(stdlinux[id]['LLC'])
         
 results = open(experiment_name + "/merged_results", 'w')
-results.write("id\tslate\tslate-IPC\tslate-LLC-hit-rate\tslate-std\tslate-IPC-std\tslate-LLC-hit-rate-std\tLinux\tLinux-IPC\tLinux-LLC-hit-rate\tLinux-std\tLinux-IPC-std\tLinux-LLC-hit-rate-std\n")
+results.write("id\tslate\tslate-LLC\tslate-local\tslate-std\tslate-LLC-std\tslate-local-std\tLinux\tLinux-LLC\tLinux-local\tLinux-std\tLinux-LLC-std\tLinux-local-std\n")
 
 for i in range(0, applications_run):
     results.write(str(i) + "\t")
