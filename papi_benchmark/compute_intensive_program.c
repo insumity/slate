@@ -8,7 +8,7 @@
 #include <numaif.h>
 #include <numa.h>
 
-#define SIZE (1024 * 1024 * 1000)
+#define SIZE (1024 * 1024 * 10000)
 
 typedef struct {
   int id;
@@ -26,16 +26,19 @@ void* do_stuff(void* args) {
     printf("couldn't set it ...\n");
   }
   long long sum = 0;
+  double result3 = 0;
 
   for (int i = 0; i < SIZE; ++i) {
     sum += sum * 34;
     sum = sum * i  + 9;
     sum /= 91;
+    result3 += sum / 91.23;
+    result3 *= 3;
   }
 
   
   long* result = malloc(sizeof(long));
-  *result = sum;
+  *result = sum + (long long) result3;
   return result;
 }
 

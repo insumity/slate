@@ -8,12 +8,14 @@
 #include <numaif.h>
 #include <numa.h>
 
-#define SIZE (1024 * 8)
+#define SIZE (1024 * 1024)
 
 typedef struct {
   int id;
   char* memory;
 } do_stuff_data;
+
+char* shared_memory;
   
 void* do_stuff(void* args) {
   do_stuff_data* dt = (do_stuff_data *) args;
@@ -27,11 +29,16 @@ void* do_stuff(void* args) {
   }
   long long sum = 0;
 
-  for (int k = 0; k < 10; ++k) {
+  for (int k = 0; k < 1; ++k) {
     for (int i = 0; i < SIZE; ++i) {
       memory[i] = (char) (rand() % 789 + memory[SIZE - i - 1]);
-      sum += memory[i];
-      usleep(1);
+      sum += memory[i] + ((i > 1024 * 512)? memory[i - 1024 * 512]: 0);
+      shared_memory[i] = (sum * 2 + 993) % 23;
+      sum = sum + (i > 0? shared_memory[i - 1]: 0);
+
+      if (i % 100 == 0) {
+	usleep(1);
+      }
     }
     usleep(2);
   }
@@ -41,9 +48,10 @@ void* do_stuff(void* args) {
   return result;
 }
 
-
 int main(int argc, char* argv[]) {
   srand(time(NULL));
+
+  shared_memory = numa_alloc_onnode(sizeof(volatile char) * SIZE, 0);
 
   int number_of_threads = atoi(argv[1]);
   pthread_t* threads = malloc(sizeof(pthread_t) * number_of_threads);
