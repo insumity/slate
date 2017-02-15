@@ -20,14 +20,12 @@
 #include <semaphore.h>
 #include <time.h>
 #include <numaif.h>
-#include <papi.h>
-
-#include <linux/perf_event.h>
 #include <linux/hw_breakpoint.h>
 
 #include "ticket.h"
 #include "slate_utils.h"
 #include "list.h"
+#include "read_counters.h"
 
 #include "heuristic.h"
 #include "heuristicX.h"
@@ -35,11 +33,6 @@
 #include "heuristic_greedy.h"
 #include "heuristic_split.h"
 #include "heuristic_rr_lat.h"
-
-
-//#define PERF_ENABLED
-//#define PAPI_MULTIPLEX
-bool PAPI_ENABLED;
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
@@ -250,54 +243,6 @@ void* execute_process(void* dt) {
   char**program = args->program;
   clock_gettime(CLOCK_MONOTONIC, (args->p)->start);
 
-  int retval;
-  int event_set = PAPI_NULL;
-  if (PAPI_ENABLED) {
-    retval = PAPI_create_eventset(&event_set);
-    retval = PAPI_assign_eventset_component(event_set, 0);
-
-#ifdef PAPI_MULTIPLEX
-    retval = PAPI_set_multiplex(event_set);
-    if (retval != PAPI_OK) {
-      perror("couldn't set multiplexing\n");
-      exit(1);
-    }
-#endif
-  
-    PAPI_option_t opt;
-    memset(&opt, 0x0, sizeof (PAPI_option_t) );
-    opt.inherit.inherit = PAPI_INHERIT_ALL;
-    opt.inherit.eventset = event_set;
-    if ((retval = PAPI_set_opt(PAPI_INHERIT, &opt)) != PAPI_OK) {
-      perror("no!\n");
-      exit(1);
-    }
-
-    //retval = PAPI_add_event(event_set, PAPI_TOT_INS);
-    //retval = PAPI_add_event(event_set, PAPI_TOT_CYC);
-    retval = PAPI_add_event(event_set, PAPI_L3_TCA);
-    if (retval != PAPI_OK) {
-      printf("Couldn't add L3_TCA\n");
-      exit(1);
-    }
-    retval = PAPI_add_event(event_set, PAPI_L3_TCM);
-    if (retval != PAPI_OK) {
-      printf("Couldn't add L3_TCM\n");
-      exit(1);
-    }
-
-    if (PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:LOCAL_DRAM") != PAPI_OK ) {
-      printf("Something wrong is going here normal\n");
-      exit(1);
-    }
-
-    if (PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_DRAM") != PAPI_OK ) {
-      perror("Something wrong is going here normal2\n");
-      exit(1);
-    }
-  }
-
-  
   pid_t pid = fork();
 
   if (pid == 0) {
@@ -307,24 +252,6 @@ void* execute_process(void* dt) {
     perror("execve didn't work");
     exit(1);
   }
-
-#ifdef PERF_ENABLED
-  //  uint64_t INSTRUCTIONS = 0x00C0;
-  //uint64_t CYCLES = 0x003C; // those are halted cycles as well
-  uint64_t CACHE_LLC_HITS = 0x4F2E;
-  uint64_t CACHE_LLC_MISSES = 0x412E; 
-  uint64_t RETIRED_LOCAL_DRAM = 0x01D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.LOCAL_DRAM
-  uint64_t RETIRED_REMOTE_DRAM = 0x10D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.REMOTE_DRAM 
-  
-  //uint64_t events[2] = {CACHE_LLC_HITS, CACHE_LLC_MISSES};RETIRED_LOCAL_DRAM, RETIRED_REMOTE_DRAM};
-  uint64_t events[2] = {RETIRED_LOCAL_DRAM, RETIRED_REMOTE_DRAM};
-  //uint64_t events[4] = {CACHE_LLC_HITS, CACHE_LLC_MISSES, RETIRED_LOCAL_DRAM, RETIRED_REMOTE_DRAM};
-  //uint64_t events[2] = {INSTRUCTIONS, CYCLES};
-
-  hw_counters* counters = create_counters(pid, 2, events);
-  start_counters(*counters);
-#endif
-    
 
   pid_t* pid_pt = malloc(sizeof(pid_t));
   *pid_pt = pid;
@@ -359,115 +286,22 @@ void* execute_process(void* dt) {
 
 
   /////
-  if (PAPI_ENABLED) {
-    int slate_wait = 1000 * 1000;
-    int reading_time = 250 * 1000;
+  //printf("1: %lld %lld %lld %lld\n", ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
+  // change policy
+  int new_policy = MCTOP_ALLOC_MIN_LAT_HWCS;
+  h.reschedule(pid, new_policy);
+  printf("I just rescheduled with MCTOP_ALLOC_MIN_LAT_HWCS!!!\n");
 
-    if (was_slate) {
-      usleep(slate_wait);
-    }
-
-    if (was_slate) {
-      retval = PAPI_start(event_set);
-      retval = PAPI_attach(event_set, ( unsigned long ) pid);
-
-      //reset counters by reading them
-      /*long long valuesy[4];
-	retval = PAPI_read(event_set, valuesy);
-	if (retval != PAPI_OK) {
-	perror("couldn't read counters\n");
-	exit(1);
-	}*/
-    
-      usleep(reading_time * 5);
-      // and now read the counters
-      long long results[4];
-      retval = PAPI_stop(event_set, results);
-      if (retval != PAPI_OK) {
-	perror("Xcouldn't stop set\n");
-	exit(1);
-      }
-
-      /*retval = PAPI_cleanup_eventset(event_set);
-	if (retval != PAPI_OK) {
-	perror("couldn't clean up set\n");
-	exit(1);
-	}*/
-    
-      /*    retval = PAPI_destroy_eventset(&event_set);
-	    if (retval != PAPI_OK) {
-	    perror("couldn't destroy set\n");
-	    exit(1);
-	    }
-      */
-
-      long long ll_cache_read_accesses = results[0];
-      long long ll_cache_read_misses = results[1];
-      long long retired_local_dram = results[2];
-      long long retired_remote_dram = results[3];
-      double res1 = fo(ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
-      printf("1: %lld %lld %lld %lld\n", ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
-      // change policy
-      int new_policy = MCTOP_ALLOC_MIN_LAT_HWCS;
-      h.reschedule(pid, new_policy);
-      usleep(slate_wait);
-      retval = PAPI_start(event_set);
-      if (retval != PAPI_OK) {
-	printf("Something is wrong on startingg again\n");
-	exit(1);
-      }
-      /*retval = PAPI_attach(event_set, ( unsigned long ) pid);
-	if (retval != PAPI_OK) {
-	printf("Something is wrong on the attach\n");
-	exit(1);
-	}*/
-
-      usleep(reading_time);
-      // and now read the counters
-      results[0] = 0;
-      results[1] = 0;
-      results[2] = 0;
-      results[3] = 0;
-
-      retval = PAPI_stop(event_set, results);
-      ll_cache_read_accesses = results[0];
-      ll_cache_read_misses = results[1];
-      retired_local_dram = results[2];
-      retired_remote_dram = results[3];
-      printf("2: %lld %lld %lld %lld\n", ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
-
-      PAPI_option_t attach;
-      memset( &attach, 0x0, sizeof ( attach ) );
-      attach.attach.eventset = event_set;
-      attach.attach.tid = pid;
-      retval = ( PAPI_set_opt( PAPI_DETACH, &attach ) );
-      //retval = PAPI_detach(event_set, pid);
-      if (retval != PAPI_OK) {
-	printf("something is wrong with detaching: %d\n", retval);
-	printf("%d %d %d %d\n", PAPI_ESBSTR, PAPI_EINVAL, PAPI_ENOEVST, PAPI_EISRUN);
-	//exit(1);
-      }
-
-      retval = PAPI_cleanup_eventset(event_set);
-      retval = PAPI_destroy_eventset(&event_set);
-
-      PAPI_shutdown();
-      
-      double res2 = fo(ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
-      printf("RES1 is: %lf and RES: %lf\n", res1, res2);
-      if (res2 <= res1) {
-	// good!
-      }
-      else {
-	printf("\n\n\nMPIKA EDO mori ametaoniti!!!\n\n\n");
-	h.reschedule(pid, MCTOP_ALLOC_BW_ROUND_ROBIN_CORES);
-	// got back to RR CORE
-      }
-    }
-    else {
-      retval = PAPI_start(event_set);
-      retval = PAPI_attach(event_set, ( unsigned long ) pid);
-    }
+  //double res2 = fo(ll_cache_read_accesses, ll_cache_read_misses, retired_local_dram, retired_remote_dram);
+  double res2 = 0, res1 = 0.0;
+  printf("RES1 is: %lf and RES2: %lf\n", res1, res2);
+  if (res2 <= res1) {
+    // good!
+  }
+  else {
+    printf("\n\n\nMPIKA EDO mori ametaoniti kai ekana ksana reschedule gia MCTOP_ALLOC_BWRR_!!!\n\n\n");
+    h.reschedule(pid, MCTOP_ALLOC_BW_ROUND_ROBIN_CORES);
+    // got back to RR CORE
   }
 
   
@@ -481,13 +315,6 @@ void* execute_process(void* dt) {
     waitpid(*pid, &status, 0);
     printf(" A process just finished!!!!!\n");
 
-    long long results[4] = {1, 2, 3, 4};
-    if (PAPI_ENABLED) {
-      retval = PAPI_stop(event_set, results);
-      retval = PAPI_cleanup_eventset(event_set);
-      retval = PAPI_destroy_eventset(&event_set);
-    }
-
     h.process_exit(*pid);
     release_hwc(h, *pid);
 
@@ -496,44 +323,16 @@ void* execute_process(void* dt) {
 
     pid_t* current_id = pid;
 
-#ifdef PERF_ENABLED
-    read_counters(*counters, results);
-#endif
-    //long long instructions = results[0];
-    //long long cycles = results[1];
-    /* long long ll_cache_read_accesses = results[0]; */
-    /* long long ll_cache_read_misses = results[1]; */
-    /* long long retired_local_dram = results[2]; */
-    /* long long retired_remote_dram = results[3]; */
-
-    long long ll_cache_read_accesses = 1;
-    long long ll_cache_read_misses = 2;
-    long long retired_local_dram = 0;
-    long long retired_remote_dram = 3;
-    if (PAPI_ENABLED) {
-      ll_cache_read_accesses = results[0];
-      ll_cache_read_misses = results[1];
-      retired_local_dram = results[2];
-      retired_remote_dram = results[3];
-    }
-    
-#ifdef PERF_ENABLED    
-    ll_cache_read_accesses = results[0];
-    ll_cache_read_misses = results[1];
-    retired_local_dram = results[2];
-    retired_remote_dram = results[3];
-#endif
-
     
     double elapsed = (finish->tv_sec - start->tv_sec);
     elapsed += (finish->tv_nsec - start->tv_nsec) / 1000000000.0;
     //printf("RETIRED DRAM: %lld\n", retired_remote_dram);
-    fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t" \
+    fprintf(results_fp, "%d\t%ld\t%lf\t%s\t%s\t"			\
 	    "%lld\t%lld\t%lf\t%lld\t%lld\t%lf\n", p->num_id, (long int) *pid, elapsed, p->policy, p->program,
 	    //instructions, cycles, (((double) instructions) / cycles),
-	    ll_cache_read_accesses, ll_cache_read_misses,
-	    ((double) ll_cache_read_misses / ll_cache_read_accesses),
-	    retired_local_dram, retired_remote_dram, retired_local_dram / ((double) retired_remote_dram + retired_local_dram)
+	    0, 1,
+	    ((double) 0 / 2),
+	    0, 2, 3 / ((double) 4 + 3)
 	    );
 	  
   }
@@ -543,27 +342,11 @@ void* execute_process(void* dt) {
 
 int main(int argc, char* argv[]) {
 
-  PAPI_ENABLED = false;
+  bool PERF_COUNTERS_ENABLED = false;
   if (argc == 5) {
     if (strcmp(argv[4], "true") == 0) {
-      PAPI_ENABLED = true;
+      PERF_COUNTERS_ENABLED = true;
     }
-  }
-  
-  if (PAPI_ENABLED) {
-    int retval = PAPI_library_init(PAPI_VER_CURRENT);
-    if (retval != PAPI_VER_CURRENT) {
-      perror("couldn't initialize library\n");
-      exit(1);
-    }
-
-#ifdef PAPI_MULTIPLEX
-    retval = PAPI_multiplex_init();
-    if (retval != PAPI_OK) {
-      perror("couldn't enable multiplexing\n");
-      exit(1);
-    }
-#endif
   }
   
   srand(time(NULL));
