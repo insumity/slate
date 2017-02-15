@@ -1,0 +1,15 @@
+#ifndef SLATE_COUNTERS_H
+#define SLATE_COUNTERS_H 1
+
+typedef struct {
+  int number_of_counters;
+  int counters_fd[8];
+} hw_counters;
+
+hw_counters* create_counters(int cpu, int counters, uint64_t* raw_event_codes);
+
+void start_counters(hw_counters* cnts);
+
+void stop_and_read_counters(hw_counters* cnts, long long* results);
+
+#endif

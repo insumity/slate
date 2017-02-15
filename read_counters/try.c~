@@ -1,0 +1,48 @@
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <dirent.h>
+#include <string.h>
+#include <assert.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sched.h>
+#include <mctop.h>
+#include <mctop_alloc.h>
+#include <sys/wait.h>
+#include <time.h>
+#include <numaif.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <semaphore.h>
+#include <time.h>
+#include <numaif.h>
+#include <linux/perf_event.h>
+#include <linux/hw_breakpoint.h>
+#include "counters.h"
+
+int main(int argc, char* argv[]) {
+
+  /*  uint64_t CACHE_LLC_HITS = 0x4F2E;
+      uint64_t CACHE_LLC_MISSES = 0x412E;  */
+  uint64_t RETIRED_LOCAL_DRAM = 0x01D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.LOCAL_DRAM
+  uint64_t RETIRED_REMOTE_DRAM = 0x10D3; // MEM_LOAD_UOPS_LLC_MISS_RETIRED.REMOTE_DRAM
+  uint64_t events[2] = {RETIRED_LOCAL_DRAM, RETIRED_REMOTE_DRAM};
+
+  
+  hw_counters* counters = create_counters(5, 2, events);
+
+  start_counters(counters);
+  sleep(10);
+
+  long long results[2];
+  stop_and_read_counters(counters, results);
+  printf("%lld %lld\n", results[0], results[1]);
+
+  free_counters(counters);
+  return 0;
+}
+
