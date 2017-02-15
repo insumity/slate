@@ -16,6 +16,14 @@
 #include <sys/wait.h>
 #include <sys/mman.h>
 
+pthread_mutex_t glock;
+
+typedef struct {
+  long long values[8];
+  pthread_mutex_t lock;
+} core_data;
+
+
 void* foo(void* dt) {
   int cpu = *((int *) dt);
     
@@ -27,17 +35,23 @@ void* foo(void* dt) {
   printf("The filename is: %s\n", filename);
   int fd = open(filename, O_RDWR, 0777);
   
-  long long* data = (long long*) mmap(0, sizeof(long long) * 8, PROT_READ, MAP_SHARED, fd, 0);
+  core_data* data = mmap(0, sizeof(core_data), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (data == MAP_FAILED) {
     fprintf(stderr, "foo barisios\n");
   }
 
-
   while (true) {
+    pthread_mutex_lock(&(glock));
+
     printf("%d\n", cpu);
+    pthread_mutex_lock(&(data->lock));
     for (int i = 0; i < 8; ++i) {
-      printf("%d: %lld\n", i, data[i]);
+      printf("%d: %lld\n", i, data->values[i]);
     }
+    pthread_mutex_unlock(&(data->lock));
+    pthread_mutex_unlock(&(glock));
+
+
     sleep(2);
   }
 }
@@ -47,6 +61,7 @@ int main(int argc, char* argv[]) {
   int THREADS = atoi(argv[1]);
   pthread_t threads[THREADS];
 
+  pthread_mutex_init(&glock, NULL);
   for (int i = 0; i < THREADS; ++i) {
     int* n = malloc(sizeof(int));
     *n = i;

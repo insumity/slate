@@ -19,6 +19,10 @@
 #define B_PAPI_ENABLED
 #define B_PAPI_MULTIPLEX
 
+typedef struct {
+  long long values[8];
+  pthread_mutex_t lock;
+} core_data;
 
 
 int add_events(int event_set) {
@@ -91,7 +95,7 @@ void start_counters(int event_set) {
   }
 }
 
-long long* data;
+core_data* data;
 void read_counters(int event_set) {
   long long results[8] = {0, 0, 0, 0, 0, 0, 0, 0};
   int retval;
@@ -101,9 +105,11 @@ void read_counters(int event_set) {
     printf("The event hasn't started yet!\n");
   }
 
+  pthread_mutex_lock(&(data->lock));
   for (int i = 0; i < 8; ++i) {
-    data[i] = results[i];
+    data->values[i] = results[i];
   }
+  pthread_mutex_unlock(&(data->lock));
   
   // printf("X 1) unhalted core cycles:  \t %lld instructions retired:  \t %lld memory local:\t %lld memory remote:\t %lld\n", results[0], results[1], results[2], results[3]);
   // printf("X 2) l3tca:\t %lld L3TCM:\t %lld l2tcm:\t %lld totcyc:\t %lld\n", results[4], results[5], results[6], results[7]);
@@ -139,11 +145,12 @@ int main(int argc, char* argv[]) {
   int fd = open(filename, O_RDWR | O_CREAT, 0777);
   syncfs(fd);
   
-  if (fallocate(fd, 0, 0, sizeof(long long) * 8) != 0) {
+  if (fallocate(fd, 0, 0, sizeof(core_data)) != 0) {
     perror("couldn' not allocate\n");
   }
   
-  data = (long long*) mmap(NULL, sizeof(long long) * 8, PROT_WRITE, MAP_SHARED, fd, 0);
+  data = (core_data *) mmap(NULL, sizeof(core_data), PROT_WRITE, MAP_SHARED, fd, 0);
+  pthread_mutex_init(&(data->lock), NULL);
   if (data == MAP_FAILED) {
     fprintf(stderr, "foo barisios\n");
   }
@@ -213,7 +220,9 @@ int main(int argc, char* argv[]) {
 
   while (true) {
     start_counters(event_set);
-    usleep(100 * 1000);
+    int one_ms_in_us = 1000;
+    int wait_time_in_ms = 100 * one_ms_in_us;
+    usleep(wait_time_in_ms);
     read_counters(event_set);
     //printf("====\n");
   }
