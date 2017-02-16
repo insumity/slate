@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+  
 #include <mctop.h>
 #include <semaphore.h>
 #include "slate_utils.h"
@@ -10,3 +14,7 @@ void HX_process_exit(pid_t pid);
 
 int HX_get_hwc(pid_t pid, pid_t tid, int* ret_node);
 void HX_release_hwc(pid_t pid);
+
+#ifdef __cplusplus
+}
+#endif

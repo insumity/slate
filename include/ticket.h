@@ -30,6 +30,9 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #ifndef _TICKET_H_
 #define _TICKET_H_
@@ -90,3 +93,6 @@ double ticket_avg_queue(void);
 #endif
 
 
+#ifdef __cplusplus
+}
+#endif

@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+  
 #ifndef SLATE_UTILS_H
 #define SLATE_UTILS_H 1
 
@@ -73,4 +77,8 @@ pin_data** initialize_pin_data(mctop_t* topo);
 void pin(pid_t pid, int core, int node);
 
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

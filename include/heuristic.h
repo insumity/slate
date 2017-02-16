@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <mctop.h>
 #include <semaphore.h>
 #include "slate_utils.h"
@@ -12,3 +16,7 @@ int H_get_hwc(pid_t pid, pid_t tid, int* ret_node);
 void H_release_hwc(pid_t pid);
 
 void H_reschedule(pid_t pid, int new_policy);
+
+#ifdef __cplusplus
+}
+#endif

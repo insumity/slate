@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef __LIST_H
 #define __LIST_H
 
@@ -35,4 +39,8 @@ void* list_get_nth(list *l, int n);
 
 void list_remove_all_data(list* l, void* data, int (*compare)(void*, void*));
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

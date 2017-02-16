@@ -1,14 +1,17 @@
-
-cc = gcc -g -Wall -pedantic -I./include 
-objects = heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o
+cc = gcc -g -Wall -pedantic -I./include
+cpp = g++ -g -Wall -pedantic -I./include
+objects = heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o ticket.o list.o slate_utils.o schedule.o use_linux_scheduler.o read_counters.o
 
 all: schedule use_linux_scheduler
 
 schedule: $(objects)
-	$(cc) heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt -lpapi
+	$(cpp) read_counters.o heuristic.o heuristicX.o heuristic_MCTOP.o heuristic_split.o heuristic_greedy.o heuristic_rr_lat.o list.o slate_utils.o schedule.o ticket.o -L/home/kantonia/scheduler/ -o schedule -lmctop -lpthread -lnuma -lrt -lpapi
 
 use_linux_scheduler: use_linux_scheduler.o slate_utils.o
 	$(cc) slate_utils.o use_linux_scheduler.o -o use_linux_scheduler -lmctop -lpthread -lnuma -L/localhome/kantonia/slate/papi/src/ -lpapi
+
+read_counters.o: src/read_counters.c include/read_counters.h
+	$(cc) -c src/read_counters.c -lpthread
 
 heuristic.o: src/heuristic.c include/heuristic.h
 	$(cc) -c src/heuristic.c 
@@ -37,8 +40,8 @@ list.o: src/list.c include/list.h
 slate_utils.o: src/slate_utils.c include/slate_utils.h
 	$(cc) -c src/slate_utils.c -o slate_utils.o
 
-schedule.o: src/schedule.c
-	$(cc) -c src/schedule.c -o schedule.o -std=gnu99
+schedule.o: src/schedule.cpp
+	$(cpp) -c src/schedule.cpp -o schedule.o -std=c++14
 
 use_linux_scheduler.o: src/use_linux_scheduler.c slate_utils.o
 	$(cc) -c src/use_linux_scheduler.c -o use_linux_scheduler.o 
