@@ -1,0 +1,280 @@
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 187,009, 2,345, (local_str: 91), (remote_str: 5) - 179,919 xs 8,062,128
+LLC_hit_rate: 0.987460, Local %: 0.947917, : 20
+LLC_hit_rate_uc: 0.00000017851111912
+Local_uc %%: 0.00000017136246522
+inter_socket_activity: 0.00852878464818763 other normalizatin: 0.17241379310344829
+Number of unhalted cycles: 5531647
+%loads: 0.022317, %LLC miss rate: 0.012540, %remote: 0.052083, intersocket: 0.008529
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 126,376, 111, (local_str: 4), (remote_str: 25) - 163,584 xs 1,452,233
+LLC_hit_rate: 0.999122, Local %: 0.137931, : 4
+LLC_hit_rate_uc: 0.00000024559450443
+Local_uc %%: 0.00000003390488378
+inter_socket_activity: 0.03603603603603604 other normalizatin: 0.12121212121212122
+Number of unhalted cycles: 4068176
+%loads: 0.112643, %LLC miss rate: 0.000878, %remote: 0.862069, intersocket: 0.036036
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 142,532, 144, (local_str: 7), (remote_str: 4) - 168,339 xs 1,593,017
+LLC_hit_rate: 0.998990, Local %: 0.636364, : 0
+LLC_hit_rate_uc: 0.00000033674827943
+Local_uc %%: 0.00000021451108006
+inter_socket_activity: 0.00000000000000000 other normalizatin: 0.00000000000000000
+Number of unhalted cycles: 2966577
+%loads: 0.105673, %LLC miss rate: 0.001010, %remote: 0.363636, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 145,232, 131, (local_str: 4), (remote_str: 0) - 209,501 xs 1,323,435
+LLC_hit_rate: 0.999098, Local %: 1.000000, : 22
+LLC_hit_rate_uc: 0.00000017885826844
+Local_uc %%: 0.00000017901974516
+inter_socket_activity: 0.16793893129770993 other normalizatin: 0.84615384615384615
+Number of unhalted cycles: 5585976
+%loads: 0.158301, %LLC miss rate: 0.000902, %remote: 0.000000, intersocket: 0.167939
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 135,141, 159, (local_str: 0), (remote_str: 13) - 157,238 xs 1,345,340
+LLC_hit_rate: 0.998823, Local %: 0.000000, : 9
+LLC_hit_rate_uc: 0.00000038991622973
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.05660377358490566 other normalizatin: 0.40909090909090912
+Number of unhalted cycles: 2561636
+%loads: 0.116876, %LLC miss rate: 0.001177, %remote: 1.000000, intersocket: 0.056604
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 142,185, 183, (local_str: 0), (remote_str: 4) - 161,107 xs 1,214,591
+LLC_hit_rate: 0.998713, Local %: 0.000000, : 14
+LLC_hit_rate_uc: 0.00000040665068821
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.07650273224043716 other normalizatin: 0.77777777777777779
+Number of unhalted cycles: 2455948
+%loads: 0.132643, %LLC miss rate: 0.001287, %remote: 1.000000, intersocket: 0.076503
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 130,212, 146, (local_str: 0), (remote_str: 5) - 159,929 xs 1,267,546
+LLC_hit_rate: 0.998879, Local %: 0.000000, : 8
+LLC_hit_rate_uc: 0.00000038540616924
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.05479452054794520 other normalizatin: 0.61538461538461542
+Number of unhalted cycles: 2591756
+%loads: 0.126172, %LLC miss rate: 0.001121, %remote: 1.000000, intersocket: 0.054795
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 116,351, 161, (local_str: 0), (remote_str: 0) - 156,429 xs 1,391,632
+LLC_hit_rate: 0.998616, Local %: -nan, : 40
+LLC_hit_rate_uc: 0.00000034785537589
+Local_uc %%: -nan
+inter_socket_activity: 0.24844720496894410 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 2870780
+%loads: 0.112407, %LLC miss rate: 0.001384, %remote: 0.000000, intersocket: 0.248447
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 110,937, 104, (local_str: 0), (remote_str: 4) - 193,816 xs 1,379,825
+LLC_hit_rate: 0.999063, Local %: 0.000000, : 68
+LLC_hit_rate_uc: 0.00000037864547812
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.65384615384615385 other normalizatin: 0.94444444444444442
+Number of unhalted cycles: 2638517
+%loads: 0.140464, %LLC miss rate: 0.000937, %remote: 1.000000, intersocket: 0.653846
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 121,458, 164, (local_str: 13), (remote_str: 5) - 159,046 xs 1,266,146
+LLC_hit_rate: 0.998650, Local %: 0.722222, : 193
+LLC_hit_rate_uc: 0.00000036449678116
+Local_uc %%: 0.00000026360360895
+inter_socket_activity: 1.17682926829268286 other normalizatin: 0.91469194312796209
+Number of unhalted cycles: 2739804
+%loads: 0.125614, %LLC miss rate: 0.001350, %remote: 0.277778, intersocket: 1.176829
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 138,246, 157, (local_str: 0), (remote_str: 14) - 176,577 xs 1,273,100
+LLC_hit_rate: 0.998864, Local %: 0.000000, : 152
+LLC_hit_rate_uc: 0.00000036209773445
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.96815286624203822 other normalizatin: 0.91566265060240959
+Number of unhalted cycles: 2758549
+%loads: 0.138698, %LLC miss rate: 0.001136, %remote: 1.000000, intersocket: 0.968153
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 148,137, 101, (local_str: 4), (remote_str: 0) - 153,261 xs 1,227,463
+LLC_hit_rate: 0.999318, Local %: 1.000000, : 5
+LLC_hit_rate_uc: 0.00000035279571255
+Local_uc %%: 0.00000035303641323
+inter_socket_activity: 0.04950495049504951 other normalizatin: 0.55555555555555558
+Number of unhalted cycles: 2832569
+%loads: 0.124860, %LLC miss rate: 0.000682, %remote: 0.000000, intersocket: 0.049505
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 145,622, 147, (local_str: 0), (remote_str: 0) - 160,998 xs 1,429,180
+LLC_hit_rate: 0.998991, Local %: -nan, : 22
+LLC_hit_rate_uc: 0.00000033826612998
+Local_uc %%: -nan
+inter_socket_activity: 0.14965986394557823 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 2953268
+%loads: 0.112651, %LLC miss rate: 0.001009, %remote: 0.000000, intersocket: 0.149660
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 153,139, 788, (local_str: 7), (remote_str: 3) - 211,061 xs 1,230,408
+LLC_hit_rate: 0.994854, Local %: 0.700000, : 8
+LLC_hit_rate_uc: -0.00000000015012012
+Local_uc %%: -0.00000000010562761
+inter_socket_activity: 0.01015228426395939 other normalizatin: 0.44444444444444442
+Number of unhalted cycles: -6627055164
+%loads: 0.171537, %LLC miss rate: 0.005146, %remote: 0.300000, intersocket: 0.010152
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 134,081, 184, (local_str: 0), (remote_str: 40) - 135,676 xs 1,037,285
+LLC_hit_rate: 0.998628, Local %: 0.000000, : 40
+LLC_hit_rate_uc: 0.00000036913013794
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.21739130434782608 other normalizatin: 0.50000000000000000
+Number of unhalted cycles: 2705354
+%loads: 0.130799, %LLC miss rate: 0.001372, %remote: 1.000000, intersocket: 0.217391
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 141,497, 118, (local_str: 0), (remote_str: 0) - 2,697,844 xs 7,627,735
+LLC_hit_rate: 0.999166, Local %: -nan, : 0
+LLC_hit_rate_uc: 0.00000019156062798
+Local_uc %%: -nan
+inter_socket_activity: 0.00000000000000000 other normalizatin: -nan
+Number of unhalted cycles: 5215926
+%loads: 0.353689, %LLC miss rate: 0.000834, %remote: 0.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 105,941, 194, (local_str: 0), (remote_str: 0) - 151,940 xs 1,160,961
+LLC_hit_rate: 0.998169, Local %: -nan, : 0
+LLC_hit_rate_uc: 0.00000038769663327
+Local_uc %%: -nan
+inter_socket_activity: 0.00000000000000000 other normalizatin: -nan
+Number of unhalted cycles: 2574613
+%loads: 0.130874, %LLC miss rate: 0.001831, %remote: 0.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 127,241, 171, (local_str: 0), (remote_str: 0) - 164,562 xs 1,419,300
+LLC_hit_rate: 0.998656, Local %: -nan, : 5
+LLC_hit_rate_uc: 0.00000034431727180
+Local_uc %%: -nan
+inter_socket_activity: 0.02923976608187134 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 2900395
+%loads: 0.115946, %LLC miss rate: 0.001344, %remote: 0.000000, intersocket: 0.029240
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 137,342, 175, (local_str: 0), (remote_str: 68) - 202,233 xs 1,321,323
+LLC_hit_rate: 0.998726, Local %: 0.000000, : 0
+LLC_hit_rate_uc: 0.00000032838045530
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.00000000000000000 other normalizatin: 0.00000000000000000
+Number of unhalted cycles: 3041368
+%loads: 0.153053, %LLC miss rate: 0.001274, %remote: 1.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 263,262, 12,400, (local_str: 0), (remote_str: 11) - 140,974 xs 1,190,919
+LLC_hit_rate: 0.952899, Local %: 0.000000, : 26
+LLC_hit_rate_uc: 0.00000030866722661
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.00209677419354839 other normalizatin: 0.70270270270270274
+Number of unhalted cycles: 3087139
+%loads: 0.118374, %LLC miss rate: 0.047101, %remote: 1.000000, intersocket: 0.002097
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 140,123, 439, (local_str: 3), (remote_str: 0) - 147,285 xs 1,181,950
+LLC_hit_rate: 0.996867, Local %: 1.000000, : 4
+LLC_hit_rate_uc: 0.00000035505856336
+Local_uc %%: 0.00000035617444427
+inter_socket_activity: 0.00911161731207289 other normalizatin: 0.57142857142857140
+Number of unhalted cycles: 2807613
+%loads: 0.124612, %LLC miss rate: 0.003133, %remote: 0.000000, intersocket: 0.009112
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 128,629, 203, (local_str: 0), (remote_str: 0) - 148,540 xs 1,138,255
+LLC_hit_rate: 0.998422, Local %: -nan, : 4
+LLC_hit_rate_uc: 0.00000035182481093
+Local_uc %%: -nan
+inter_socket_activity: 0.01970443349753695 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 2837838
+%loads: 0.130498, %LLC miss rate: 0.001578, %remote: 0.000000, intersocket: 0.019704
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 141,570, 158, (local_str: 0), (remote_str: 39) - 156,736 xs 1,225,733
+LLC_hit_rate: 0.998884, Local %: 0.000000, : 4
+LLC_hit_rate_uc: 0.00000023868787763
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.02531645569620253 other normalizatin: 0.09302325581395349
+Number of unhalted cycles: 4184896
+%loads: 0.127871, %LLC miss rate: 0.001116, %remote: 1.000000, intersocket: 0.025316
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 140,037, 148, (local_str: 0), (remote_str: 0) - 200,850 xs 1,370,230
+LLC_hit_rate: 0.998943, Local %: -nan, : 0
+LLC_hit_rate_uc: 0.00000029426698648
+Local_uc %%: -nan
+inter_socket_activity: 0.00000000000000000 other normalizatin: -nan
+Number of unhalted cycles: 3394683
+%loads: 0.146581, %LLC miss rate: 0.001057, %remote: 0.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 151,233, 149, (local_str: 0), (remote_str: 0) - 157,218 xs 1,138,522
+LLC_hit_rate: 0.999015, Local %: -nan, : 8
+LLC_hit_rate_uc: 0.00000032974016440
+Local_uc %%: -nan
+inter_socket_activity: 0.05369127516778523 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 3029703
+%loads: 0.138090, %LLC miss rate: 0.000985, %remote: 0.000000, intersocket: 0.053691
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 158,187, 156, (local_str: 3), (remote_str: 0) - 155,045 xs 1,127,022
+LLC_hit_rate: 0.999014, Local %: 1.000000, : 0
+LLC_hit_rate_uc: 0.00000034960122754
+Local_uc %%: 0.00000034994633573
+inter_socket_activity: 0.00000000000000000 other normalizatin: 0.00000000000000000
+Number of unhalted cycles: 2857581
+%loads: 0.137571, %LLC miss rate: 0.000986, %remote: 0.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 207,092, 442, (local_str: 0), (remote_str: 0) - 170,197 xs 1,253,040
+LLC_hit_rate: 0.997866, Local %: -nan, : 9
+LLC_hit_rate_uc: 0.00000032371414428
+Local_uc %%: -nan
+inter_socket_activity: 0.02036199095022624 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 3082552
+%loads: 0.135827, %LLC miss rate: 0.002134, %remote: 0.000000, intersocket: 0.020362
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 146,416, 164, (local_str: 0), (remote_str: 0) - 159,421 xs 1,245,743
+LLC_hit_rate: 0.998880, Local %: -nan, : 0
+LLC_hit_rate_uc: 0.00000031557285060
+Local_uc %%: -nan
+inter_socket_activity: 0.00000000000000000 other normalizatin: -nan
+Number of unhalted cycles: 3165291
+%loads: 0.127973, %LLC miss rate: 0.001120, %remote: 0.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 152,199, 153, (local_str: 0), (remote_str: 4) - 203,700 xs 1,260,978
+LLC_hit_rate: 0.998995, Local %: 0.000000, : 0
+LLC_hit_rate_uc: 0.00000041378046869
+Local_uc %%: 0.00000000000000000
+inter_socket_activity: 0.00000000000000000 other normalizatin: 0.00000000000000000
+Number of unhalted cycles: 2414311
+%loads: 0.161541, %LLC miss rate: 0.001005, %remote: 1.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 141,537, 191, (local_str: 7), (remote_str: 5) - 160,413 xs 1,102,883
+LLC_hit_rate: 0.998651, Local %: 0.583333, : 4
+LLC_hit_rate_uc: 0.00000034349522225
+Local_uc %%: 0.00000020064297474
+inter_socket_activity: 0.02094240837696335 other normalizatin: 0.25000000000000000
+Number of unhalted cycles: 2907320
+%loads: 0.145449, %LLC miss rate: 0.001349, %remote: 0.416667, intersocket: 0.020942
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 133,068, 211, (local_str: 14), (remote_str: 12) - 155,533 xs 1,166,137
+LLC_hit_rate: 0.998414, Local %: 0.538462, : 4
+LLC_hit_rate_uc: 0.00000036128591351
+Local_uc %%: 0.00000019484752986
+inter_socket_activity: 0.01895734597156398 other normalizatin: 0.13333333333333333
+Number of unhalted cycles: 2763502
+%loads: 0.133375, %LLC miss rate: 0.001586, %remote: 0.461538, intersocket: 0.018957
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 167,633, 98, (local_str: 0), (remote_str: 0) - 178,066 xs 1,558,415
+LLC_hit_rate: 0.999415, Local %: -nan, : 0
+LLC_hit_rate_uc: 0.00000031197579324
+Local_uc %%: -nan
+inter_socket_activity: 0.00000000000000000 other normalizatin: -nan
+Number of unhalted cycles: 3203503
+%loads: 0.114261, %LLC miss rate: 0.000585, %remote: 0.000000, intersocket: 0.000000
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 173,185, 171, (local_str: 0), (remote_str: 0) - 174,013 xs 2,169,146
+LLC_hit_rate: 0.999013, Local %: -nan, : 269
+LLC_hit_rate_uc: 0.00000021436939534
+Local_uc %%: -nan
+inter_socket_activity: 1.57309941520467844 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 4660239
+%loads: 0.080222, %LLC miss rate: 0.000987, %remote: 0.000000, intersocket: 1.573099
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 159,255, 149, (local_str: 0), (remote_str: 0) - 216,286 xs 1,389,685
+LLC_hit_rate: 0.999064, Local %: -nan, : 3
+LLC_hit_rate_uc: 0.00000032929939348
+Local_uc %%: -nan
+inter_socket_activity: 0.02013422818791946 other normalizatin: 1.00000000000000000
+Number of unhalted cycles: 3033909
+%loads: 0.155637, %LLC miss rate: 0.000936, %remote: 0.000000, intersocket: 0.020134
+CPU is : 0 - CPU is : 1 - CPU is : 2 - CPU is : 3 - CPU is : 4 - CPU is : 5 - CPU is : 6 - CPU is : 7 - CPU is : 8 - CPU is : 9 - 
+1???: 139,814, 92, (local_str: 0), (remote_str: 0) - 205,471 xs 1,392,032
+LLC_hit_rate: 0.999342, Local %: -nan, : 0
+LLC_hit_rate_uc: 0.00000034547007708
+Local_uc %%: -nan
+inter_socket_activity: 0.00000000000000000 other normalizatin: -nan
+Number of unhalted cycles: 2892702
+%loads: 0.147605, %LLC miss rate: 0.000658, %remote: 0.000000, intersocket: 0.000000
