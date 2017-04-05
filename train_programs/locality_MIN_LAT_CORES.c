@@ -43,16 +43,22 @@ int main(int argc, char* argv[])
   int number_of_threads = atoi(argv[1]);
 
   bool pin = false;
-  if (argc == 3) {
+  if (argc >= 3) {
     pin = true;
   }
 
   pthread_t threads[number_of_threads];
 
-  int cores[11] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20};
-  //int cores[11] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40};
-
-  //int cores[11] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+  #ifdef LOC_HWCS
+  int cores[33] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
+#elif LOC_CORES
+  int cores[33] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76};
+#else
+  int cores[33];
+  for (int i = 0; i < 33; ++i) {
+    cores[i] = i;
+  }
+#endif
 
   if (pin) {
     cpu_set_t st;

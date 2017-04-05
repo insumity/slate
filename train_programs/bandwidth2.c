@@ -60,11 +60,14 @@ int main(int argc, char* argv[])
   pthread_t threads[number_of_threads];
 
 #ifdef LOC_HWCS
-  int cores[20] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
+  int cores[33] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
 #elif LOC_CORES
-  int cores[20] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76};
+  int cores[33] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76};
 #else
-  int cores[20] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+  int cores[33];
+  for (int i = 0; i < 33; ++i) {
+    cores[i] = i;
+  }
 #endif
 
   if (pin) {
@@ -92,7 +95,7 @@ int main(int argc, char* argv[])
     }
 
     if (pin) {
-      printf("I'mm about to pin!\n");
+      printf("I'm about to pin!\n");
       cpu_set_t st;
       CPU_ZERO(&st);
       CPU_SET(cores[i], &st);

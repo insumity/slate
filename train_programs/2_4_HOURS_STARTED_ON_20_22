@@ -1,0 +1,9 @@
+Operations: 0.000000
+		Context every loop: 20
+			To communicate: 0
+				Memory size in KB: 0
+				Iteration: 0
+					Policy: 0
+							Threads: 4
+							Threads: 8
+							Threads: 12

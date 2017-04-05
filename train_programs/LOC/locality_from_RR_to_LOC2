@@ -1,0 +1,3 @@
+retired_uops	loads_retired_ups	LLC_misses	LLC_references	local_accesses	remote_accesses	inter_socket1	inter_socket2	context_switches	number_of_threads
+3434681947		385665704		7782933		8026245		2826		2477		1349		6009238		1		3
+3758277902		434579978		7994663		7961308		2310		2594		1777		5131020		-1		3

@@ -21,8 +21,8 @@ int get_line_number_of_context_switches(bool isVoluntary, FILE* fp) {
   rewind(fp);
 
   int lines = 1;
-  char* line = malloc(1000);
-  while (fgets(line, 1000, fp) != NULL) {
+  char line[2000];
+  while (fgets(line, 2000, fp) != NULL) {
     if (isVoluntary && starts_with(line, "voluntary")) {
       return lines;
     }
@@ -37,6 +37,7 @@ int get_line_number_of_context_switches(bool isVoluntary, FILE* fp) {
 
 char* get_nth_line(int n, FILE* fp) {
   rewind(fp);
+
   int lines = 1;
 
   char* line = malloc(1000);
@@ -64,18 +65,26 @@ long long extract_number(char* line) {
   return res;
 }
 
-int read_context_switches(bool isVoluntary, pid_t pid) {
+long long read_context_switches(bool isVoluntary, pid_t pid) {
   char filename[1000];
   sprintf(filename, "/proc/%ld/status", (long int) pid);
-  printf("Filename: (%s)\n", filename);
 
   FILE* fp = fopen(filename, "r");
+  if (fp == NULL) {
+    printf("FILENAME:: %s and pid: %ld\n", filename, (long int) pid);
+    perror("couldn't open file");
+    return -1;
+  }
+  
   char* line;
 
   int voluntary_line = get_line_number_of_context_switches(true, fp);
   int unvoluntary_line = get_line_number_of_context_switches(false, fp);
 
-  printf("%d ... %d\n", voluntary_line, unvoluntary_line);
+  if (voluntary_line == -1 || unvoluntary_line == -1) {
+    return -1;
+  }
+
   if (isVoluntary) {
     line = get_nth_line(voluntary_line, fp);
   }
@@ -83,12 +92,16 @@ int read_context_switches(bool isVoluntary, pid_t pid) {
     line = get_nth_line(unvoluntary_line, fp);
   }
 
-  printf("First line: (%s) %lld\n", get_nth_line(voluntary_line, fp), extract_number(get_nth_line(voluntary_line, fp)));
-  printf("First line: (%s) %lld\n", get_nth_line(unvoluntary_line, fp), extract_number(get_nth_line(unvoluntary_line, fp)));
+  if (line == NULL) {
+    return -1;
+  }
 
+  long long result = extract_number(line);
   free(line);
-  fclose(fp);
-  return 0;
+  if (fclose(fp) != 0) {
+    perror("couldn't close the file");
+  }
+  return result;
 }
 
 /* int main(int argc, char* argv[]) */
