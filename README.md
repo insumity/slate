@@ -53,3 +53,16 @@ TODO
 perf stat -e L1-dcache-load-misses -e L1-dcache-loads -e L1-dcache-store-misses -e L1-dcache-stores -e L1-icache-load-misses -e LLC-loads -e LLC-load-misses -e LLC-store-misses -e LLC-stores -e cache-misses  -e cache-references -e stalled-cycles-frontend ./a.out 
 
 
+event - perf counter for quad
+PAPI_L3_TCA   r4F2E
+PAPI_L3_TCM   r412E
+MEM_LOAD_UOPS_LLC_MISS_RETIRED:LOCAL_DRAM  r03D3
+MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_DRAM r0CD3                                                                                                                                                                                                                  MEM_UOPS_RETIRED:ALL_LOADS r81D0
+UOPS_RETIRED r01C2 
+UNHALTED_CORE_CYCLES r003C (seems to be ...)
+MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_FWD r20D3
+MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_HITM r10D3
+
+
+
+
