@@ -5,56 +5,36 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
-#include <numa.h>
-#include <getopt.h>
-#include <strings.h>
 
-const int KB = 1024;
-const long long int MB = 1024 * 1024;
-const long long int GB = 1024 * 1024 * 1024;
+volatile int x[48 * 16]; // 16 * sizeof(int) = 4 = 64B -> one cache line
 
-typedef struct {
-  int repetions;
-  int numa_node;
-} inc_dt;
-
-void *inc(void *index_pt)
+void *writer(void *index_pt)
 {
-  sleep(3);
-  inc_dt* dt = (inc_dt *) index_pt;
-  long long size = 2 * GB;
-  int repetions = dt->repetions;
-  int numa_node = dt->numa_node;
-  
-  char *y = numa_alloc_onnode(sizeof(char) * size, numa_node);
-  bzero(y, sizeof(char) * size);
+  int index = *((int *) index_pt);
 
-  char sum = 0;
-
-  const long long int n_warmup = size >> 2;
-  for (long long int i = 0; i < n_warmup; i++) {
-    sum = y[i];
-  }
-  
-  for (long long int k = 0; k < repetions; ++k) {
-    for (long long int j = 0; j < size; ++j) {
-      sum = y[j];
+  int loops = 0;
+  while (true) {
+    if (loops % 1000000 == 0) {
+      x[index * 16]++;
     }
+    loops++;
   }
 
-  for (long long int k = 0; k < repetions; ++k) {
-    for (long long int j = 0; j < size; ++j) {
-      y[j] = 0xFF;
+}
+
+void *reader(void *index_pt)
+{
+  int index = *((int *) index_pt);
+
+  long sum = 0;
+  int loops = 0;
+  while (true) {
+    if (loops % 1000000 == 0) {
+      sum += x[index * 16];
     }
+    loops++;
   }
-
-  for (long long int i = 0; i < n_warmup; i++) {
-    sum = y[i];
-  }
-  
-  printf("%c\n", sum);
-
-  return NULL;
+  printf("%ld\n", sum);
 }
 
 int main(int argc, char* argv[])
@@ -63,15 +43,12 @@ int main(int argc, char* argv[])
 
   int oc;
 
-  int number_of_threads, repetitions, pin, pol;
+  int number_of_threads, pin, pol;
   pin = 0;
-  while ((oc = getopt(argc, argv, "t:r:s:p")) != -1) {
+  while ((oc = getopt(argc, argv, "t:s:p")) != -1) {
     switch (oc) {
     case 't':
       number_of_threads = atoi(optarg);
-      break;
-    case 'r':
-      repetitions = atoi(optarg);
       break;
     case 's':
       printf("P input: (%s)\n", optarg);
@@ -81,13 +58,12 @@ int main(int argc, char* argv[])
       pin = 1;
       break;
     default:
-      printf("Use t, r, s, or p as options!\n");
+      printf("Use t, s, or p as option!\n");
     }
   }
 
-  
-  pthread_t threads[number_of_threads];
 
+  pthread_t threads[number_of_threads];
 
   int cores_loc_hwcs[20] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
 
@@ -97,7 +73,6 @@ int main(int argc, char* argv[])
 			     2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46,
 			     3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47};
   
-
   int cores_rr[48];
   for (int i = 0; i < 48; ++i) {
     cores_rr[i] = i;
@@ -123,31 +98,38 @@ int main(int argc, char* argv[])
     sched_setaffinity(0,  sizeof(cpu_set_t), &st);
   }
 
+
   printf("The number of threads is: %d\n", number_of_threads);
   printf("Used cores are:\n");
+
   int cnt = 0;
   for (int i = 0; i < number_of_threads; ++i) {
-    inc_dt* dt = malloc(sizeof(inc_dt));
-    dt->repetions = repetitions;
-
-    if (pthread_create(&threads[i], NULL, inc, dt)) {
-      fprintf(stderr, "Error creating thread\n");
-      return EXIT_FAILURE;
+    int* pa = malloc(sizeof(int));
+    *pa = i;
+    if (i % 2 == 0) {
+      if (pthread_create(&threads[i], NULL, writer, pa)) {
+	fprintf(stderr, "Error creating thread\n");
+	return EXIT_FAILURE;
+      }
+    }
+    else {
+      if (pthread_create(&threads[i], NULL, reader, pa)) {
+	fprintf(stderr, "Error creating thread\n");
+	return EXIT_FAILURE;
+      }
     }
 
     if (pin) {
-      fprintf(stderr, "I'm about to pin!\n");
       cpu_set_t st;
       CPU_ZERO(&st);
       CPU_SET(cores[i], &st);
-      dt->numa_node = cores[i] % 4;
       printf("%d ", cores[i]);
-      fprintf(stderr, "Core: %d going to node: %d\n", cores[i], dt->numa_node);
       if (pthread_setaffinity_np(threads[i], sizeof(st), &st)) {
 	perror("Something went wrong while setting the affinity!\n");
 	return EXIT_FAILURE;
       }
     }
+    
   }
   printf("\n");
 
