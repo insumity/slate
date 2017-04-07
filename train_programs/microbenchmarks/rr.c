@@ -22,35 +22,38 @@ void *inc(void *index_pt)
 {
   sleep(3);
   inc_dt* dt = (inc_dt *) index_pt;
-  long long size = 2 * GB;
-  int repetions = dt->repetions;
+  long long size = 5 * GB;
+  int repetions = 1000;
   int numa_node = dt->numa_node;
   
-  char *y = numa_alloc_onnode(sizeof(char) * size, numa_node);
-  bzero(y, sizeof(char) * size);
+  char *y = numa_alloc_onnode(size, numa_node);
+  bzero(y, size);
 
   char sum = 0;
 
-  const long long int n_warmup = size >> 2;
-  for (long long int i = 0; i < n_warmup; i++) {
-    sum = y[i];
-  }
+  /* const long long int n_warmup = size >> 2; */
+  /* for (long long int i = 0; i < n_warmup; i++) { */
+  /*   sum = y[i]; */
+  /* } */
   
   for (long long int k = 0; k < repetions; ++k) {
-    for (long long int j = 0; j < size; ++j) {
-      sum = y[j];
+    for (long long int j = 0; j < size / 64; ++j) {
+      sum = y[j * 64];
+      //y[j] = 0XFF;
     }
   }
 
-  for (long long int k = 0; k < repetions; ++k) {
-    for (long long int j = 0; j < size; ++j) {
-      y[j] = 0xFF;
-    }
-  }
+  fprintf(stderr, "Never reaches this point!\n");
 
-  for (long long int i = 0; i < n_warmup; i++) {
-    sum = y[i];
-  }
+  /* for (long long int k = 0; k < repetions; ++k) { */
+  /*   for (long long int j = 0; j < size; ++j) { */
+  /*     y[j] = 0xFF; */
+  /*   } */
+  /* } */
+
+  /* for (long long int i = 0; i < n_warmup; i++) { */
+  /*   sum = y[i]; */
+  /* } */
   
   printf("%c\n", sum);
 
@@ -63,15 +66,12 @@ int main(int argc, char* argv[])
 
   int oc;
 
-  int number_of_threads, repetitions, pin, pol;
+  int number_of_threads, pin, pol;
   pin = 0;
-  while ((oc = getopt(argc, argv, "t:r:s:p")) != -1) {
+  while ((oc = getopt(argc, argv, "t:s:p")) != -1) {
     switch (oc) {
     case 't':
       number_of_threads = atoi(optarg);
-      break;
-    case 'r':
-      repetitions = atoi(optarg);
       break;
     case 's':
       printf("P input: (%s)\n", optarg);
@@ -128,7 +128,6 @@ int main(int argc, char* argv[])
   int cnt = 0;
   for (int i = 0; i < number_of_threads; ++i) {
     inc_dt* dt = malloc(sizeof(inc_dt));
-    dt->repetions = repetitions;
 
     if (pthread_create(&threads[i], NULL, inc, dt)) {
       fprintf(stderr, "Error creating thread\n");

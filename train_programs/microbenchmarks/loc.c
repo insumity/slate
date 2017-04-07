@@ -5,35 +5,19 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
+#include <stdatomic.h>
 
-volatile int x[20];
-int time_before_exit;
+#define ATOMIC_INTS_PER_CACHE_LINE 16
 
-void *inc(void *index_pt)
+int number_of_counters = 20;
+atomic_int counters[20 * ATOMIC_INTS_PER_CACHE_LINE]; 
+
+void *inc(void *v)
 {
-  int index = *((int *) index_pt);
-  //struct timespec start, finish;
-  //double elapsed;
-  //clock_gettime(CLOCK_MONOTONIC, &start);
-
   int loops = 0;
   while (true) {
-    x[loops % 20]++;
+    atomic_fetch_add(&counters[(loops % 20) * ATOMIC_INTS_PER_CACHE_LINE], 1);
     loops++;
-    //if (loops % 100000000 == 0) {
-      //times++;
-      //loops = 0;
-
-      // clock_gettime(CLOCK_MONOTONIC, &finish);
-      /* elapsed = (finish.tv_sec - start.tv_sec); */
-      /* if (elapsed >= time_before_exit) { */
-      /* 	printf("elapsed: %lf\n", elapsed); */
-      /* 	return NULL; */
-      /* } */
-      /* if (times == 2) { */
-      /* 	return NULL; */
-      /* } */
-    //}
   }
 }
 
@@ -62,12 +46,9 @@ int main(int argc, char* argv[])
     }
   }
 
-
   pthread_t threads[number_of_threads];
+  //int cores_loc_hwcs[20] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
 
-  int cores_loc_hwcs[20] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
-
-  
   int cores_loc_cores[48] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44,
 			     1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45,
 			     2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46,

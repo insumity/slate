@@ -4,42 +4,23 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
-#include <stdatomic.h>
 #include <time.h>
-
+#include <stdatomic.h>
 
 #define ATOMIC_INTS_PER_CACHE_LINE 16
-#define MAX_NUM_THREADS 48
 
-atomic_int shared_memory[MAX_NUM_THREADS * ATOMIC_INTS_PER_CACHE_LINE]; 
+int number_of_counters = 1;
+atomic_int counters[1 * ATOMIC_INTS_PER_CACHE_LINE]; 
 
-void *writer(void *index_pt)
+void *inc(void *v)
 {
-  int index = *((int *) index_pt);
-
   int loops = 0;
   while (true) {
-    for (int i = 0; i < MAX_NUM_THREADS; ++i) {
-      atomic_fetch_add(&shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE], 1);
+    if (loops % 1000 == 0) {
+      atomic_fetch_add(&counters[0], 1);
     }
     loops++;
   }
-
-}
-
-void *reader(void *index_pt)
-{
-  int index = *((int *) index_pt);
-
-  long sum = 0;
-  int loops = 0;
-  while (true) {
-    for (int i = 0; i < MAX_NUM_THREADS; ++i) {
-      sum += shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE];
-    }
-    loops++;
-  }
-  printf("%ld\n", sum);
 }
 
 int main(int argc, char* argv[])
@@ -67,12 +48,9 @@ int main(int argc, char* argv[])
     }
   }
 
-
   pthread_t threads[number_of_threads];
+  //int cores_loc_hwcs[20] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
 
-  int cores_loc_hwcs[20] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84};
-
-  
   int cores_loc_cores[48] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44,
 			     1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45,
 			     2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46,
@@ -110,22 +88,10 @@ int main(int argc, char* argv[])
   int cnt = 0;
   for (int i = 0; i < number_of_threads; ++i) {
     int* pa = malloc(sizeof(int));
-
-
-    
-    if (i % 2 == 0) {
-      *pa = i;
-      if (pthread_create(&threads[i], NULL, writer, pa)) {
-	fprintf(stderr, "Error creating thread\n");
-	return EXIT_FAILURE;
-      }
-    }
-    else {
-      *pa = i - 1;
-      if (pthread_create(&threads[i], NULL, reader, pa)) {
-	fprintf(stderr, "Error creating thread\n");
-	return EXIT_FAILURE;
-      }
+    *pa = i;
+    if (pthread_create(&threads[i], NULL, inc, pa)) {
+      fprintf(stderr, "Error creating thread\n");
+      return EXIT_FAILURE;
     }
 
     if (pin) {

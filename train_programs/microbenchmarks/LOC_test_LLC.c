@@ -11,6 +11,8 @@
 #define ATOMIC_INTS_PER_CACHE_LINE 16
 #define MAX_NUM_THREADS 48
 
+#define LIMIT 12500
+
 atomic_int shared_memory[MAX_NUM_THREADS * ATOMIC_INTS_PER_CACHE_LINE]; 
 
 void *writer(void *index_pt)
@@ -19,8 +21,8 @@ void *writer(void *index_pt)
 
   int loops = 0;
   while (true) {
-    for (int i = 0; i < MAX_NUM_THREADS; ++i) {
-      atomic_fetch_add(&shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE], 1);
+    if (loops % LIMIT == 0) {
+      atomic_fetch_add(&shared_memory[index * ATOMIC_INTS_PER_CACHE_LINE], 1);
     }
     loops++;
   }
@@ -34,8 +36,8 @@ void *reader(void *index_pt)
   long sum = 0;
   int loops = 0;
   while (true) {
-    for (int i = 0; i < MAX_NUM_THREADS; ++i) {
-      sum += shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE];
+    if (loops % LIMIT == 0) {
+      sum += shared_memory[index * ATOMIC_INTS_PER_CACHE_LINE];
     }
     loops++;
   }
