@@ -1,7 +1,9 @@
 all:
 	gcc -g loc2.c -o loc2 -lpthread -lnuma
+	gcc -g loc3.c -o loc3 -lpthread -lnuma
 	gcc -g rr.c -o rr -lpthread -lnuma
 	gcc -g loc.c -o loc -lpthread -lnuma
+	gcc -g rr2.c -o rr2 -lpthread -lnuma
 	g++ -c -g gather_data.cpp -std=c++11
 	gcc -c -g read_counters.c
 	gcc -c -g read_context_switches.c

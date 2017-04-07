@@ -10,13 +10,15 @@
 #define ATOMIC_INTS_PER_CACHE_LINE 16
 
 int number_of_counters = 1;
-atomic_int counters[1 * ATOMIC_INTS_PER_CACHE_LINE]; 
+atomic_int counters[1 * ATOMIC_INTS_PER_CACHE_LINE];
+
+int every_loop = 1;
 
 void *inc(void *v)
 {
   int loops = 0;
   while (true) {
-    if (loops % 1000 == 0) {
+    if (loops % every_loop == 0) {
       atomic_fetch_add(&counters[0], 1);
     }
     loops++;
@@ -31,7 +33,7 @@ int main(int argc, char* argv[])
 
   int number_of_threads, pin, pol;
   pin = 0;
-  while ((oc = getopt(argc, argv, "t:s:p")) != -1) {
+  while ((oc = getopt(argc, argv, "t:s:l:p")) != -1) {
     switch (oc) {
     case 't':
       number_of_threads = atoi(optarg);
@@ -42,6 +44,10 @@ int main(int argc, char* argv[])
       break;
     case 'p':
       pin = 1;
+      break;
+    case 'l':
+      every_loop = atoi(optarg);
+      printf("Every loop (l) is now: %d\n", every_loop);
       break;
     default:
       printf("Use t, s, or p as option!\n");
