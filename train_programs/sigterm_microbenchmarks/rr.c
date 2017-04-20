@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <signal.h>
 #include <strings.h>
+#include <assert.h>
 
 const int KB = 1024;
 const long long int MB = 1024 * 1024;
@@ -23,58 +24,47 @@ typedef struct {
 
 int number_of_threads, pin, pol;
 #define MAX_NUMBER_OF_THREADS 50
-volatile long long int loops_per_thread[MAX_NUMBER_OF_THREADS];
+#define LONG_LONG_PER_CACHE_LINE 8
+volatile long long int loops_per_thread[LONG_LONG_PER_CACHE_LINE * MAX_NUMBER_OF_THREADS];
 
 void *inc(void *v)
 {
-  sleep(3);
   inc_dt* dt = (inc_dt *) v;
 
   long long size = 5 * GB;
   int repetions = 1000;
   int numa_node = dt->numa_node;
-  
+
+  struct timespec start;
+  clock_gettime(CLOCK_MONOTONIC, &start);
+
   char *y = numa_alloc_onnode(size, numa_node);
   bzero(y, size);
 
+  struct timespec end;
+  clock_gettime(CLOCK_MONOTONIC, &end);
+
+  double elapsed = (end.tv_sec - start.tv_sec);
+  if (elapsed < 20) {
+    sleep(20 - elapsed); // make sure the whole operation of alloc + bzero takes exactly 20s
+  }
+
   char sum = 0;
 
-  /* const long long int n_warmup = size >> 2; */
-  /* for (long long int i = 0; i < n_warmup; i++) { */
-  /*   sum = y[i]; */
-  /* } */
   int index_thread = dt->index;
   long long int loops = 0;
   long offset = 1L << 14;
 
   for (long long int k = 0; k < repetions; ++k) {
-    /* for (long long int j = 0; j < size / 64; ++j) { */
-    /*   sum = y[j * 64]; */
-    /*   if (j & offset == offset) { // j instead of loops, so I don't have an extra addition inside the loop */
-    /* 	loops_per_thread[index_thread]++; */
-    /*   } */
-    /* } */
-
     for (long long int times = 0; times < size / 64; times += offset) {
       for (long long int j = 0; j < offset; ++j) {
-	sum = y[j * 64];
+	sum = y[(offset + j) * 64];
       }
-      loops_per_thread[index_thread]++;
+      loops_per_thread[LONG_LONG_PER_CACHE_LINE * index_thread]++;
     }
   }
 
   fprintf(stderr, "Never reaches this point!\n");
-
-  /* for (long long int k = 0; k < repetions; ++k) { */
-  /*   for (long long int j = 0; j < size; ++j) { */
-  /*     y[j] = 0xFF; */
-  /*   } */
-  /* } */
-
-  /* for (long long int i = 0; i < n_warmup; i++) { */
-  /*   sum = y[i]; */
-  /* } */
-  
   printf("%c\n", sum);
 
   return NULL;
@@ -85,7 +75,7 @@ void sig_handler(int signo)
   long long sum = 0;
   if (signo == SIGINT) {
     for (int i = 0; i < number_of_threads; ++i) {
-      sum += loops_per_thread[i];
+      sum += loops_per_thread[LONG_LONG_PER_CACHE_LINE * i];
     }
     printf("received SIGINT: %lld\n", sum);
   }

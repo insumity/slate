@@ -16,7 +16,9 @@ atomic_int counters[20 * ATOMIC_INTS_PER_CACHE_LINE];
 
 int number_of_threads, pin, pol;
 #define MAX_NUMBER_OF_THREADS 50
-volatile long long int loops_per_thread[MAX_NUMBER_OF_THREADS];
+
+#define LONG_LONGS_PER_CACHE_LINE 8
+long long int loops_per_thread[LONG_LONGS_PER_CACHE_LINE * MAX_NUMBER_OF_THREADS];
 
 void *inc(void *v)
 {
@@ -28,7 +30,7 @@ void *inc(void *v)
     loops++;
     
     if (loops & offset == offset) {
-      loops_per_thread[index]++;
+      loops_per_thread[LONG_LONGS_PER_CACHE_LINE * index]++;
     }
   }
 
@@ -38,9 +40,9 @@ void *inc(void *v)
 void sig_handler(int signo)
 {
   long long sum = 0;
-  if (signo == SIGINT || signo == SIGKILL) {
+  if (signo == SIGINT) {
     for (int i = 0; i < number_of_threads; ++i) {
-      sum += loops_per_thread[i];
+      sum += loops_per_thread[LONG_LONGS_PER_CACHE_LINE * i];
     }
     printf("received SIGINT: %lld\n", sum);
   }

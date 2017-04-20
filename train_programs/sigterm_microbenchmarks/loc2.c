@@ -1,5 +1,4 @@
 /* Microbenchmark where half of the threads are reading and half of the others are writing in a shared array that fits in LLC. */
-
 #define _GNU_SOURCE
 #include <pthread.h>
 #include <stdio.h>
@@ -15,12 +14,14 @@
 #define KB 1024
 #define MB (1024 * KB)
 
-atomic_int shared_memory[16 * MB];
+atomic_int shared_memory[16 * (256 * KB)];
 
 
 int number_of_threads, pin, pol;
 #define MAX_NUMBER_OF_THREADS 50
-volatile long long int loops_per_thread[MAX_NUMBER_OF_THREADS];
+
+#define LONG_LONGS_PER_CACHE_LINE 8
+long long int loops_per_thread[LONG_LONGS_PER_CACHE_LINE * MAX_NUMBER_OF_THREADS];
 
 
 void *writer(void *v)
@@ -30,13 +31,13 @@ void *writer(void *v)
   long offset = 1L << 14;
 
   while (true) {
-    for (int i = 0; i < MB; ++i) {
+    for (int i = 0; i < 256 * KB; ++i) {
       atomic_fetch_add(&shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE], 1);
     }
     loops++;
 
     if (loops & offset == offset) {
-      loops_per_thread[index]++;
+      loops_per_thread[LONG_LONGS_PER_CACHE_LINE * index]++;
     }
   }
 
@@ -48,7 +49,7 @@ void sig_handler(int signo)
   long long sum = 0;
   if (signo == SIGINT) {
     for (int i = 0; i < number_of_threads; ++i) {
-      sum += loops_per_thread[i];
+      sum += loops_per_thread[LONG_LONGS_PER_CACHE_LINE * i];
     }
     printf("received SIGINT: %lld\n", sum);
   }
@@ -74,7 +75,7 @@ void *reader(void *index_pt)
   long sum = 0;
   int loops = 0;
   while (true) {
-    for (int i = 0; i < MB; ++i) {
+    for (int i = 0; i < 256 * KB; ++i) {
       sum += shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE];
     }
     loops++;
@@ -155,8 +156,10 @@ int main(int argc, char* argv[])
   for (int i = 0; i < number_of_threads; ++i) {
     int* pa = malloc(sizeof(int));
     *pa = i;
-    
-    if (i % 2 == 0) {
+
+    // splot the readers and the writers in such a way that each socket has both readers and writers
+    int mod8 = i % 8;
+    if (mod8 == 0 || mod8 == 3 || mod8 == 5 || mod8 == 6) {
       if (pthread_create(&threads[i], NULL, writer, pa)) {
 	fprintf(stderr, "Error creating thread\n");
 	return EXIT_FAILURE;

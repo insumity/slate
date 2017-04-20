@@ -109,13 +109,20 @@ long long* read_and_print_perf_counters(bool is_rr, int result, long long values
   }
   else {
     if (is_rr) {
-      std::cerr << "0, 1, ";
+      //std::cerr << "0, 1, ";
+      std::cerr << "0 1 ";
+
     }
     else {
-      std::cerr << "1, 0, ";
+      //std::cerr << "1, 0, ";
+      std::cerr << "1 0 ";
+
     }
-    std::cerr << UOPS_RETIRED << ", " << ALL_LOADS << ", " << LLC_TCM << ", " << LLC_TCA << ", " << LOCAL_DRAM << ", " << REMOTE_DRAM << ", "
-	      << inter_socket_activity1 << ", " << inter_socket_activity2 << ", " << context_switches << ", " << number_of_threads << ", " << result << std::endl << std::flush;
+    //    std::cerr << UOPS_RETIRED << ", " << ALL_LOADS << ", " << LLC_TCM << ", " << LLC_TCA << ", " << LOCAL_DRAM << ", " << REMOTE_DRAM << ", "
+    //	      << inter_socket_activity1 << ", " << inter_socket_activity2 << ", " << context_switches << ", " << number_of_threads << ", " << result << std::endl << std::flush;
+    std::cerr << UOPS_RETIRED << " " << ALL_LOADS << " " << LLC_TCM << " " << LLC_TCA << " " << LOCAL_DRAM << " " << REMOTE_DRAM << " "
+	      << inter_socket_activity1 << " " << inter_socket_activity2 << " " << context_switches << " " << number_of_threads << " " << result << std::endl << std::flush;
+
   }
 
   double LLC_hit_rate = 1.0 - (LLC_TCM / (double) LLC_TCA);

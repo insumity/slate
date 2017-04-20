@@ -54,7 +54,6 @@ void *inc(void *index_pt)
   /* } */
   
   for (long long int k = 0; k < repetions; ++k) {
-
     
     for (long long int j = 0; j < size / 64; ++j) {
       sum = y[j * 64];

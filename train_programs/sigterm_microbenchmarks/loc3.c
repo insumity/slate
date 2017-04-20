@@ -21,15 +21,24 @@ int number_of_threads, pin, pol;
 #define MAX_NUMBER_OF_THREADS 50
 volatile long long int loops_per_thread[MAX_NUMBER_OF_THREADS];
 
+#define RANDOM_NUMBERS 250000
+
+typedef struct {
+  int index;
+  int* random_numbers;
+} thread_dt;
 
 void *writer(void *v)
 {
-  int index_thread = *((int *) v);
+  thread_dt* dt = (thread_dt *) v;
+  int index_thread = dt->index;
   long long int loops = 0;
   long offset = 1L << 14;
 
+  int* random_numbers = dt->random_numbers;
+
   while (true) {
-    int index = rand() % (16 * KB);
+    int index = random_numbers[loops % RANDOM_NUMBERS];
     atomic_fetch_add(&shared_memory[index * ATOMIC_INTS_PER_CACHE_LINE], 1);
     loops++;
 
@@ -43,13 +52,17 @@ void *writer(void *v)
 
 void *reader(void *v)
 {
-  int index_thread = *((int *) v);
+  thread_dt* dt = (thread_dt *) v;
+  int index_thread = dt->index;
   long long int loops = 0;
   long offset = 1L << 14;
 
   long sum = 0;
+
+  int* random_numbers = dt->random_numbers;
+
   while (true) {
-    int index = rand() % (16 * KB);
+    int index = random_numbers[loops % RANDOM_NUMBERS];
     sum += shared_memory[index * ATOMIC_INTS_PER_CACHE_LINE];
     loops++;
 
@@ -158,8 +171,12 @@ int main(int argc, char* argv[])
 
   int cnt = 0;
   for (int i = 0; i < number_of_threads; ++i) {
-    int* pa = malloc(sizeof(int));
-    *pa = i;
+    thread_dt* pa = malloc(sizeof(thread_dt));
+    pa->index = i;
+    pa->random_numbers = malloc(sizeof(int) * RANDOM_NUMBERS);
+    for (int i = 0; i < RANDOM_NUMBERS; ++i) {
+      pa->random_numbers[i] = rand() % (16 * KB);
+    }
 
     if (i % 2 == 0) {
       if (pthread_create(&threads[i], NULL, writer, pa)) {
