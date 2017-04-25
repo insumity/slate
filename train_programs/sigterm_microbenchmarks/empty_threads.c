@@ -11,7 +11,7 @@
 void *inc(void *v)
 {
   while (true) {
-    usleep(10000);
+    usleep(100000000);
   }
 
   return NULL;

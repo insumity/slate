@@ -4,6 +4,7 @@ all:
 	gcc -g rr.c -o rr -lpthread -lnuma
 	gcc -g loc.c -o loc -lpthread -lnuma
 	gcc -g sort.c -o sort -lpthread -lnuma
+	gcc -g empty_threads.c -o empty_threads -lpthread -lnuma
 
 	gcc -g lock.c -o lock -lpthread 
 	gcc -g rr2.c -o rr2 -lpthread -lnuma
