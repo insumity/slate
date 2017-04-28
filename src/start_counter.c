@@ -20,7 +20,7 @@
 #define B_PAPI_MULTIPLEX
 
 typedef struct {
-  long long values[8];
+  volatile long long values[9];
   pthread_mutex_t lock;
 } core_data;
 
@@ -28,13 +28,13 @@ typedef struct {
 int add_events(int event_set) {
 
 #ifdef B_PAPI_ENABLED
-  int retval = PAPI_add_named_event(event_set, "UNHALTED_CORE_CYCLES");
+  int retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_RETIRED:L3_HIT");
   if (retval != PAPI_OK) {
     printf("Couldn't add L3_TCA\n");
     exit(1);
     }
     
-  retval = PAPI_add_named_event(event_set, "INSTRUCTIONS_RETIRED");
+  retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_RETIRED:L3_MISS");
   if (retval != PAPI_OK) {
     printf("Couldn't add L3_TCM\n");
     exit(1);
@@ -54,30 +54,36 @@ int add_events(int event_set) {
 #endif
   
 #ifdef B_PAPI_MULTIPLEX
-  retval = PAPI_add_event(event_set, PAPI_L3_TCA);
+  retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_RETIRED:L2_MISS");
   if (retval != PAPI_OK) {
-    perror("1) eat shit ..\n");
+    perror("couldn't add mem PAPI_L2_LDM\nn");
     exit(1);
   }
 
-  printf("I'm here\n");
-  retval = PAPI_add_event(event_set, PAPI_L3_TCM);
+  retval = PAPI_add_named_event(event_set, "UOPS_RETIRED");
   if (retval != PAPI_OK) {
-    perror("2) eat shit ..\n");
-    exit(1);
-  }
-
-  retval = PAPI_add_named_event(event_set, "ICACHE:MISSES");
-  if (retval != PAPI_OK) {
-    perror("3) eat shit ..\n");
+    perror("couldn't add retired l2 miss\n");
     exit(1);
   }
   
-  retval = PAPI_add_event(event_set, PAPI_L1_DCM);
+  retval = PAPI_add_named_event(event_set, "UNHALTED_CORE_CYCLES");
   if (retval != PAPI_OK) {
-    perror("4) eat shit ..\n");
+    perror("couldn't add unhalted core cycles\n");
     exit(1);
   }
+
+  retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_FWD");
+  if (retval != PAPI_OK) {
+    perror("couldn't add remote_fwd llc miss\n");
+    exit(1);
+  }
+
+  retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_HITM");
+  if (retval != PAPI_OK) {
+    perror("couldn't add remote_hitm llc miss\n");
+    exit(1);
+  }
+
 #endif
 
   return event_set;
@@ -97,22 +103,25 @@ void start_counters(int event_set) {
 
 core_data* data;
 void read_counters(int event_set) {
-  long long results[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+  long long results[9] = {0, 0, 0, 0, 0, 0, 0, 0};
   int retval;
 
-  retval = PAPI_stop(event_set, results);
+  retval = PAPI_read(event_set, results);
   if (retval != PAPI_OK) {
     printf("The event hasn't started yet!\n");
   }
 
   pthread_mutex_lock(&(data->lock));
-  for (int i = 0; i < 8; ++i) {
-    data->values[i] = results[i];
-  }
-  pthread_mutex_unlock(&(data->lock));
+
   
-  // printf("X 1) unhalted core cycles:  \t %lld instructions retired:  \t %lld memory local:\t %lld memory remote:\t %lld\n", results[0], results[1], results[2], results[3]);
-  // printf("X 2) l3tca:\t %lld L3TCM:\t %lld l2tcm:\t %lld totcyc:\t %lld\n", results[4], results[5], results[6], results[7]);
+  //printf(">>>\t\t");
+  for (int i = 0; i < 9; ++i) {
+    data->values[i] = results[i];
+    //i < 8? printf("%lld\t\t", results[i]): printf("%lld\n", results[i]);
+  }
+  
+  msync(data, sizeof(core_data), MS_SYNC);
+  pthread_mutex_unlock(&(data->lock));
 }
 
 void kill_events(int event_set) {
@@ -133,7 +142,6 @@ void kill_events(int event_set) {
 
 
 int main(int argc, char* argv[]) {
-
   int cpu = atoi(argv[1]);
 
   char filename[100] = {'\0'};
@@ -141,7 +149,6 @@ int main(int argc, char* argv[]) {
   char id[100];
   sprintf(id, "%d", cpu);
   strcat(filename, id);
-  printf("The filename is: %s\n", filename);
   int fd = open(filename, O_RDWR | O_CREAT, 0777);
   syncfs(fd);
   
@@ -150,23 +157,28 @@ int main(int argc, char* argv[]) {
   }
   
   data = (core_data *) mmap(NULL, sizeof(core_data), PROT_WRITE, MAP_SHARED, fd, 0);
-  pthread_mutex_init(&(data->lock), NULL);
   if (data == MAP_FAILED) {
-    fprintf(stderr, "foo barisios\n");
+    fprintf(stderr, "couldn't memory map\n");
   }
 
+  pthread_mutexattr_t attrmutex;
+
+  pthread_mutexattr_init(&attrmutex);
+  pthread_mutexattr_setpshared(&attrmutex, PTHREAD_PROCESS_SHARED);
+  
+  pthread_mutex_init(&(data->lock), &attrmutex);
 
   int retval;
 #ifdef B_PAPI_ENABLED
   retval = PAPI_library_init(PAPI_VER_CURRENT);
   if (retval != PAPI_VER_CURRENT) {
-    perror("couldn't initialize library\n");
+    perror("couldn't initialize PAPI\n");
     exit(1);
   }
 #endif
   
 #ifdef B_PAPI_MULTIPLEX
-  printf("PAPI multiplexing baby\n");
+  printf("PAPI multiplexing enabled\n");
   retval = PAPI_multiplex_init();
   if (retval != PAPI_OK) {
     perror("couldn't enable multiplexing\n");
@@ -174,10 +186,10 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-
-  if ((retval = PAPI_set_domain(PAPI_DOM_ALL)) != PAPI_OK) {
-    fprintf(stderr, "eat shit!\n");
-  }
+  /* I'm setting the domain below and only for user-level events */
+  /* if ((retval = PAPI_set_domain(PAPI_DOM_ALL)) != PAPI_OK) { */
+  /*   fprintf(stderr, "couldn't set domain!\n"); */
+  /* } */
 
   int event_set = PAPI_NULL;
 #ifdef B_PAPI_ENABLED
@@ -203,8 +215,17 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-
+  
 #ifdef B_PAPI_ENABLED
+  PAPI_option_t options2;
+  memset(&options2, 0x0, sizeof (PAPI_option_t));
+  options2.domain.eventset = event_set;
+  options2.domain.domain = PAPI_DOM_USER;
+  if (PAPI_set_opt(PAPI_DOMAIN, &options2) != PAPI_OK) {
+    perror("Coulnd't set to read only user events\n");
+    exit(-1);
+  }
+  
   PAPI_option_t options;
   memset(&options, 0x0, sizeof (PAPI_option_t));
   options.cpu.eventset = event_set;
@@ -216,28 +237,17 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
+  //printf(">>>\t\tRTDL3_HIT\t\tRTDL3_MISS\t\tLOCAL_RAM\t\tREMOTE_RAM\t\tEMPTY_CYCLES\t\tUOPS_RTD\t\tUNHALTED\t\tREM_HITM\t\tREMOTE_FWD\n");
   add_events(event_set);
-
+  start_counters(event_set);
+  
   while (true) {
-    start_counters(event_set);
     int one_ms_in_us = 1000;
-    int wait_time_in_ms = 100 * one_ms_in_us;
+    int wait_time_in_ms = 125 * one_ms_in_us;
     usleep(wait_time_in_ms);
     read_counters(event_set);
-    //printf("====\n");
   }
   
-  /* pthread_t threads[48]; */
-
-  /* for (int i = 0; i < 48; ++i) { */
-  /*   int* n = malloc(sizeof(int)); */
-  /*   *n = i; */
-  /*   pthread_create(&threads[i], NULL, foo, n); */
-  /* } */
-
-
-  /* sleep(50); */
-
   return 0;
 }
 
