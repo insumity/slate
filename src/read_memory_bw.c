@@ -90,7 +90,6 @@ void read_perf_counter(int fd, long long results[])
 }
 
 int main(int argc, char* argv[]) {
-
   /* sudo perf stat -vv -a -e uncore_imc_0/cas_count_read/  -C 0 */
   /* ------------------------------------------------------------ */
   /* perf_event_attr: */
@@ -135,7 +134,9 @@ int main(int argc, char* argv[]) {
   }
 
 
+
   while (true) {
+
     for (int i = 0; i < 96; ++i) {
       for (int j = 0; j < 4; ++j) {
 	reset_perf_counter(read_fds[i][j]);
@@ -180,12 +181,22 @@ int main(int argc, char* argv[]) {
 	int core = cores_in_socket[j][i];
 	long long results[3] = {0};
 
-	for (int imc = 0; imc < 1; ++imc) {
+	for (int imc = 0; imc < 4; ++imc) {
 	  read_perf_counter(read_fds[core][imc], results);
+
+	  // take into account multiplexing
+	  double percentage_run = results[2] / (double) results[1];
+	  long long events = results[0] / percentage_run;
 	  bw_per_socket[i] += results[0];
 
-	  //	  read_perf_counter(write_fds[core][imc], results);
-	  //bw_per_socket[i] += results[0];
+	  read_perf_counter(write_fds[core][imc], results);
+
+	  percentage_run = results[2] / results[1];
+	  events = results[0] / percentage_run;
+	  bw_per_socket[i] += results[0];
+
+	  // do the multiplexing
+	  printf("++>> %lld %lld %lld: %lld\n", results[0], results[1], results[2], results[1] - results[2]);
 	}
       }
       printf("Bandwidth for Socket %d is: %.2lfMB/s\n", i, (bw_per_socket[i] / (1024 * 1024.)) * 64.);
@@ -194,6 +205,13 @@ int main(int argc, char* argv[]) {
 
   }
 
+  for (int i = 0; i < 96; ++i) {
+    for (int j = 0; j < 4; ++j) {
+      close_perf(write_fds[i][j]);
+      close_perf(read_fds[i][j]);
+    }
+  }
+  
   
   return 0;
 }
