@@ -37,8 +37,9 @@
 #include <ctime>
 
 
-long long int min_max[10][2] = {{124264251, 109110801742}, {246097, 47882468310}, {0, 484779018}, {35, 1129030691}, {0, 139257884}, {0, 29103353}, {0, 8706227}, {0, 27922638}, {0, 497}, {2, 23}};
-  
+
+long long int min_max[11][2] = {{0, 77436373389}, {0, 304460564}, {0, 83136354}, {0, 292501258}, {0, 84155769}, {0, 20063832}, {0, 5437316}, {0, 17101458}, {0, 374}, {2, 14}, {0, 89967054}};
+
 
 using namespace std;
 using namespace mlpack;
@@ -126,24 +127,16 @@ int classify(const Model& model, int LOC, int RR, long long data[])
   matrix[1] = RR; // 0 or 1 
 
   //cout << matrix[0] << ", " << matrix[1] << ", ";
-  for (int i = 2; i < 12; ++i) {
+  for (int i = 2; i < 13; ++i) {
     double res = (data[i - 2] - (double) min_max[i -2][0]) / ((double) min_max[i - 2][1] - min_max[i - 2][0]);
     matrix[i] = res;
     //cout << matrix[i] << ", ";
   }
 
-  double load_perc = data[1] / (double) data[0];
-  double LLC_miss_rate = data[2] / (double) data[3];
-  double remote = data[5] / (data[4] + (double) data[5]);
-  //cerr << load_perc << " ... " << LLC_miss_rate << " ... " << remote << endl;
-    
-  matrix[12] = load_perc;
-  matrix[13] = LLC_miss_rate;
-  matrix[14] = remote;
+  matrix[13] = data[13];
 
 
-
-  arma::mat testData(matrix, 15, 1, true, true);
+  arma::mat testData(matrix, 14, 1, true, true);
   arma::Row<size_t> predictLabels;
 
   model.Predict(testData, predictLabels);
@@ -185,18 +178,6 @@ int classify(const Model& model, int LOC, int RR, long long data[])
   return predictLabels(0);
 }
 
-void* slate_bg(void* pid_dt) {
-  pid_t pid = *((pid_t *) pid_dt);
-
-  long long zeroes[10] = {0};
-  long long* prev_counters;
-
-  long long new_values[10];
-
-  using namespace mlpack;
-
-
-}
 
 int main(int argc, char* argv[]) {
   const string trainingFile = "/localhome/kantonia/slate/train_programs/sigterm_microbenchmarks/microbenchmark_results.csv";

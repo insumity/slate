@@ -2,6 +2,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
@@ -32,14 +33,15 @@ void *inc(void *v)
   inc_dt* dt = (inc_dt *) v;
 
   long long size = 5 * GB;
-  int repetions = 1000;
+  int repetions = 1000 * 1000;
   int numa_node = dt->numa_node;
 
   struct timespec start;
   clock_gettime(CLOCK_MONOTONIC, &start);
 
-  char *y = numa_alloc_onnode(size, numa_node);
-  bzero(y, size);
+  volatile uint64_t *y = (volatile uint64_t *) numa_alloc_onnode(size, numa_node);
+  printf("before ... bzero\n");
+  memset(y, 0, size);
 
   struct timespec end;
   clock_gettime(CLOCK_MONOTONIC, &end);
@@ -56,9 +58,11 @@ void *inc(void *v)
   long offset = 1L << 14;
 
   for (long long int k = 0; k < repetions; ++k) {
-    for (long long int times = 0; times < size / 64; times += offset) {
-      for (long long int j = 0; j < offset; ++j) {
-	sum = y[(offset + j) * 64];
+    long long total = size / 64;
+    for (long long int times = 0; times < total - offset; times += offset) {
+      for (long long int j = times; j < times + offset; ++j) {
+	sum = y[j];
+	//y[j] = 0;
       }
       loops_per_thread[LONG_LONG_PER_CACHE_LINE * index_thread]++;
     }
@@ -180,7 +184,7 @@ int main(int argc, char* argv[])
       CPU_ZERO(&st);
       CPU_SET(cores[i], &st);
       dt->numa_node = cores[i] % 4;
-      printf("%d ", cores[i]);
+      printf("%d (node: %d)\n", cores[i], dt->numa_node);
       fprintf(stderr, "Core: %d going to node: %d\n", cores[i], dt->numa_node);
       if (pthread_setaffinity_np(threads[i], sizeof(st), &st)) {
 	perror("Something went wrong while setting the affinity!\n");
