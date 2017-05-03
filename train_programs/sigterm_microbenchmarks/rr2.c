@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <time.h>
@@ -38,26 +39,17 @@ void *inc(void *index_pt)
   int repetions = 1000 * 1000 * 500;
   int numa_node = dt->numa_node;
   
-  char *y = numa_alloc_onnode(size, numa_node);
+  volatile char *y = (volatile char *) numa_alloc_onnode(size, numa_node);
   bzero(y, size);
 
   char sum = 0;
 
   int index_thread = dt->index;
   long long int loops = 0;
-  long offset = 1L << 14;
 
-
-  /* const long long int n_warmup = size >> 2; */
-  /* for (long long int i = 0; i < n_warmup; i++) { */
-  /*   sum = y[i]; */
-  /* } */
-  
   for (long long int k = 0; k < repetions; ++k) {
-    
     for (long long int j = 0; j < size / 64; ++j) {
-      sum = y[j * 64];
-      //y[j] = 0XFF;
+      y[j * 64] = 0;
     }
     loops_per_thread[index_thread]++;
   }

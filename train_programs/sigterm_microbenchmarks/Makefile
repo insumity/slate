@@ -19,7 +19,7 @@ all: gather_data.cpp
 
 
 classifier: classifier.cpp
-	g++ classifier.cpp -std=c++11 -lboost_serialization -lmlpack -larmadillo -o classifier -g
+	g++ classifier.cpp -std=c++11 -lboost_serialization -lmlpack -larmadillo -o classifier -g -Wall -pedantic
 
 clean:
 	rm -f *.o

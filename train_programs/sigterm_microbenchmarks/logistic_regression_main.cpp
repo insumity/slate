@@ -10,6 +10,8 @@
 #include <mlpack/core/optimizers/sgd/sgd.hpp>
 #include <mlpack/core/optimizers/minibatch_sgd/minibatch_sgd.hpp>
 
+#define NUMBER_OF_EXTENDED_FEATURES 28
+
 using namespace std;
 using namespace mlpack;
 using namespace mlpack::regression;
@@ -128,7 +130,7 @@ typedef struct {
 
 double* normalize_features(extended_features ef)
 {
-  double* normalized_features = (double*) malloc(26 * sizeof(double));
+  double* normalized_features = (double*) malloc(NUMBER_OF_EXTENDED_FEATURES * sizeof(double));
   my_features f = ef.feat;
 
   int k = 0;
@@ -160,7 +162,18 @@ double* normalize_features(extended_features ef)
   normalized_features[k++] = (ef.intra_socket / f.l2_miss) * (ef.intra_socket / f.l2_miss);
   normalized_features[k++] = ef.inter_socket / f.l3_miss; // normalize
   normalized_features[k++] = (ef.inter_socket / f.l3_miss) * (ef.inter_socket / f.l3_miss);
-  normalized_features[k++] = ef.llc_miss_rate * ef.local_memory_rate;
+  normalized_features[k++] = ef.llc_miss_rate_times_local_memory_rate;
+
+  normalized_features[k++] = 100000000 * (f.sockets_bw[0] + f.sockets_bw[1] + f.sockets_bw[2] + f.sockets_bw[3]);
+  normalized_features[k++] = 0; //((f.local_dram + f.remote_dram) / ((double) f.l3_miss)) * ef.llc_miss_rate;
+
+  // 28 so far
+  //normalized_features[k++] = (f.uops_retired / ((double) f.unhalted_cycles)) * (f.uops_retired / ((double) f.unhalted_cycles));
+  //normalized_features[k++] = (f.unhalted_cycles / (- 100.)) * (f.unhalted_cycles / (- 100.));
+
+
+
+  
 
   return normalized_features;
 }
@@ -271,7 +284,7 @@ int main(int argc, char** argv)
 
 
   
-  arma::mat regressors(27, regressors2.n_cols);
+  arma::mat regressors(NUMBER_OF_EXTENDED_FEATURES + 1, regressors2.n_cols);
   for (size_t i = 0; i < regressors2.n_cols; ++i) {
 
     my_features f;
@@ -295,10 +308,10 @@ int main(int argc, char** argv)
     f.number_of_threads = regressors2(16, i);
 
     double* res = normalize_features(introduce_features(f));
-    for (int j = 0; j < 26; ++j) {
+    for (int j = 0; j < NUMBER_OF_EXTENDED_FEATURES; ++j) {
       regressors(j, i) = res[j];
     }
-    regressors(26, i) = regressors2(17, i);
+    regressors(NUMBER_OF_EXTENDED_FEATURES, i) = regressors2(17, i);
   }
 
   // Load the model, if necessary.
@@ -409,7 +422,7 @@ int main(int argc, char** argv)
 
     data::Load(testFile, testFile2, true);
 
-    arma::mat testSet(26, testFile2.n_cols);
+    arma::mat testSet(NUMBER_OF_EXTENDED_FEATURES, testFile2.n_cols);
     cout << "NUMBE RO FCOULMS : " << testFile2.n_cols << endl;
     for (size_t i = 0; i < testFile2.n_cols; ++i) {
 
@@ -434,7 +447,7 @@ int main(int argc, char** argv)
       f.number_of_threads = testFile2(16, i);
 
       double* res = normalize_features(introduce_features(f));
-      for (int j = 0; j < 26; ++j) {
+      for (int j = 0; j < NUMBER_OF_EXTENDED_FEATURES; ++j) {
 	testSet(j, i) = res[j];
       }
     }

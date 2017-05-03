@@ -31,8 +31,13 @@
 #include <string>
 #include <mlpack/core.hpp>
 #include <mlpack/methods/softmax_regression/softmax_regression.hpp>
+#include <mlpack/methods/logistic_regression/logistic_regression.hpp>
 #include <mlpack/core/optimizers/lbfgs/lbfgs.hpp>
 #include <mlpack/prereqs.hpp>
+#include <mlpack/core/optimizers/sgd/sgd.hpp>
+#include <mlpack/core/optimizers/minibatch_sgd/minibatch_sgd.hpp>
+
+
 
 #include <memory>
 #include <set>
@@ -41,8 +46,10 @@
 
 using namespace std;
 using namespace mlpack;
-using SM = regression::LogisticRegression<>;
-unique_ptr<SM> sm;
+using namespace mlpack::regression;
+using namespace mlpack::optimization;
+
+LogisticRegression<> sm(0, 0);
 
 typedef struct {
   int LOC, RR;
@@ -100,7 +107,6 @@ double* normalize_features(extended_features ef)
   normalized_features[k++] = (ef.inter_socket / f.l3_miss) * (ef.inter_socket / f.l3_miss);
   normalized_features[k++] = ef.llc_miss_rate * ef.local_memory_rate;
 
-  printf("K is ::: %d\n", k);
   return normalized_features;
 }
 
@@ -155,8 +161,6 @@ unique_ptr<Model> TrainSoftmax(const string& trainingFile,
 			       const size_t maxIterations)
 {
   using namespace mlpack;
-
-  using SRF = regression::LogisticRegressionFunction;
 
   unique_ptr<Model> sm;
 
@@ -218,15 +222,24 @@ unique_ptr<Model> TrainSoftmax(const string& trainingFile,
 
   const bool intercept = false;
 
-  SRF smFunction(trainData, trainLabels, numClasses, intercept, 0.001);
+  LogisticRegressionFunction<> lrf(trainData, trainLabels, model.Parameters());
+  L_BFGS<LogisticRegressionFunction<>> lbfgsOpt(lrf);
+  lbfgsOpt.MaxIterations() = 5000;
+  lbfgsOpt.MinGradientNorm() = 0.003
+  Log::Info << "Training model with L-BFGS optimizer." << endl;
+
+  // This will train the model.
+  model.Train(lbfgsOpt);
+
+  //SRF smFunction(trainData, trainLabels, numClasses, intercept, 0.001);
 
   
-  const size_t numBasis = 5;
-  optimization::L_BFGS<SRF> optimizer(smFunction, numBasis, maxIterations);
-  sm.reset(new Model(optimizer));
+  // const size_t numBasis = 5;
+  // optimization::L_BFGS<SRF> optimizer(smFunction, numBasis, maxIterations);
+  // sm.reset(new Model(optimizer));
 
-  arma::mat probabilities;
-  smFunction.GetProbabilitiesMatrix(sm->Parameters(), probabilities);
+  // arma::mat probabilities;
+  // smFunction.GetProbabilitiesMatrix(sm->Parameters(), probabilities);
 
   // cout << "All the probabilities" << probabilities.n_rows << " , " << probabilities.n_cols << endl;
   // for (int i = 0; i < 2; ++i) {
@@ -255,20 +268,23 @@ int classify(const Model& model, double* normalized_features)
   
   arma::Row<size_t> predictLabels;
   model.Classify(testData, predictLabels);
-  cout << "The PARAMeETERS are: " << model.Parameters() << endl;
+  //cout << "The PARAMeETERS are: " << model.Parameters() << endl;
 
   return predictLabels(0);
 }
 
 
 int main(int argc, char* argv[]) {
-  const string trainingFile = "/localhome/kantonia/slate/train_programs/sigterm_microbenchmarks/demo.csv";
+
+
+  strint fn(argv[1]);
+  const string trainingFile = "/localhome/kantonia/slate/train_programs/sigterm_microbenchmarks/" + fn;
   const size_t maxIterations = 5000;
 
-  sm = TrainSoftmax<SM>(trainingFile, 0, maxIterations);
+  sm = TrainSoftmax(trainingFile, 0, maxIterations);
 
 
-  FILE* fp = fopen(argv[1], "r");
+  FILE* fp = fopen(argv[2], "r");
 
   char line[5000];
   while (fgets(line, 5000, fp) != NULL) {

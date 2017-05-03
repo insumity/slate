@@ -8,7 +8,7 @@
 #include <stdatomic.h>
 #include <signal.h>
 
-#define ARRAY_SIZE (5 * 1000 * 1000)
+#define ARRAY_SIZE (0.5 * 1000 * 1000)
 
 #define LONG_LONGS_PER_CACHE_LINE 8
 long long loops_per_thread[LONG_LONGS_PER_CACHE_LINE * 50];

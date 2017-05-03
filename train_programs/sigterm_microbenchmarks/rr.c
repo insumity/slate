@@ -61,8 +61,8 @@ void *inc(void *v)
     long long total = size / 64;
     for (long long int times = 0; times < total - offset; times += offset) {
       for (long long int j = times; j < times + offset; ++j) {
-	sum = y[j];
-	//y[j] = 0;
+	//sum = y[j];
+	y[j] = 0;
       }
       loops_per_thread[LONG_LONG_PER_CACHE_LINE * index_thread]++;
     }
