@@ -1,4 +1,6 @@
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -37,14 +39,93 @@
 #include <ctime>
 
 
-
-long long int min_max[11][2] = {{0, 77436373389}, {0, 304460564}, {0, 83136354}, {0, 292501258}, {0, 84155769}, {0, 20063832}, {0, 5437316}, {0, 17101458}, {0, 374}, {2, 14}, {0, 89967054}};
-
-
 using namespace std;
 using namespace mlpack;
-using SM = regression::SoftmaxRegression<>;
+using SM = regression::LogisticRegression<>;
 unique_ptr<SM> sm;
+
+typedef struct {
+  int LOC, RR;
+  long long l3_hit, l3_miss, local_dram, remote_dram, l2_miss, uops_retired, unhalted_cycles, remote_fwd, remote_hitm;
+  long long context_switches;
+  double sockets_bw[4];
+  int number_of_threads;
+} my_features;
+
+typedef struct {
+  my_features feat;
+
+  double llc_miss_rate, llc_miss_rate_square;
+  double local_memory_rate, local_memory_rate_square;
+  double intra_socket, intra_socket_square;
+  double inter_socket, inter_socket_square;
+
+  double llc_miss_rate_times_local_memory_rate;
+  
+} extended_features;
+
+double* normalize_features(extended_features ef)
+{
+  double* normalized_features = (double*) malloc(26 * sizeof(double));
+  my_features f = ef.feat;
+
+  int k = 0;
+  normalized_features[k++] = f.LOC;
+  normalized_features[k++] = f.RR;
+  normalized_features[k++] = f.l3_hit / ((double) f.unhalted_cycles);
+  normalized_features[k++] = f.l3_miss / ((double) f.unhalted_cycles);
+  normalized_features[k++] = f.local_dram / ((double) f.l3_miss);
+  normalized_features[k++] = f.remote_dram / ((double) f.l3_miss);
+  normalized_features[k++] = f.l2_miss / ((double) f.unhalted_cycles);
+  normalized_features[k++] = f.uops_retired / ((double) f.unhalted_cycles);
+  normalized_features[k++] = f.unhalted_cycles / (1000. * 1000. * 1000.);
+  normalized_features[k++] = f.remote_fwd / ((double) f.l3_miss);
+  normalized_features[k++] = f.remote_hitm / ((double) f.l3_miss);
+
+  normalized_features[k++] = f.context_switches;
+
+  for (int s = 0; s < 4; ++s) {
+    normalized_features[k++] = f.sockets_bw[s];
+  }
+
+  normalized_features[k++] = f.number_of_threads;
+  
+  normalized_features[k++] = ef.llc_miss_rate;
+  normalized_features[k++] = ef.llc_miss_rate_square;
+  normalized_features[k++] = ef.local_memory_rate;
+  normalized_features[k++] = ef.local_memory_rate_square;
+  normalized_features[k++] = ef.intra_socket / f.l2_miss; // normalize
+  normalized_features[k++] = (ef.intra_socket / f.l2_miss) * (ef.intra_socket / f.l2_miss);
+  normalized_features[k++] = ef.inter_socket / f.l3_miss; // normalize
+  normalized_features[k++] = (ef.inter_socket / f.l3_miss) * (ef.inter_socket / f.l3_miss);
+  normalized_features[k++] = ef.llc_miss_rate * ef.local_memory_rate;
+
+  printf("K is ::: %d\n", k);
+  return normalized_features;
+}
+
+extended_features introduce_features(my_features f)
+{
+  extended_features ef;
+  ef.feat = f;
+  
+  ef.llc_miss_rate = f.l3_miss / ((double) f.l3_hit + f.l3_miss);
+  ef.llc_miss_rate_square = ef.llc_miss_rate * ef.llc_miss_rate;
+  ef.local_memory_rate = f.local_dram / ((double) f.local_dram + f.remote_dram);
+  ef.local_memory_rate_square = ef.local_memory_rate * ef.local_memory_rate;
+
+  double intra_socket = f.l2_miss - (f.l3_hit + f.l3_miss);
+  ef.intra_socket = intra_socket >= 0? intra_socket: 0;
+  ef.intra_socket_square = ef.intra_socket * ef.intra_socket;
+  ef.inter_socket = f.remote_fwd + f.remote_hitm;
+  ef.inter_socket_square = ef.inter_socket * ef.inter_socket;
+
+  ef.llc_miss_rate_times_local_memory_rate = ef.llc_miss_rate * ef.local_memory_rate;
+
+  return ef;
+}
+
+
 
 
 template<typename Model>
@@ -75,24 +156,65 @@ unique_ptr<Model> TrainSoftmax(const string& trainingFile,
 {
   using namespace mlpack;
 
-  using SRF = regression::SoftmaxRegressionFunction;
+  using SRF = regression::LogisticRegressionFunction;
 
   unique_ptr<Model> sm;
 
-  arma::mat trainData;
+  arma::mat trainDataNoNormalization;
   arma::Row<size_t> trainLabels;
   arma::Mat<size_t> tmpTrainLabels;
 
-  data::Load(trainingFile, trainData, true);
-  trainLabels = arma::conv_to< arma::Row<size_t> >::from(trainData.row(trainData.n_rows - 1));
+  data::Load(trainingFile, trainDataNoNormalization, true);
+  trainLabels = arma::conv_to< arma::Row<size_t> >::from(trainDataNoNormalization.row(trainDataNoNormalization.n_rows - 1));
+  // was -2 for rows ...
+  trainDataNoNormalization.submat(0, 0, trainDataNoNormalization.n_rows - 2, trainDataNoNormalization.n_cols - 1);
 
-  trainData = trainData.submat(0, 0, trainData.n_rows - 2, trainData.n_cols - 1);
+  cout << "bEFORE NORMALIZAING\n";
+  cout << trainDataNoNormalization << endl;
+  cout << "===\n";
+  
+  arma::mat trainData(26, trainDataNoNormalization.n_cols);
+  for (size_t i = 0; i < trainDataNoNormalization.n_cols; ++i) {
+
+    my_features f;
+    f.LOC = trainDataNoNormalization(0, i);
+    f.RR = trainDataNoNormalization(1, i);
+    f.l3_hit = trainDataNoNormalization(2, i);
+    f.l3_miss = trainDataNoNormalization(3, i);
+    f.local_dram = trainDataNoNormalization(4, i);
+    f.remote_dram = trainDataNoNormalization(5, i);
+    f.l2_miss = trainDataNoNormalization(6, i);
+    f.uops_retired = trainDataNoNormalization(7, i);
+    f.unhalted_cycles = trainDataNoNormalization(8, i);
+    f.remote_fwd = trainDataNoNormalization(9, i);
+    f.remote_hitm = trainDataNoNormalization(10, i);
+
+    f.context_switches = trainDataNoNormalization(11, i);
+    for (int j = 0; j < 4; ++j) {
+      f.sockets_bw[j] = trainDataNoNormalization(12 + j, i);
+    }
+    
+    f.number_of_threads = trainDataNoNormalization(16, i);
+
+    double* res = normalize_features(introduce_features(f));
+    for (int j = 0; j < 26; ++j) {
+      trainData(j, i) = res[j];
+    }
+  }
+  
+  cout << "TRAIN DATA" << endl;
+  cout << trainData << endl;
+  cout << "========\n";
+
+  cout << "TRAIN LABELS" << endl;
+  cout << trainLabels << endl;
+  cout << "========\n";
+
 
   if (trainData.n_cols != trainLabels.n_elem)
     std::cerr << "Samples of input_data should same as the size input_label." << endl;
 
   const size_t numClasses = CalculateNumberOfClasses(number_of_classes, trainLabels);
-  cerr << "The number of classes is " << numClasses << endl;
 
   const bool intercept = false;
 
@@ -103,14 +225,13 @@ unique_ptr<Model> TrainSoftmax(const string& trainingFile,
   optimization::L_BFGS<SRF> optimizer(smFunction, numBasis, maxIterations);
   sm.reset(new Model(optimizer));
 
-
   arma::mat probabilities;
   smFunction.GetProbabilitiesMatrix(sm->Parameters(), probabilities);
 
-  cout << "All the probabilities" << probabilities.n_rows << " , " << probabilities.n_cols << endl;
-  //  for (int i = 0; i < 2962; ++i) {
-  //cout << "Elem  " << i << ": " << probabilities(0, i) << " , " << probabilities(1, i) << "=" << (probabilities(0, i) + probabilities(1, i)) << endl;
-  //  }
+  // cout << "All the probabilities" << probabilities.n_rows << " , " << probabilities.n_cols << endl;
+  // for (int i = 0; i < 2; ++i) {
+  //   cout << "Elem  " << i << ": " << probabilities(0, i) << " , " << probabilities(1, i) << "=" << (probabilities(0, i) + probabilities(1, i)) << endl;
+  // }
 
   cout << endl << endl << endl << endl;
 
@@ -119,68 +240,29 @@ unique_ptr<Model> TrainSoftmax(const string& trainingFile,
 }
 
 template<typename Model>
-int classify(const Model& model, int LOC, int RR, long long data[])
+int classify(const Model& model, double* normalized_features)
 {
-  //cerr << "aboutt to classify ... " << endl;
-  double matrix[15];
-  matrix[0] = LOC; // 0 or 1
-  matrix[1] = RR; // 0 or 1 
-
-  //cout << matrix[0] << ", " << matrix[1] << ", ";
-  for (int i = 2; i < 13; ++i) {
-    double res = (data[i - 2] - (double) min_max[i -2][0]) / ((double) min_max[i - 2][1] - min_max[i - 2][0]);
-    matrix[i] = res;
-    //cout << matrix[i] << ", ";
+  printf("NORMALIZED\n");
+  for (int i = 0; i < 26; ++i) {
+    cout << normalized_features[i] << ", ";
   }
+  printf("\n");
+  arma::mat testData(normalized_features, 26, 1, true, true);
 
-  matrix[13] = data[13];
-
-
-  arma::mat testData(matrix, 14, 1, true, true);
-  arma::Row<size_t> predictLabels;
-
-  model.Predict(testData, predictLabels);
-
-  std::string features[12] = {"LOC", "RR", "retired_uops", "loads_retired_ups", "LLC_misses", "LLC_references", 
-  			"local_accesses", "remote_accesses", "inter_socket1", "inter_socket2", "context_switches", "number_of_threads"};
-
-
-  // GET THE PROBABILITIES of the testData
-  using namespace mlpack;
-  using SRF = regression::SoftmaxRegressionFunction;
-
-  const size_t numClasses = 2;
-
-  const bool intercept = false;
-  SRF smFunction(testData, predictLabels, numClasses, intercept, 0.001);
+  cout << "TEST DATA\n";
+  cout << testData << endl;
+  cout << "-----\n";
   
-  const size_t numBasis = 5;
-  const size_t maxIterations = 5000;
-
-  optimization::L_BFGS<SRF> optimizer(smFunction, numBasis, maxIterations);
-
-  arma::mat probabilities;
-  smFunction.GetProbabilitiesMatrix(model.Parameters(), probabilities);
-
-  for (int i = 0; i < 1; ++i) {
-  cout << "(" << probabilities(0, i) << " , " << probabilities(1, i) << "=" << (probabilities(0, i) + probabilities(1, i)) << ")" << endl;
-  }
-  cout << endl;
-
-
-  // for (int i = 0; i < 12; ++i) {
-  //   cout << features[i] << " ";
-  // }
-  // cout << endl;
-
-  //cout << "The PARAMeETERS are: " << model.Parameters() << endl;
+  arma::Row<size_t> predictLabels;
+  model.Classify(testData, predictLabels);
+  cout << "The PARAMeETERS are: " << model.Parameters() << endl;
 
   return predictLabels(0);
 }
 
 
 int main(int argc, char* argv[]) {
-  const string trainingFile = "/localhome/kantonia/slate/train_programs/sigterm_microbenchmarks/microbenchmark_results.csv";
+  const string trainingFile = "/localhome/kantonia/slate/train_programs/sigterm_microbenchmarks/demo.csv";
   const size_t maxIterations = 5000;
 
   sm = TrainSoftmax<SM>(trainingFile, 0, maxIterations);
@@ -190,14 +272,53 @@ int main(int argc, char* argv[]) {
 
   char line[5000];
   while (fgets(line, 5000, fp) != NULL) {
-    int loc, rr, final_result;
-    long long int new_values[10];
-    sscanf(line, "%d %d %lld %lld %lld %lld %lld %lld %lld %lld %lld %lld %d\n", &loc, &rr,
+    int loc, rr;
+    long long int new_values[11];
+    int final_result;
+    double socket_values[4];
+
+
+    sscanf(line, "%d, %d, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lf, %lf, %lf, %lf, %lld, %d", &loc, &rr,
 	   &new_values[0], &new_values[1], &new_values[2], &new_values[3], &new_values[4],
 	   &new_values[5], &new_values[6], &new_values[7], &new_values[8], &new_values[9],
+	   &socket_values[0], &socket_values[1], &socket_values[2], &socket_values[3], &new_values[10],
 	   &final_result);
 
-    int classification_result = classify(*sm, loc, rr, new_values);
+
+    printf("=== > %d, %d, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lf, %lf, %lf, %lf, %lld, %d\n", loc, rr,
+    	   new_values[0], new_values[1], new_values[2], new_values[3], new_values[4],
+    	   new_values[5], new_values[6], new_values[7], new_values[8], new_values[9],
+    	   socket_values[0], socket_values[1], socket_values[2], socket_values[3], new_values[10],
+    	   final_result);
+
+    my_features feat;
+    feat.LOC = loc;
+    feat.RR = rr;
+    feat.l3_hit = new_values[0];
+    feat.l3_miss = new_values[1];
+    feat.local_dram = new_values[2];
+    feat.remote_dram = new_values[3];
+    feat.l2_miss = new_values[4];
+    feat.uops_retired = new_values[5];
+    feat.unhalted_cycles = new_values[6];
+    feat.remote_fwd = new_values[7];
+    feat.remote_hitm = new_values[8];
+    feat.context_switches = new_values[9];
+
+    for (int i = 0; i < 4; ++i) {
+      feat.sockets_bw[i] = socket_values[i];
+    }
+
+    feat.number_of_threads = new_values[10];
+
+    double* normalized = normalize_features(introduce_features(feat));
+    int classification_result = classify(*sm, normalized);
+
+    cout << "NORMALIZED main\n";
+    for (int k = 0; k < 26; ++k) {
+      cout << normalized[k] << ", ";
+    }
+    cout << "after NORMALIZED" << endl;
     
     fprintf(stderr, "classification: %d\n", classification_result);
   }

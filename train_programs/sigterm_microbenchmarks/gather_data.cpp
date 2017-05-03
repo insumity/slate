@@ -41,7 +41,7 @@ long long* subtract(long long* ar1, long long* ar2, int length) {
   return result;
 }
 
-void print_perf_counters(bool is_rr, int result, long long values[], long long context_switches, double sockets_bw[]) {
+void print_perf_counters(bool is_rr, int result, long long values[], long long context_switches, double sockets_bw[], int number_of_threads) {
 
   if (is_rr) {
     std::cerr << "0, 1, ";
@@ -57,6 +57,8 @@ void print_perf_counters(bool is_rr, int result, long long values[], long long c
   for (int i = 0; i < 4; ++i) {
     std::cerr << sockets_bw[i] << ", ";
   }
+
+  std::cerr << number_of_threads << ", ";
 
   std::cerr << result << std::endl;
 }
@@ -175,8 +177,9 @@ int main(int argc, char* argv[])
 
   FILE* fp = start_reading_memory_bandwidth();
   sleep(1);
-  
-  int* tids = get_thread_ids(pid, &number_of_threads);
+
+  int actual_number_of_threads = number_of_threads;
+  int* tids = get_thread_ids(pid, &number_of_threads); // also counts process
 
   //fprintf(stderr, "retired_uops\tloads_retired_ups\tLLC_misses\tLLC_references\tlocal_accesses\tremote_accesses\tinter_socket1\tinter_socket2\tcontext_switches\tnumber_of_threads\n");
   start_reading();
@@ -215,7 +218,7 @@ int main(int argc, char* argv[])
     prev_counters = read_perf_counters(cur_counters, hwcs);
 
     long long* actual_values = subtract(prev_counters, cur_counters, COUNTERS_NUMBER);
-    print_perf_counters(is_rr, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw);
+    print_perf_counters(is_rr, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw, actual_number_of_threads);
     free(actual_values);
     
     prev_context_switches = cur_context_switches;
