@@ -1,4 +1,7 @@
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -19,23 +22,135 @@
 #include <fcntl.h>
 #include <semaphore.h>
 #include <time.h>
+#include <math.h>
 #include <numaif.h>
 #include <linux/hw_breakpoint.h>
 
 #include "ticket.h"
 #include "slate_utils.h"
-#include "list.h"
-#include "read_counters.h"
+#include "../include/list.h"
+#include "../include/read_counters.h" // FIXME: wouldn't compile otherwise. I've no idea why!
+#include "../include/read_context_switches.h" // FIXME: wouldn't compile otherwise. I've no idea why!
+#include "read_memory_bandwidth.h"
+#include "get_tids.h"
 
 #include "heuristic.h"
-#include "heuristicX.h"
+#include "../include/heuristicX.h"
 #include "heuristic_MCTOP.h"
 #include "heuristic_greedy.h"
-#include "heuristic_split.h"
+#include "../include/heuristic_split.h"
 #include "heuristic_rr_lat.h"
+#include "python_classify.h"
 
+#include <iostream>
 #include <map>
 #include <vector>
+#include <string>
+
+#include <memory>
+#include <set>
+#include <ctime>
+
+#define COUNTERS_NUMBER 9
+
+volatile classifier_data* classify_data; // communication with python classifier (scikitlearn)
+
+// returns the old value if new_value - old_value < 00
+long long get_difference(long long new_value, long long old_value) {
+  return (new_value - old_value >= 0)? new_value - old_value: old_value;
+}
+
+long long* subtract(long long* ar1, long long* ar2, int length) {
+
+  long long* result = (long long *) malloc(sizeof(long long) * length);
+
+  for (int i = 0 ; i < length; ++i) {
+    result[i] = get_difference(ar1[i], ar2[i]);
+  }
+
+  return result;
+}
+
+
+void print_perf_counters(bool is_rr, int result, long long values[], long long context_switches, double sockets_bw[], int number_of_threads) {
+
+  if (is_rr) {
+    std::cerr << "0, 1, ";
+  }
+  else {
+    std::cerr << "1, 0, ";
+  }
+
+  for (int i = 0; i < COUNTERS_NUMBER; ++i) {
+    std::cerr << values[i] << ", ";
+  }
+  std::cerr << context_switches << ", ";
+  for (int i = 0; i < 4; ++i) {
+    std::cerr << sockets_bw[i] << ", ";
+  }
+
+  std::cerr << number_of_threads << ", ";
+
+  std::cerr << result << std::endl;
+}
+
+// returns the current values of the read performance counters
+long long* read_perf_counters(long long values[], std::vector<int> hwcs) {
+
+
+  // Events being read by start_counter in this order
+  // MEM_LOAD_UOPS_RETIRED:L3_HIT
+  // MEM_LOAD_UOPS_RETIRED:L3_MISS
+  // MEM_LOAD_UOPS_LLC_MISS_RETIRED:LOCAL_DRAM
+  // MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_DRAM
+  // MEM_LOAD_UOPS_RETIRED:L2_MISS
+  // UOPS_RETIRED
+  // UNHALTED_CORE_CYCLES
+  // MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_FWD
+  // MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_HITM
+
+  long long* results = (long long *) malloc(sizeof(long long) * COUNTERS_NUMBER);
+  long long L3_HIT = 0; 
+  long long L3_MISS = 0;
+  long long LOCAL_DRAM = 0;
+  long long REMOTE_DRAM = 0;
+  long long L2_MISS = 0;
+  long long UOPS_RETIRED = 0;
+  long long UNHALTED_CORE_CYCLES = 0;
+  long long REMOTE_FWD = 0;
+  long long REMOTE_HITM = 0;
+  
+
+  for (std::vector<int>::iterator it = hwcs.begin(); it != hwcs.end(); it++) {
+    int cpu = *it;
+
+    core_data cd = get_counters(cpu);
+    L3_HIT += cd.values[0];
+    L3_MISS += cd.values[1];
+    LOCAL_DRAM += cd.values[2];
+    REMOTE_DRAM += cd.values[3];
+    L2_MISS += cd.values[4];
+    UOPS_RETIRED += cd.values[5];
+    UNHALTED_CORE_CYCLES += cd.values[6];
+    REMOTE_FWD += cd.values[7];
+    REMOTE_HITM += cd.values[8];
+  }
+
+  results[0] = L3_HIT;
+  results[1] = L3_MISS;
+  results[2] = LOCAL_DRAM;
+  results[3] = REMOTE_DRAM;
+  results[4] = L2_MISS;
+  results[5] = UOPS_RETIRED;
+  results[6] = UNHALTED_CORE_CYCLES;
+  results[7] = REMOTE_FWD;
+  results[8] = REMOTE_HITM;
+  
+  return results;
+}
+
+
+using namespace std;
 
 #define SLEEPING_TIME_IN_MICROSECONDS 5000
 #define SLOTS_FILE_NAME "/tmp/scheduler_slots"
@@ -63,17 +178,34 @@ typedef struct {
   int (*get_hwc)(pid_t pid, pid_t tid, int* node);
   void (*release_hwc)(pid_t pid);
 
-  void (*reschedule)(pid_t pid, int new_policy);
+  std::vector<int> (*reschedule)(pid_t pid, int new_policy);
 } heuristic_t;
 heuristic_t h;
 
-double fo(long long ll_cache_read_accesses, long long ll_cache_read_misses,
-	  long long retired_local_dram, long long retired_remote_dram) {
-  double LLC = ll_cache_read_misses / ((double) ll_cache_read_accesses);
-  double local = retired_local_dram / (retired_local_dram + (double) retired_remote_dram);
-
-  return LLC * local * 2.2 + LLC * (1.0 - local) * 6.0;
+heuristic_t new_heuristic(void (*init)(pin_data**, mctop_t*), sem_t* (*get_lock)(), void (*new_process)(pid_t, int), void (*process_exit)(pid_t),
+			  int (*get_hwc)(pid_t, pid_t, int*), void (*release_hwc)(pid_t), std::vector<int> (*reschedule)(pid_t, int)) {
+  heuristic_t tmp;
+  tmp.init = init;
+  tmp.get_lock = get_lock;
+  tmp.new_process = new_process;
+  tmp.process_exit = process_exit;
+  tmp.get_hwc = get_hwc;
+  tmp.release_hwc = release_hwc;
+  tmp.reschedule = reschedule;
+  return tmp;
 }
+
+void copy_heuristic(heuristic_t* to, heuristic_t from) {
+  to->init = from.init;
+  to->get_lock = from.get_lock;
+  to->new_process = from.new_process;
+  to->process_exit = from.process_exit;
+  to->get_hwc = from.get_hwc;
+  to->release_hwc = from.release_hwc;
+  to->reschedule = from.reschedule;
+  printf("After copy and to init is %p and %p\n", to->init, from.init);
+}
+
 
 
 void initialize_lock(int i, communication_slot* slots)
@@ -94,7 +226,7 @@ void release_lock(int i, communication_slot* slots)
   ticket_release(lock);
 }
 
-list *tids_per_pid;
+std::map< pid_t, std::vector<pid_t> > tids_per_pid;
 
 volatile pid_t* hwcs_used_by_pid; 
 
@@ -138,7 +270,13 @@ void* check_slots(void* dt) {
 	int* pt_core = (pid_t*) malloc(sizeof(int));
 	*pt_core = core;
 
-	list_add(tids_per_pid, (void *) pt_pid, (void *) pt_tid);
+
+	std::map< pid_t, std::vector<pid_t> >::iterator it = tids_per_pid.find(pid);
+	if (it == tids_per_pid.end()) {
+	  tids_per_pid.insert(std::pair<pid_t, std::vector<pid_t> >(pid, std::vector<pid_t>()));
+	}
+	it = tids_per_pid.find(pid);
+	it->second.push_back(*pt_tid);
 	
 	slot->used = SCHEDULER;
       }
@@ -198,6 +336,8 @@ communication_slot* initialize_slots() {
 
 // returns chosen node as well
 int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int* node) {
+
+  printf("\n Get hwc wtih tid: %lld\n", (long) tid);
   sem_wait(h.get_lock());
 
   int hwc = h.get_hwc(pid, tid, node);
@@ -233,6 +373,25 @@ int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int
   return hwc;
 }
 
+void reschedule(heuristic_t h, pid_t pid, int new_policy) {
+  printf("\n\n\n-----------\n\nreschedule()\n\n---------");
+  for (std::vector<int>::iterator it = cores_per_pid[pid].begin() ; it != cores_per_pid[pid].end(); ++it) {
+    printf("%d\n", *it);
+  }
+
+  cores_per_pid.clear();
+  std::vector<int> tmp = h.reschedule(pid, new_policy);
+  for (std::vector<int>::iterator it = tmp.begin() ; it != tmp.end(); ++it) {
+    cores_per_pid[pid].push_back(*it);
+  }
+  printf("---AFTER ---\n");
+  for (std::vector<int>::iterator it = cores_per_pid[pid].begin() ; it != cores_per_pid[pid].end(); ++it) {
+    printf("%d\n", *it);
+  }
+
+  printf("-----\n");
+}
+
 void release_hwc(heuristic_t h, pid_t pid) {
   h.release_hwc(pid);
 }
@@ -245,8 +404,240 @@ typedef struct {
   char** program;
   int start_time_ms;
   int policy;
+
+  FILE* memory_bandwidth_file;
 } execute_process_args;
 
+double divide(long long a, long long b) {
+  if (b == 0) {
+    return 0; // so we don't get NaN
+  }
+  return a / ((double) b);
+}
+
+// including the threads of the application
+long long read_all_context_switches(bool isVoluntary, pid_t pid) {
+  long long context_switches = 0;
+
+  std::vector<pid_t>::iterator it;
+  printf("The number of elements is :%d\n", tids_per_pid.size());
+  printf("The number of elements is for !!! :%d\n", tids_per_pid.find(pid)->second.size());
+
+  std::vector<pid_t> v = tids_per_pid.find(pid)->second;
+  
+  for (it = v.begin(); it != v.end(); it++) {
+    context_switches += read_context_switches(isVoluntary, *it);
+  }
+  context_switches += read_context_switches(isVoluntary, pid);
+
+
+  return context_switches;
+}
+  
+
+// long long* read_and_print_perf_counters(pid_t pid, long long old_values[], bool print_to_cerr, long long new_values[], int number_of_threads) {
+//   long long* results = (long long *) malloc(sizeof(long long) * 10);
+//   long long LLC_TCA = 0;
+//   long long LLC_TCM = 0;
+//   long long LOCAL_DRAM = 0;
+//   long long REMOTE_DRAM = 0;
+//   long long ALL_LOADS = 0;
+//   long long UOPS_RETIRED = 0;
+//   long long inter_socket_activity1 = 0; // MEM_LOAD_UOPS_LLC_MISS_..._REMOTE_FWD
+//   long long inter_socket_activity2 = 0; // MEM_LOAD_UOPS_LLC_MISS_..._REMOTE_HITM
+//   long long context_switches = 0;
+//   long long unhalted_cycles = 0;
+
+  
+//   std::vector<int>::iterator it;
+//   std::vector<int> v = cores_per_pid.find(pid)->second;
+//   for (it = v.begin(); it != v.end(); it++) {
+//     int cpu = *it;
+//     core_data cd = get_counters(cpu);
+//     LLC_TCA += cd.values[0];
+//     LLC_TCM += cd.values[1];
+//     LOCAL_DRAM += cd.values[2];
+//     REMOTE_DRAM += cd.values[3];
+//     ALL_LOADS += cd.values[4];
+//     UOPS_RETIRED += cd.values[5];
+//     unhalted_cycles += cd.values[6];
+//     inter_socket_activity1 += cd.values[7];
+//     inter_socket_activity2 += cd.values[8];
+//   }
+//   context_switches = read_all_context_switches(true, pid);
+
+//   results[0] = LLC_TCA;
+//   results[1] = LLC_TCM;
+//   results[2] = LOCAL_DRAM;
+//   results[3] = REMOTE_DRAM;
+//   results[4] = ALL_LOADS;
+//   results[5] = UOPS_RETIRED;
+//   results[6] = unhalted_cycles;
+//   results[7] = inter_socket_activity1;
+//   results[8] = inter_socket_activity2;
+//   results[9] = context_switches;
+
+
+//   LLC_TCA -= old_values[0];
+//   LLC_TCM -= old_values[1];
+//   LOCAL_DRAM -= old_values[2];
+//   REMOTE_DRAM -= old_values[3];
+//   ALL_LOADS -= old_values[4];
+//   UOPS_RETIRED -= old_values[5];
+//   unhalted_cycles -= old_values[6];
+//   inter_socket_activity1 -= old_values[7];
+//   inter_socket_activity2 -= old_values[8];
+//   context_switches -= old_values[9];
+
+
+//   // std::string features[10] = {"retired_uops", "loads_retired_ups", "LLC_misses", "LLC_references", 
+//   // 			"local_accesses", "remote_accesses", "inter_socket1", "inter_socket2", "context_switches", "number_of_threads"};
+  
+
+//   new_values[0] = UOPS_RETIRED;
+//   new_values[1] = ALL_LOADS;
+//   new_values[2] = LLC_TCM;
+//   new_values[3] = LLC_TCA;
+//   new_values[4] = LOCAL_DRAM;
+//   new_values[5] = REMOTE_DRAM;
+//   new_values[6] = inter_socket_activity1;
+//   new_values[7] = inter_socket_activity2;
+//   new_values[8] = context_switches;
+//   new_values[9] = number_of_threads;
+
+//   return results;
+// }
+
+
+double clean(double x) {
+  if (x > 1.0) {
+    return 1.0;
+  }
+  else if (x < 0.0) {
+    return 0.0;
+  }
+  return x;
+}
+
+typedef struct {
+  pid_t pid;
+  FILE* memory_bandwidth_file;
+} slate_bg_dt;
+
+volatile int times = 0, RRtimes = 0;
+void* slate_bg(void* dt) {
+  slate_bg_dt* slate_dt = (slate_bg_dt *) dt;
+  
+  pid_t pid = slate_dt->pid;
+  FILE* fp = slate_dt->memory_bandwidth_file;
+
+  long long prev_context_switches = 0;
+  long long *prev_counters, *cur_counters;
+  prev_counters = (long long *) malloc(sizeof(long long) * COUNTERS_NUMBER);
+  bzero(prev_counters, sizeof(long long) * COUNTERS_NUMBER);
+
+  int number_of_threads;
+  int* tids = get_thread_ids(pid, &number_of_threads);
+
+  std::vector<int> hwcs;
+  for (int i = 0; i < number_of_threads; ++i) {
+
+    std::map< pid_t, std::vector<int> >::iterator it = cores_per_pid.find(pid);
+    it = cores_per_pid.find(pid);
+
+    std::vector<int> cores_used = it->second;
+    for (std::vector<int>::iterator it2 = cores_used.begin(); it2 != cores_used.end(); ++it2) {
+      hwcs.push_back(*it2);
+    }
+  }
+  
+
+
+  int policy_before = 1;
+  int status;
+  while (true) {
+    cur_counters = read_perf_counters(prev_counters, hwcs);
+    sleep(1);
+
+    pid_t w = waitpid(pid, &status, WNOHANG);
+    if (w == pid) {
+      cerr << "What's this?" << endl;
+      break;
+    }
+    
+    double sockets_bw[4];
+    for (int i = 0; i < 4; ++i) {
+      sockets_bw[i] = read_memory_bandwidth(i, fp);
+      rewind(fp);
+    }
+
+    long cur_context_switches = 0;
+    for (int i = 0; i < number_of_threads; ++i) {
+      long long result = read_context_switches(true, tids[i]);
+      if (result == -1) {
+	printf("cannot read any more context switches. probably files are missing!");
+	int status;
+	while (waitpid(pid, &status, WNOHANG) != 0) {
+	  usleep(100);
+	  return 0;
+	}
+	
+      }
+      cur_context_switches += result;
+    }
+
+
+    prev_counters = read_perf_counters(cur_counters, hwcs);
+
+    long long* actual_values = subtract(prev_counters, cur_counters, COUNTERS_NUMBER);
+    int final_result = -1;
+    print_perf_counters(policy_before == 1, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw, number_of_threads); // fIXME +-1 for the thread
+    free(actual_values);
+
+
+    
+
+    
+    w = waitpid(pid, &status, WNOHANG);
+    if (w == pid) {
+      cerr << "What's this?" << endl;
+      break;
+    }
+    else {
+    }
+
+
+    int loc = policy_before == 0? 1: 0;
+    int rr = 1 - loc;
+
+
+    classifier_data input =  create_data(loc, rr, actual_values[0], actual_values[1], actual_values[2], actual_values[3],
+					 actual_values[4], actual_values[5], actual_values[6], actual_values[7], actual_values[8],
+					 cur_context_switches - prev_context_switches,
+					 sockets_bw[1], sockets_bw[2], sockets_bw[3], sockets_bw[4], number_of_threads);
+
+
+    prev_context_switches = cur_context_switches;
+    
+    int classification_result = classify(classify_data, input);
+    fprintf(stderr, "What is the classification: %d\n", classification_result);
+    if (policy_before == 1 && classification_result == 0) {
+      int new_policy = MCTOP_ALLOC_MIN_LAT_HWCS;
+      policy_before = 0;
+      reschedule(h, pid, new_policy);
+      fprintf(stderr, "Moved to LOC\n");
+    }
+    else if (policy_before == 0 && classification_result == 1) {
+      int new_policy = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
+      policy_before = 1;
+      reschedule(h, pid, new_policy);
+      fprintf(stderr, "Moved to RR\n");
+    }
+    
+    times++;
+  }
+
+}
 
 void* execute_process(void* dt) {
   execute_process_args* args = (execute_process_args*) dt;
@@ -275,7 +666,7 @@ void* execute_process(void* dt) {
 
   bool was_slate = false;
   if (pol == MCTOP_ALLOC_SLATE) {
-    pol = MCTOP_ALLOC_MIN_LAT_HWCS;
+    pol = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
     was_slate = true;
   }
 
@@ -298,106 +689,13 @@ void* execute_process(void* dt) {
   p->pid = pid_pt;
 
   if (was_slate) {
-    usleep(2000 * 1000);
-
-    long long LLC_TCA = 0;
-    long long LLC_TCM = 0;
-    long long LOCAL_DRAM = 0;
-    long long REMOTE_DRAM = 0;
-
-    std::vector<int>::iterator it;
-    std::vector<int> v = cores_per_pid.find(pid)->second;
-    for (it = v.begin(); it != v.end(); it++) {
-      int cpu = *it;
-      printf("MPIKA\n\n\n edo me cpu\n\n: cpu: %d\n", cpu);
-      core_data cd = get_counters(cpu);
-      LLC_TCA += cd.values[0];
-      LLC_TCM += cd.values[1];
-      LOCAL_DRAM += cd.values[2];
-      REMOTE_DRAM += cd.values[3];
-      printf("%lld, %lld, %lld, %lld\n", LLC_TCA, LLC_TCM, LOCAL_DRAM, REMOTE_DRAM);
-    }
-
-    usleep(1200 * 1000); // wait for 1.2s
-
-  
-    long long LLC_TCA2 = 0;
-    long long LLC_TCM2 = 0;
-    long long LOCAL_DRAM2 = 0;
-    long long REMOTE_DRAM2 = 0;
+    slate_bg_dt* dt = malloc(sizeof(slate_bg_dt));
+    dt->pid = pid;
+    dt->memory_bandwidth_file = args->memory_bandwidth_file;
     
-    for (it = v.begin(); it != v.end(); it++) {
-      int cpu = *it;
-
-      core_data cd = get_counters(cpu);
-      LLC_TCA2 += cd.values[0];
-      LLC_TCM2 += cd.values[1];
-      LOCAL_DRAM2 += cd.values[2];
-      REMOTE_DRAM2 += cd.values[3];
-      printf("%lld, %lld, %lld, %lld\n", LLC_TCA2, LLC_TCM2, LOCAL_DRAM2, REMOTE_DRAM2);
-    }
-
-    printf("====\n\n%lld, %lld, %lld, %lld\n", LLC_TCA, LLC_TCM, LOCAL_DRAM, REMOTE_DRAM);
-
-    LLC_TCA2 -= LLC_TCA;
-    LLC_TCM2 -= LLC_TCM;
-    LOCAL_DRAM2 -= LOCAL_DRAM;
-    REMOTE_DRAM2 -= REMOTE_DRAM;
-    printf("====\n\n%lld, %lld, %lld, %lld\n", LLC_TCA2, LLC_TCM2, LOCAL_DRAM2, REMOTE_DRAM2);
-
-
-    double res1 = fo(LLC_TCA2, LLC_TCM2, LOCAL_DRAM2, REMOTE_DRAM2);
-
-    // change policy
-    int new_policy = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
-    h.reschedule(pid, new_policy);
-    printf("I just rescheduled to ROUND_ROBIN_CORES!!!\n");
-
-
-    LLC_TCA = 0;
-    LLC_TCM = 0;
-    LOCAL_DRAM = 0;
-    REMOTE_DRAM = 0;
-    for (it = v.begin(); it != v.end(); it++) {
-      int cpu = *it;
-      core_data cd = get_counters(cpu);
-      LLC_TCA += cd.values[0];
-      LLC_TCM += cd.values[1];
-      LOCAL_DRAM += cd.values[2];
-      REMOTE_DRAM += cd.values[3];
-    }
-    usleep(1200 * 1000); // wait for 500ms
-
-  
-    LLC_TCA2 = 0;
-    LLC_TCM2 = 0;
-    LOCAL_DRAM2 = 0;
-    REMOTE_DRAM2 = 0;
-    for (it = v.begin(); it != v.end(); it++) {
-      int cpu = *it;
-      core_data cd = get_counters(cpu);
-      LLC_TCA2 += cd.values[0];
-      LLC_TCM2 += cd.values[1];
-      LOCAL_DRAM2 += cd.values[2];
-      REMOTE_DRAM2 += cd.values[3];
-    }
-  
-    LLC_TCA2 -= LLC_TCA;
-    LLC_TCM2 -= LLC_TCM;
-    LOCAL_DRAM2 -= LOCAL_DRAM;
-    REMOTE_DRAM2 -= REMOTE_DRAM;
-
-    double res2 = fo(LLC_TCA2, LLC_TCM2, LOCAL_DRAM2, REMOTE_DRAM2);
-
-    printf("RES1 is: %lf and RES2: %lf\n", res1, res2);
-    if (res2 <= res1) {
-      // good!
-    }
-    else {
-      printf("\n\n\nMPIKA EDO mori ametaoniti kai ekana ksana reschedule gia MCTOP_ALLOC_BWRR_!!!\n\n\n");
-      h.reschedule(pid, MCTOP_ALLOC_BW_ROUND_ROBIN_CORES);
-      // got back to RR CORE
-    }
+    sleep(3);
+    pthread_t slate_th;
+    pthread_create(&slate_th, NULL, slate_bg, dt);
   }
   
   printf("Added %lld to list with processes\n", (long long) (*pid_pt));
@@ -406,9 +704,9 @@ void* execute_process(void* dt) {
     pid_t* pid = p->pid;
     int status;
 
-    printf("BLOCK .. waiting for process to FINIShH\n");
+    printf("Waiting for the process to terminate ...\n");
     waitpid(*pid, &status, 0);
-    printf(" A process just finished!!!!!\n");
+    printf("The process just terminated.\n");
 
     h.process_exit(*pid);
     release_hwc(h, *pid);
@@ -437,6 +735,7 @@ void* execute_process(void* dt) {
 
 int main(int argc, char* argv[]) {
 
+
   PERF_COUNTERS_ENABLED = false;
   if (argc == 5) {
     if (strcmp(argv[4], "true") == 0) {
@@ -449,15 +748,13 @@ int main(int argc, char* argv[]) {
   char* heuristic = (char *) malloc(100);
   
   if (argc != 4 && argc != 5) {
-    perror("Call schedule like this: ./schedule input_file output_file_for_results heuristic\n");
+    perror("Call schedule like this: ./schedule input_file output_file_for_results heuristic COUNTERS_OR_NOT?\n");
     return EXIT_FAILURE;
   }
-
 
   results_fp = fopen(argv[2], "w");
   strcpy(heuristic, argv[3]);
   
-  tids_per_pid = create_list();
 
   mctop_t* topo = mctop_load(NULL);
   //  mctop_print(topo);
@@ -465,63 +762,44 @@ int main(int argc, char* argv[]) {
     fprintf(stderr, "Couldn't load topology file.\n");
     return EXIT_FAILURE;
   }
-  
+
+
+  classify_data = init_classifier_data();
   communication_slot* slots = initialize_slots();
   pin_data** pin = initialize_pin_data(topo);
+
+  heuristic_t init_h = new_heuristic(H_init, H_get_lock, H_new_process, H_process_exit, H_get_hwc, H_release_hwc, H_reschedule);
+  heuristic_t X_h = new_heuristic(HX_init, HX_get_lock, HX_new_process, HX_process_exit, HX_get_hwc, HX_release_hwc, NULL);
+  heuristic_t MCTOP_h = new_heuristic(HMCTOP_init, HMCTOP_get_lock, HMCTOP_new_process, HMCTOP_process_exit, HMCTOP_get_hwc, HMCTOP_release_hwc, NULL);
+  heuristic_t GREEDY_h = new_heuristic(HGREEDY_init, HGREEDY_get_lock, HGREEDY_new_process, HGREEDY_process_exit, HGREEDY_get_hwc, HGREEDY_release_hwc, HGREEDY_reschedule);
+  heuristic_t SPLIT_h = new_heuristic(HSPLIT_init, HSPLIT_get_lock, HSPLIT_new_process, HSPLIT_process_exit, HSPLIT_get_hwc, HSPLIT_release_hwc, NULL);
+  heuristic_t RRLAT_h = new_heuristic(HRRLAT_init, HRRLAT_get_lock, HRRLAT_new_process, HRRLAT_process_exit, HRRLAT_get_hwc, HRRLAT_release_hwc, NULL);
+
+  
   if (strcmp(heuristic, "NORMAL") == 0) {
-    h.init = H_init;
-    h.get_lock = H_get_lock;
-    h.new_process = H_new_process;
-    h.process_exit = H_process_exit;
-    h.get_hwc = H_get_hwc;
-    h.release_hwc = H_release_hwc;
-    h.reschedule = H_reschedule; // FIXME put this in the other ones
+    copy_heuristic(&h, init_h);
     h.init(pin, topo);
   }
   else if (strcmp(heuristic, "X") == 0) {
-    h.init = HX_init;
-    h.get_lock = HX_get_lock;
-    h.new_process = HX_new_process;
-    h.process_exit = HX_process_exit;
-    h.get_hwc = HX_get_hwc;
-    h.release_hwc = HX_release_hwc;
+    copy_heuristic(&h, X_h);
     h.init(pin, topo);
   }
   else if (strcmp(heuristic, "MCTOP") == 0) {
-    h.init = HMCTOP_init;
-    h.get_lock = HMCTOP_get_lock;
-    h.new_process = HMCTOP_new_process;
-    h.process_exit = HMCTOP_process_exit;
-    h.get_hwc = HMCTOP_get_hwc;
-    h.release_hwc = HMCTOP_release_hwc;
+    copy_heuristic(&h, MCTOP_h);
     h.init(pin, topo);
   }
   else if (strcmp(heuristic, "GREEDY") == 0) {
-    h.init = HGREEDY_init;
-    h.get_lock = HGREEDY_get_lock;
-    h.new_process = HGREEDY_new_process;
-    h.process_exit = HGREEDY_process_exit;
-    h.get_hwc = HGREEDY_get_hwc;
-    h.release_hwc = HGREEDY_release_hwc;
-    h.reschedule = HGREEDY_reschedule; // FIXME put this in the other ones
+    copy_heuristic(&h, GREEDY_h);
+    printf("%p\n", h.init);
     h.init(pin, topo);
+
   }
   else if (strcmp(heuristic, "SPLIT") == 0) {
-    h.init = HSPLIT_init;
-    h.get_lock = HSPLIT_get_lock;
-    h.new_process = HSPLIT_new_process;
-    h.process_exit = HSPLIT_process_exit;
-    h.get_hwc = HSPLIT_get_hwc;
-    h.release_hwc = HSPLIT_release_hwc;
+    copy_heuristic(&h, SPLIT_h);
     h.init(pin, topo);
   }
   else if (strcmp(heuristic, "RRLAT") == 0) {
-    h.init = HRRLAT_init;
-    h.get_lock = HRRLAT_get_lock;
-    h.new_process = HRRLAT_new_process;
-    h.process_exit = HRRLAT_process_exit;
-    h.get_hwc = HRRLAT_get_hwc;
-    h.release_hwc = HRRLAT_release_hwc;
+    copy_heuristic(&h, RRLAT_h);
     h.init(pin, topo);
   }
   else {
@@ -563,9 +841,9 @@ int main(int argc, char* argv[]) {
       pol = get_policy(policy);
     }
 
-    process* p = (process* )malloc(sizeof(process));
-    p->pid = (pid_t*)malloc(sizeof(pid_t));
-    p->start = (struct timespec * )malloc(sizeof(struct timespec));
+    process* p = (process* ) malloc(sizeof(process));
+    p->pid = (pid_t*) malloc(sizeof(pid_t));
+    p->start = (struct timespec * ) malloc(sizeof(struct timespec));
     p->policy = (char *) malloc(sizeof(char) * 100);
     p->policy[0] = '\0';
     strcpy(p->policy, policy);
@@ -583,11 +861,12 @@ int main(int argc, char* argv[]) {
       z++;
     }
 
-    execute_process_args* args = (execute_process_args * )malloc(sizeof(execute_process_args));
+    execute_process_args* args = (execute_process_args * ) malloc(sizeof(execute_process_args));
     args->p = p;
     args->start_time_ms = start_time_ms;
     args->program = program;
     args->policy = pol;
+    args->memory_bandwidth_file = start_reading_memory_bandwidth();
 
     struct timeval tm;
     gettimeofday(&tm, NULL);

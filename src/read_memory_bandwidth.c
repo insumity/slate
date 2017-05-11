@@ -12,14 +12,17 @@
 
 #define MAX_LINE_SIZE 1000
 
-void start_reading_memory_bandwidth() {
+FILE* start_reading_memory_bandwidth() {
   system("sudo pkill -9 pcm-memory.x");
   system("sudo rm -f /tmp/memory_bw.csv");
   system("sudo /localhome/kantonia/slate/pcm/pcm-memory.x 0.5 -csv=/tmp/memory_bw.csv &");
+
+  sleep(1);
+  FILE* fp = fopen("/tmp/memory_bw.csv", "r");
+  return fp;
 }
 
-FILE *fp;
-double read_memory_bandwidth(int socket) {
+double read_memory_bandwidth(int socket, FILE* fp) {
 
   char last_line1[MAX_LINE_SIZE], last_line2[MAX_LINE_SIZE];
   char current_line[MAX_LINE_SIZE];
@@ -83,9 +86,8 @@ double read_memory_bandwidth(int socket) {
 
 /*int main(int argc, char* argv[]) {
 
-  start_reading_memory_bandwidth();
+  FILE* fp = start_reading_memory_bandwidth();
   sleep(1);
-  fp = fopen("/tmp/memory_bw.csv", "r");
 
   while (1) {
     for (int i = 0; i < 4; ++i) {

@@ -16,7 +16,7 @@
 
 #include "slate_utils.h"
 
-#define PAPI_ENABLED
+//#define PAPI_ENABLED
 //#define PAPI_MULTIPLEX
 
 

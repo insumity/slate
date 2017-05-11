@@ -19,20 +19,12 @@
 #define B_PAPI_ENABLED
 #define B_PAPI_MULTIPLEX
 
-typedef struct {
-  volatile long long values[9];
-  pthread_mutex_t lock;
-} core_data;
-
-
 int add_events(int event_set) {
 
 #ifdef B_PAPI_ENABLED
-
-  unsigned int native = 0x03d3;
   int retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_RETIRED:L3_HIT");
   if (retval != PAPI_OK) {
-    printf("Couldn't add L3_TCA: %d\n", retval);
+    printf("Couldn't add L3_TCA\n");
     exit(1);
     }
     
@@ -62,12 +54,13 @@ int add_events(int event_set) {
     exit(1);
   }
 
-  retval = PAPI_add_named_event(event_set, "UOPS_RETIRED");
+ retval = PAPI_add_named_event(event_set, "UOPS_RETIRED");
   if (retval != PAPI_OK) {
     perror("couldn't add retired l2 miss\n");
     exit(1);
   }
-  
+
+  // this counter should be given for free (one of the predefined ones)
   retval = PAPI_add_named_event(event_set, "UNHALTED_CORE_CYCLES");
   if (retval != PAPI_OK) {
     perror("couldn't add unhalted core cycles\n");
@@ -103,7 +96,6 @@ void start_counters(int event_set) {
   }
 }
 
-core_data* data;
 void read_counters(int event_set) {
   long long results[9] = {0, 0, 0, 0, 0, 0, 0, 0};
   int retval;
@@ -112,18 +104,10 @@ void read_counters(int event_set) {
   if (retval != PAPI_OK) {
     printf("The event hasn't started yet!\n");
   }
-
-  pthread_mutex_lock(&(data->lock));
-
   
-  //printf(">>>\t\t");
   for (int i = 0; i < 9; ++i) {
-    data->values[i] = results[i];
-    //i < 8? printf("%lld\t\t", results[i]): printf("%lld\n", results[i]);
+    i < 8? printf("%lld\t\t", results[i]): printf("%lld\n", results[i]);
   }
-  
-  msync(data, sizeof(core_data), MS_SYNC);
-  pthread_mutex_unlock(&(data->lock));
 }
 
 void kill_events(int event_set) {
@@ -146,30 +130,6 @@ void kill_events(int event_set) {
 int main(int argc, char* argv[]) {
   int cpu = atoi(argv[1]);
 
-  char filename[100] = {'\0'};
-  strcpy(filename, "/tmp/cpu");
-  char id[100];
-  sprintf(id, "%d", cpu);
-  strcat(filename, id);
-  int fd = open(filename, O_RDWR | O_CREAT, 0777);
-  syncfs(fd);
-  
-  if (fallocate(fd, 0, 0, sizeof(core_data)) != 0) {
-    perror("couldn' not allocate\n");
-  }
-  
-  data = (core_data *) mmap(NULL, sizeof(core_data), PROT_WRITE, MAP_SHARED, fd, 0);
-  if (data == MAP_FAILED) {
-    fprintf(stderr, "couldn't memory map\n");
-  }
-
-  pthread_mutexattr_t attrmutex;
-
-  pthread_mutexattr_init(&attrmutex);
-  pthread_mutexattr_setpshared(&attrmutex, PTHREAD_PROCESS_SHARED);
-  
-  pthread_mutex_init(&(data->lock), &attrmutex);
-
   int retval;
 #ifdef B_PAPI_ENABLED
   retval = PAPI_library_init(PAPI_VER_CURRENT);
@@ -188,17 +148,11 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  /* I'm setting the domain below and only for user-level events */
-  /* if ((retval = PAPI_set_domain(PAPI_DOM_ALL)) != PAPI_OK) { */
-  /*   fprintf(stderr, "couldn't set domain!\n"); */
-  /* } */
-
   int event_set = PAPI_NULL;
 #ifdef B_PAPI_ENABLED
   retval = PAPI_create_eventset(&event_set);
   if (retval != PAPI_OK) {
     printf("couldn't assign because: %d\n", retval);
-    perror("couldn't assign the component\n");
     exit(1);
   }
 
@@ -239,13 +193,12 @@ int main(int argc, char* argv[]) {
   }
 #endif
 
-  //printf(">>>\t\tRTDL3_HIT\t\tRTDL3_MISS\t\tLOCAL_RAM\t\tREMOTE_RAM\t\tEMPTY_CYCLES\t\tUOPS_RTD\t\tUNHALTED\t\tREM_HITM\t\tREMOTE_FWD\n");
   add_events(event_set);
   start_counters(event_set);
   
   while (true) {
     int one_ms_in_us = 1000;
-    int wait_time_in_ms = 125 * one_ms_in_us;
+    int wait_time_in_ms = 500 * one_ms_in_us;
     usleep(wait_time_in_ms);
     read_counters(event_set);
   }
