@@ -9,7 +9,7 @@
 #include <signal.h>
 #include <clht.h>
 
-#define WAITING_TIME_IN_MS (0 * 1000)
+#define WAITING_TIME_IN_MS (5 * 1000)
 
 clht_t* global_ht;
 clht_val_t* global_value;
@@ -43,7 +43,7 @@ void *writer(void *v)
     }
     ++times;
 
-    usleep(WAITING_TIME_IN_MS);
+    //usleep(WAITING_TIME_IN_MS);
 
     loops_per_thread[LONG_LONGS_PER_CACHE_LINE * index]++;
   }
@@ -118,7 +118,6 @@ int main(int argc, char* argv[])
 
 
   int oc;
-
 
   pin = 0;
   while ((oc = getopt(argc, argv, "t:s:p")) != -1) {
@@ -195,10 +194,12 @@ int main(int argc, char* argv[])
     }
 
     if (pin) {
+      printf("Pinning thread %lld to core ... ", threads[i]);
       cpu_set_t st;
       CPU_ZERO(&st);
       CPU_SET(cores[i], &st);
-      printf("%d ", cores[i]);
+      printf("%d\n", cores[i]);
+      
       if (pthread_setaffinity_np(threads[i], sizeof(st), &st)) {
 	perror("Something went wrong while setting the affinity!\n");
 	return EXIT_FAILURE;
