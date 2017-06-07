@@ -1,0 +1,79 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 20 going to node: 0
+I'm about to pin!
+Core: 24 going to node: 0
+I'm about to pin!
+Core: 28 going to node: 0
+I'm about to pin!
+Core: 32 going to node: 0
+I'm about to pin!
+Core: 36 going to node: 0
+I'm about to pin!
+Core: 40 going to node: 0
+I'm about to pin!
+Core: 44 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 21 going to node: 1
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 8980, 942, 561, 247, 11094, 121830703, 243730406, 0, 78, 144, 47.765, 37.12, 36.99, 38.48, 18, 1
+1, 0, 17715, 30268, 25082, 2970, 52170, 10286495172, 40657401775, 126, 243, 0, 23195.6, 18757.9, 54.275, 70.75, 18, 1
+1, 0, 16526, 27761, 30071, 1154, 44854, 10500078390, 42639914810, 87, 207, 0, 36580.7, 29816, 59.57, 77.9, 18, 1
+1, 0, 16829, 30105, 27671, 1048, 44872, 10475381050, 42634810665, 87, 195, 0, 36619, 29840, 60.96, 77.915, 18, 1
+1, 0, 16851, 27127, 24922, 1110, 48851, 10479472365, 42676166175, 123, 177, 0, 36610.1, 29832.9, 59.305, 77.45, 18, 1
+1, 0, 17065, 27927, 27554, 1094, 46352, 10476840241, 42608635894, 75, 132, 0, 36612.3, 29834.4, 60.04, 78.7, 18, 1
+1, 0, 16313, 29218, 27725, 1366, 44390, 10377800380, 42284755512, 84, 141, 0, 36570.7, 29808.7, 58.85, 77.345, 18, 1
+1, 0, 16614, 29094, 26848, 1028, 45896, 10342865186, 42285563644, 57, 135, 0, 36614.1, 29842.9, 59.255, 77.325, 18, 1
+1, 0, 17358, 29655, 27227, 974, 47504, 10441165822, 42495474852, 78, 165, 0, 36609.3, 29830.2, 58.735, 77.385, 18, 1
+1, 0, 17094, 27761, 26574, 1177, 46557, 10469801579, 42586725392, 72, 204, 0, 36618.1, 29836.5, 59.175, 77.55, 18, 1
+1, 0, 17077, 28726, 26994, 1129, 46259, 10482984760, 42657839433, 84, 252, 0, 36574.1, 29812.1, 58.855, 77.105, 18, 1
+1, 0, 16915, 27605, 26547, 1050, 45733, 10529809612, 42795327002, 87, 132, 0, 36616.9, 29843.1, 59.555, 77.785, 18, 1
+1, 0, 17144, 28321, 27368, 1107, 45161, 10455493581, 42551073252, 81, 144, 0, 36608.9, 29818.8, 58.975, 76.94, 18, 1
+1, 0, 17452, 28927, 26761, 1705, 48200, 10478643059, 42567648527, 72, 192, 0, 36573.6, 29807.1, 59.305, 77.355, 18, 1
+1, 0, 16974, 27654, 26753, 1316, 45949, 10474752394, 42562872945, 66, 147, 0, 36614.8, 29831, 59.495, 77.935, 18, 1
+1, 0, 17043, 28150, 26884, 965, 45636, 10440098136, 42554842950, 54, 129, 0, 36616.2, 29840.6, 59.76, 78.425, 18, 1
+1, 0, 16953, 27688, 26061, 1091, 45060, 10465292008, 42613612700, 84, 186, 0, 36624.4, 29845.7, 62.48, 79.49, 18, 1
+couldn't open file: No such file or directory

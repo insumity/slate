@@ -14,7 +14,7 @@
 #include <strings.h>
 #include <signal.h>
 
-#define MEMORY_PER_THREAD (5 * MB)
+#define LLC_SIZE (30 * MB)
 
 
 const int KB = 1024;
@@ -35,7 +35,7 @@ void *inc(void *index_pt)
 {
   sleep(3);
   inc_dt* dt = (inc_dt *) index_pt;
-  long long size = MEMORY_PER_THREAD;
+  long long size = LLC_SIZE / number_of_threads + 5 * MB; // + 5 * MB to make sure the LLC is going to be the problem
   int repetions = 1000 * 1000 * 500;
   int numa_node = dt->numa_node;
   

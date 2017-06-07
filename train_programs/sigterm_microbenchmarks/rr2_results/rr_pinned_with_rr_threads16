@@ -1,0 +1,75 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 8690, 5479, 2156, 161, 6473, 491117101, 513499740, 189, 2085, 113, 47.13, 37.58, 37.27, 38.57, 16, 1
+0, 1, 26695, 27611, 11047, 3868, 57878, 29122007587, 36220438524, 516, 11772, 0, 4963.02, 4166.14, 4496.85, 4126.83, 16, 1
+0, 1, 28337, 36726, 24574, 3153, 73272, 30504097035, 38029828845, 263, 10628, 0, 8142.24, 6406.36, 6849.52, 6386, 16, 1
+0, 1, 38294, 47402, 30516, 3923, 91735, 30400284023, 45820231299, 264, 10752, 0, 7812.8, 6408.14, 6434.59, 6387.48, 16, 1
+0, 1, 32064, 36703, 25033, 2913, 71675, 30485011475, 38060663299, 243, 10458, 0, 7956.39, 6393.91, 6403.07, 6390.41, 16, 1
+0, 1, 29356, 39032, 25200, 2474, 69792, 30306539572, 29837907151, 269, 10418, 0, 7817.23, 6390.36, 6756.01, 6385.26, 16, 1
+0, 1, 34080, 41995, 26921, 3083, 80712, 30053502290, 37522312694, 279, 10607, 0, 7835.75, 6392.09, 6473.42, 6385.25, 16, 1
+0, 1, 30926, 34870, 21938, 2169, 71299, 30237777813, 38012555684, 279, 10592, 0, 7833.86, 6404.51, 6632.73, 6384.01, 16, 1
+0, 1, 21938, 26273, 14954, 1080650, 50680, 30469655921, 38178168773, 285, 10763, 0, 9000.62, 6590.25, 7187.66, 6399.98, 16, 1
+0, 1, 23707, 26514, 14132, 10954285597, 50531, 30410459961, 46080238568, 231, 10578, 0, 7826.88, 6393.77, 7143.7, 6384.13, 16, 1
+0, 1, 23525, 25286, 13944, 1612, 55063, 30527117585, 30214345434, 192, 10607, 0, 7812.48, 6387.77, 7138.09, 6383.32, 16, 1
+0, 1, 22691, 26740, 15283, 1562, 48595, 30425996442, 37992205677, 297, 10742, 0, 7840.66, 6386.93, 7145.8, 6384.53, 16, 1
+0, 1, 25724, 27316, 13455, 1205, 52761, 30244393935, 37987386479, 267, 10616, 0, 7826.98, 6396.48, 7136.84, 6386.07, 16, 1
+0, 1, 23232, 26587, 14405, 1231, 50450, 30245403149, 38010279133, 240, 10485, 0, 8170.5, 6426.68, 7145.62, 6395.34, 16, 1
+0, 1, 22684, 27261, 14819, 1306, 51407, 30106968196, 37810118214, 204, 10626, 0, 9000.31, 6585.35, 7154.73, 6378.47, 16, 1
+0, 1, 23109, 26799, 14934, 1706, 53343, 29900526852, 38057996647, 201, 10527, 0, 9927.86, 6546.41, 7161.85, 6387.95, 16, 1
+0, 1, 22454, 27459, 16247, 1811, 51930, 30044591695, 38049487483, 288, 10526, 0, 9362.33, 6661.22, 7215.4, 6377.91, 16, 1
+couldn't open file: No such file or directory

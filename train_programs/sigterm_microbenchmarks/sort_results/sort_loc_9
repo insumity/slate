@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 549679, 24082, 23973, 126, 578277, 85732884450, 21380051684, 30, 96, 68, 769.215, 39.725, 47.31, 49.175, 9, 0
+1, 0, 559482, 21514, 21954, 41, 584992, 86491951992, 21512268099, 21, 168, 0, 766.195, 39.075, 46.64, 48.53, 9, 0
+1, 0, 550869, 20561, 20422, 67, 570024, 86863418330, 21546900495, 30, 174, 0, 772.59, 39.55, 47.375, 49.135, 9, 0
+1, 0, 552380, 25963, 25894, 206, 583181, 86741588093, 21520579802, 39, 129, 7, 784.52, 39.4, 46.725, 48.52, 9, 0
+1, 0, 566174, 20810, 19111, 225, 584117, 86464456545, 21439670800, 6, 120, 0, 792.135, 39.66, 46.98, 49.02, 9, 0
+1, 0, 565115, 20902, 20814, 382, 586946, 86164490889, 21366479999, 12, 87, 0, 739.825, 39.04, 46.49, 48.35, 9, 0
+1, 0, 567759, 23615, 21837, 67, 582033, 86213692551, 21442061750, 54, 123, 0, 741.545, 39.22, 46.535, 48.39, 9, 0
+couldn't open file: No such file or directory

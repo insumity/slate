@@ -1,0 +1,58 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+I'm about to pin!
+Core: 0 going to node: 2
+I'm about to pin!
+Core: 4 going to node: 2
+I'm about to pin!
+Core: 8 going to node: 2
+I'm about to pin!
+Core: 12 going to node: 2
+I'm about to pin!
+Core: 16 going to node: 2
+1, 0, 1136, 58, 0, 0, 1604, 70731, 168801, 0, 6, 39, 50.01, 37.645, 37.345, 38.98, 5, 1
+1, 0, 840, 135, 0, 0, 238, 73688, 275949, 0, 3, 0, 49.585, 37.605, 37.93, 39.11, 5, 1
+1, 0, 7443, 16658, 16555, 211, 23864, 39061737, 73653249, 0, 87, 0, 46.99, 37.52, 37.56, 38.795, 5, 1
+1, 0, 121783, 674047, 657332, 9946, 788219, 1496613658, 3934752594, 45, 90, 0, 1088.14, 41.225, 2685.05, 43.475, 5, 1
+1, 0, 135795, 1704768, 1702550, 10547, 1848102, 3917322558, 10758312501, 6, 108, 0, 4997.53, 43.7, 13551, 53.1, 5, 1
+1, 0, 138221, 1887103, 1871598, 9594, 1996433, 4221585820, 11837693205, 6, 90, 0, 6392.19, 45.535, 17420.2, 54.435, 5, 1
+1, 0, 146656, 1886481, 1858689, 9864, 2011661, 4281540335, 11923352880, 18, 102, 0, 6381.15, 45.655, 17394.7, 54.395, 5, 1
+1, 0, 144637, 1849337, 1849081, 9700, 2027167, 4272118201, 11936886591, 24, 129, 0, 6383.13, 45.82, 17403.2, 54.65, 5, 1
+1, 0, 143971, 1876096, 1872452, 9792, 2029602, 4296633520, 11985372024, 12, 51, 0, 6379.44, 45.71, 17398.2, 54.31, 5, 1
+1, 0, 144516, 1875761, 1869248, 10130, 2026951, 4291620539, 11877976395, 9, 48, 0, 6378.86, 45.775, 17400.6, 54.475, 5, 1
+1, 0, 143598, 1885970, 1877858, 10093, 2014967, 4201388375, 11790084027, 0, 45, 0, 6378.24, 45.585, 17403.9, 54.885, 5, 1
+1, 0, 144413, 1888903, 1867535, 9968, 1995416, 4277377430, 11942536539, 15, 54, 0, 6385.99, 45.95, 17428.1, 54.755, 5, 1
+1, 0, 143567, 1863085, 1835059, 9141, 2024765, 4286604484, 11942564454, 18, 99, 0, 6377.73, 45.455, 17405.3, 54.755, 5, 1
+1, 0, 142491, 1860548, 1872420, 9456, 2018157, 4278663926, 11951730840, 9, 105, 0, 6380.83, 45.36, 17410.5, 54.57, 5, 1
+1, 0, 143447, 1885464, 1871835, 9924, 2026754, 4301302315, 11937370080, 9, 48, 0, 6380.06, 45.615, 17408.2, 55.085, 5, 1
+1, 0, 142589, 1876159, 1870000, 9900, 2028924, 4225418276, 11791903146, 9, 45, 0, 6377.84, 45.305, 17406, 54.6, 5, 1
+1, 0, 141937, 1878720, 1868177, 10938, 1987309, 4245103873, 11894052069, 0, 12, 0, 6385.95, 45.365, 17426.6, 54.225, 5, 1
+1, 0, 142589, 1877907, 1837439, 9594, 2021295, 4302949756, 11971465920, 21, 42, 0, 6379.24, 45.51, 17408.3, 54.21, 5, 1
+1, 0, 143132, 1841739, 1861540, 9559, 2029677, 4276233635, 11938325589, 30, 60, 0, 6379.43, 45.395, 17405.6, 54.42, 5, 1
+1, 0, 141205, 1887093, 1874134, 9740, 2021744, 4286871683, 11968519242, 12, 144, 0, 6379.45, 45.345, 17411.2, 54.405, 5, 1
+1, 0, 143245, 1884561, 1863965, 9612, 2022997, 4282990489, 11835339930, 6, 93, 0, 6385.58, 44.845, 17429.7, 53.96, 5, 1
+1, 0, 142670, 1870790, 1873708, 9693, 1993627, 4193754488, 11797245849, 6, 6, 0, 6379.52, 45.13, 17410.2, 54.345, 5, 1
+couldn't open file: No such file or directory

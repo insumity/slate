@@ -1,0 +1,81 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 20 going to node: 0
+I'm about to pin!
+Core: 24 going to node: 0
+I'm about to pin!
+Core: 28 going to node: 0
+I'm about to pin!
+Core: 32 going to node: 0
+I'm about to pin!
+Core: 36 going to node: 0
+I'm about to pin!
+Core: 40 going to node: 0
+I'm about to pin!
+Core: 44 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 21 going to node: 1
+I'm about to pin!
+Core: 25 going to node: 1
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 7080, 3480, 2424, 578, 17362, 488837015, 1267669349, 180, 1152, 152, 48.305, 37.89, 37.62, 39.05, 19, 1
+1, 0, 18167, 33499, 29009, 3261, 49221, 10493391178, 43991258219, 357, 783, 0, 23406.6, 20723.8, 54.045, 64.48, 19, 1
+1, 0, 16828, 29659, 26698, 1157, 49372, 10446980464, 44703489812, 303, 795, 0, 36575.1, 32506.4, 59.245, 70.135, 19, 1
+1, 0, 16974, 30210, 29168, 1235, 48161, 10466957096, 44691844180, 285, 771, 0, 36611.9, 32547.1, 59.415, 69.9, 19, 1
+1, 0, 16142, 30028, 28038, 964, 44632, 10106017516, 42823827282, 354, 735, 0, 36579.9, 32525.8, 59.38, 70.11, 19, 1
+1, 0, 17638, 31337, 27707, 1280, 49722, 10502479043, 44904592543, 282, 747, 0, 36596.4, 32536.3, 59.395, 70.56, 19, 1
+1, 0, 17125, 29392, 27088, 1704, 49087, 10536286221, 44982989680, 318, 702, 1, 36592.9, 32539.6, 60.195, 71.625, 19, 1
+1, 0, 16716, 29848, 29025, 1060, 47127, 10613860802, 45196810549, 276, 726, 0, 36595.4, 32533.4, 60.81, 70.98, 19, 1
+1, 0, 17576, 32398, 28031, 808, 47312, 10501932725, 44913241601, 282, 900, 0, 36594.3, 32536.1, 59.575, 71.18, 19, 1
+1, 0, 17405, 29082, 25544, 877, 49966, 10547618413, 45046908415, 318, 792, 0, 36601.1, 32533.3, 58.86, 69.905, 19, 1
+1, 0, 16689, 29920, 28423, 996, 48281, 10576137823, 45063296787, 336, 834, 0, 36601.3, 32528.9, 58.865, 70.3, 19, 1
+1, 0, 16969, 31566, 30160, 807, 46502, 10539217791, 44925605260, 309, 825, 0, 36606.2, 32529.1, 58.28, 69.605, 19, 1
+1, 0, 17825, 30817, 27241, 1084, 49029, 10503021375, 44891807960, 306, 756, 0, 36599, 32528.7, 58.615, 70.21, 19, 1
+1, 0, 17254, 28917, 26824, 1525, 49506, 10524393455, 44961190319, 291, 663, 0, 36566.1, 32501.4, 59.515, 72.055, 19, 1
+1, 0, 16930, 29797, 29169, 999, 49078, 10546266455, 44917005932, 270, 843, 0, 36602.4, 32536, 59.445, 71.825, 19, 1
+1, 0, 16934, 31144, 28251, 720, 45226, 10236346562, 44032203522, 300, 768, 0, 36600.6, 32524.5, 59.955, 72.51, 19, 1
+1, 0, 17360, 29601, 27036, 915, 49868, 10538810612, 45053711909, 336, 786, 0, 36603.6, 32535, 59.725, 72.32, 19, 1
+couldn't open file: No such file or directory

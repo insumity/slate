@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 322512, 5344, 6505, 44, 338643, 48040811530, 11856196407, 0, 183, 27, 216.635, 37.485, 46.055, 47.63, 5, 0
+1, 0, 333531, 7138, 7799, 59, 333968, 47547543045, 11863042232, 69, 132, 0, 283.43, 47.305, 56.055, 56.165, 5, 0
+1, 0, 321794, 5635, 5182, 73, 335619, 48445748849, 11989415684, 0, 39, 0, 215.215, 37.32, 45.67, 47.4, 5, 0
+1, 0, 323948, 6120, 6080, 156, 330050, 48144988794, 11950549453, 24, 78, 0, 228.565, 39.59, 48.165, 49.785, 5, 0
+1, 0, 322710, 5842, 5927, 23, 340373, 47976272794, 11955679427, 21, 72, 0, 215.21, 37.17, 45.785, 47.1, 5, 0
+1, 0, 336203, 7369, 5719, 58, 329626, 48117709611, 11862632295, 21, 96, 5, 355.68, 70.625, 59.19, 55.88, 5, 0
+1, 0, 334441, 6329, 4877, 63, 346286, 47497246153, 11856214677, 18, 165, 0, 218.765, 37.34, 45.745, 47.105, 5, 0
+couldn't open file: No such file or directory

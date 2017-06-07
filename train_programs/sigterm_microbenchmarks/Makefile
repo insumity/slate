@@ -1,13 +1,20 @@
 all: gather_data.cpp
+	gcc -g loc.c -o loc -lpthread -lnuma
 	gcc -g loc2.c -o loc2 -lpthread -lnuma
 	gcc -g loc3.c -o loc3 -lpthread -lnuma
+	gcc -g loc4.c -o loc4 -lpthread -lnuma
+	gcc -g loc5.c -o loc5 -lpthread -lnuma
+
 	gcc -g rr.c -o rr -lpthread -lnuma
-	gcc -g loc.c -o loc -lpthread -lnuma
+	gcc -g rr2.c -o rr2 -lpthread -lnuma
+	gcc -g rr3.c -o rr3 -lpthread -lnuma
+	gcc -g rr4.c -o rr4 -lpthread -lnuma
+	gcc -g rr5.c -o rr5 -lpthread -lnuma
+
 	gcc -g sort.c -o sort -lpthread -lnuma
 	gcc -g empty_threads.c -o empty_threads -lpthread -lnuma
 
 	gcc -g lock.c -o lock -lpthread 
-	gcc -g rr2.c -o rr2 -lpthread -lnuma
 	g++ -c -g gather_data.cpp -std=c++11
 	gcc -c -g read_counters.c
 	gcc -c -g read_context_switches.c

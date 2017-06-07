@@ -10,7 +10,7 @@
 #include <mlpack/core/optimizers/sgd/sgd.hpp>
 #include <mlpack/core/optimizers/minibatch_sgd/minibatch_sgd.hpp>
 
-#define NUMBER_OF_EXTENDED_FEATURES 28
+#define NUMBER_OF_EXTENDED_FEATURES 26
 
 using namespace std;
 using namespace mlpack;
@@ -134,22 +134,23 @@ double* normalize_features(extended_features ef)
   my_features f = ef.feat;
 
   int k = 0;
+  double nt = 1.0;
   normalized_features[k++] = f.LOC;
   normalized_features[k++] = f.RR;
-  normalized_features[k++] = f.l3_hit / ((double) f.unhalted_cycles);
-  normalized_features[k++] = f.l3_miss / ((double) f.unhalted_cycles);
-  normalized_features[k++] = f.local_dram / ((double) f.l3_miss);
-  normalized_features[k++] = f.remote_dram / ((double) f.l3_miss);
-  normalized_features[k++] = f.l2_miss / ((double) f.unhalted_cycles);
-  normalized_features[k++] = f.uops_retired / ((double) f.unhalted_cycles);
-  normalized_features[k++] = f.unhalted_cycles / (1000. * 1000. * 1000.);
-  normalized_features[k++] = f.remote_fwd / ((double) f.l3_miss);
-  normalized_features[k++] = f.remote_hitm / ((double) f.l3_miss);
+  normalized_features[k++] = nt * (f.l3_hit / ((double) f.unhalted_cycles));
+  normalized_features[k++] = nt * (f.l3_miss / ((double) f.unhalted_cycles));
+  normalized_features[k++] = nt * (f.local_dram / ((double) f.l3_miss));
+  normalized_features[k++] = nt * (f.remote_dram / ((double) f.l3_miss));
+  normalized_features[k++] = nt * (f.l2_miss / ((double) f.unhalted_cycles));
+  normalized_features[k++] = nt * (f.uops_retired / ((double) f.unhalted_cycles));
+  normalized_features[k++] = nt * (f.unhalted_cycles / (1000. * 1000. * 1000.));
+  normalized_features[k++] = nt *(f.remote_fwd / ((double) f.l3_miss));
+  normalized_features[k++] = nt * (f.remote_hitm / ((double) f.l3_miss));
 
   normalized_features[k++] = f.context_switches;
 
   for (int s = 0; s < 4; ++s) {
-    normalized_features[k++] = f.sockets_bw[s];
+    normalized_features[k++] = f.sockets_bw[s] / nt;
   }
 
   normalized_features[k++] = f.number_of_threads;
@@ -164,8 +165,8 @@ double* normalize_features(extended_features ef)
   normalized_features[k++] = (ef.inter_socket / f.l3_miss) * (ef.inter_socket / f.l3_miss);
   normalized_features[k++] = ef.llc_miss_rate_times_local_memory_rate;
 
-  normalized_features[k++] = 100000000 * (f.sockets_bw[0] + f.sockets_bw[1] + f.sockets_bw[2] + f.sockets_bw[3]);
-  normalized_features[k++] = 0; //((f.local_dram + f.remote_dram) / ((double) f.l3_miss)) * ef.llc_miss_rate;
+  //normalized_features[k++] = 0; // * (f.sockets_bw[0] + f.sockets_bw[1] + f.sockets_bw[2] + f.sockets_bw[3]);
+  //normalized_features[k++] = 0; //((f.local_dram + f.remote_dram) / ((double) f.l3_miss)) * ef.llc_miss_rate;
 
   // 28 so far
   //normalized_features[k++] = (f.uops_retired / ((double) f.unhalted_cycles)) * (f.uops_retired / ((double) f.unhalted_cycles));

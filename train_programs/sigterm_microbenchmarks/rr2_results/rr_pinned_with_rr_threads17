@@ -1,0 +1,77 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 6374, 7613, 988, 122, 9267, 630973140, 8670447491, 66, 2722, 185, 48.875, 37.72, 37.475, 39.02, 17, 1
+0, 1, 23854, 32183, 16733, 4862, 60656, 30093035346, 31087744154, 399, 10825, 0, 13881.6, 4101.69, 3188.27, 3913.83, 17, 1
+0, 1, 23073, 29697, 18353, 1609, 56606, 31056934043, 40603169792, 231, 10308, 0, 21607.4, 6448.17, 5008.99, 6161.47, 17, 1
+0, 1, 23279, 30320, 18730, 1513, 54387, 31064243177, 40493520898, 162, 10485, 0, 21627.5, 6451.32, 5002.75, 6169.82, 17, 1
+0, 1, 24281, 29457, 16329, 1572, 56565, 30982924405, 40473800725, 195, 10256, 0, 21622, 6439.5, 4994.93, 6164.06, 17, 1
+0, 1, 22842, 29361, 19010, 1843, 54462, 31025664671, 40392301669, 228, 10392, 0, 21609.8, 6447.76, 5000.28, 6162.31, 17, 1
+0, 1, 22417, 31333, 18551, 1509, 52212, 30722730911, 48275724288, 210, 10478, 0, 21602.3, 6450.48, 5000.75, 6156.41, 17, 1
+0, 1, 24235, 30182, 16874, 1575, 57661, 30834189643, 32343889178, 261, 10550, 0, 21710.5, 6502.82, 5016.95, 6167.16, 17, 1
+0, 1, 21518, 28852, 19280, 1533, 52583, 31081090856, 40584114886, 189, 10475, 0, 21620.9, 6448.37, 5008.85, 6169.25, 17, 1
+0, 1, 22786, 31581, 18317, 1631, 52841, 31077383363, 40529964919, 219, 10465, 0, 21640.1, 6445.33, 5002.59, 6175.02, 17, 1
+0, 1, 24817, 30482, 16743, 1743, 58746, 31018531750, 40482049715, 167, 10535, 0, 21617.9, 6447.23, 5001.92, 6162.26, 17, 1
+0, 1, 21474, 29396, 19331, 1765, 51901, 30918816928, 48442089489, 198, 10328, 0, 21626.1, 6449.79, 4992.86, 6157.11, 17, 1
+0, 1, 24986, 31099, 17305, 1656, 55946, 30802659950, 40339837388, 147, 10655, 0, 21624.9, 6431.3, 4996.75, 6150.07, 17, 1
+0, 1, 23090, 28651, 17235, 1473, 55963, 30987336706, 32395663586, 207, 10550, 0, 21609.5, 6462.34, 5000.41, 6154.4, 17, 1
+0, 1, 21888, 29784, 19279, 1565, 52612, 31079566051, 40488768533, 189, 10425, 0, 21612.7, 6455.89, 4997.15, 6149.24, 17, 1
+0, 1, 23813, 30683, 17475, 1824, 57697, 30935050628, 40444773898, 192, 10519, 0, 21618, 6455.1, 4998.6, 6154.24, 17, 1
+0, 1, 22956, 28866, 18045, 2220, 55548, 31013077456, 40423742463, 183, 10308, 0, 21626.1, 6447.44, 5002.8, 6156.38, 17, 1
+couldn't open file: No such file or directory

@@ -1,0 +1,82 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+I'm about to pin!
+Core: 0 going to node: 2
+I'm about to pin!
+Core: 4 going to node: 2
+I'm about to pin!
+Core: 8 going to node: 2
+I'm about to pin!
+Core: 12 going to node: 2
+I'm about to pin!
+Core: 16 going to node: 2
+I'm about to pin!
+Core: 20 going to node: 2
+I'm about to pin!
+Core: 24 going to node: 2
+I'm about to pin!
+Core: 28 going to node: 2
+I'm about to pin!
+Core: 32 going to node: 2
+I'm about to pin!
+Core: 36 going to node: 2
+I'm about to pin!
+Core: 40 going to node: 2
+I'm about to pin!
+Core: 44 going to node: 2
+I'm about to pin!
+Core: 1 going to node: 3
+I'm about to pin!
+Core: 5 going to node: 3
+I'm about to pin!
+Core: 9 going to node: 3
+I'm about to pin!
+Core: 13 going to node: 3
+1, 0, 14417, 9734, 7179, 4894, 30165, 6374746185, 2885934678, 18, 138, 101, 1721.53, 254.615, 3813.05, 1050.67, 17, 1
+I'm about to pin!
+Core: 17 going to node: 3
+1, 0, 5924, 907, 489, 781, 9370, 533015337, 292511088, 0, 12, 2, 134.305, 1267.28, 45.375, 3148.03, 17, 1
+1, 0, 61791, 174362, 170465, 3561, 224316, 384912841, 980890923, 0, 6, 0, 109.155, 38.315, 115.76, 38.905, 17, 1
+1, 0, 140206, 757211, 734599, 12980, 914091, 1817269397, 4790531241, 0, 81, 0, 1575.69, 39.24, 4238.25, 42.755, 17, 1
+1, 0, 160297, 3398471, 3375863, 12819, 3524277, 5170373853, 16070374380, 0, 39, 0, 5838.95, 44.295, 15979.8, 53.14, 17, 1
+1, 0, 222720, 5750881, 5702966, 54632, 5979712, 7295320302, 28867635255, 84, 840, 0, 9475.01, 45.05, 26159.4, 54, 17, 1
+1, 0, 300327, 7260802, 7194591, 51955, 7556880, 10698255911, 39365918037, 72, 468, 0, 10247.9, 4265.94, 27694.9, 11273.9, 17, 1
+1, 0, 283874, 7358593, 7333224, 28192, 7638944, 10990264580, 40499781873, 24, 123, 0, 10049.3, 6339.49, 27706.4, 17350.4, 17, 1
+1, 0, 300501, 7371912, 7337172, 29783, 7697603, 11036806304, 40541491653, 21, 177, 0, 10056.9, 6326.2, 27702.8, 17332.8, 17, 1
+1, 0, 299813, 7365378, 7346140, 30904, 7711248, 11002019509, 40430682483, 36, 189, 0, 10056.4, 6325.84, 27696.4, 17331.2, 17, 1
+1, 0, 278819, 7137555, 7121227, 27964, 7387689, 10421480469, 38890202736, 9, 129, 0, 10054, 6324.15, 27700.5, 17331.9, 17, 1
+1, 0, 293229, 7373701, 7359278, 28506, 7679946, 11048216197, 40679778486, 27, 150, 0, 10059.8, 6331.03, 27709.9, 17352.1, 17, 1
+1, 0, 293643, 7418191, 7371552, 28346, 7689506, 11018347916, 40492261218, 15, 132, 0, 10054.3, 6326.05, 27705, 17339.9, 17, 1
+1, 0, 290540, 7373893, 7368349, 28373, 7639180, 10987422460, 40439284668, 27, 126, 0, 10055.8, 6324.77, 27702.1, 17336.7, 17, 1
+1, 0, 295558, 7377203, 7326749, 29130, 7655077, 11003976306, 40446172161, 18, 171, 0, 10052.9, 6323.15, 27704.3, 17338.3, 17, 1
+1, 0, 288814, 7375362, 7340243, 28496, 7655571, 10986288654, 40433029830, 24, 120, 0, 10048.7, 6325.52, 27690.1, 17344.3, 17, 1
+1, 0, 293276, 7367839, 7354000, 28883, 7671771, 10966539388, 40435486971, 9, 132, 0, 10052.9, 6322.78, 27704, 17338.1, 17, 1
+1, 0, 292969, 7381915, 7347193, 27584, 7652175, 11000711880, 40477678539, 24, 126, 0, 10063.9, 6332.25, 27729.2, 17363, 17, 1
+1, 0, 290916, 7401890, 7358073, 28824, 7683250, 11004418694, 40458808557, 15, 138, 1, 10052.5, 6324.65, 27705.2, 17342.8, 17, 1
+1, 0, 290965, 7320695, 7313065, 28291, 7601216, 10954421508, 40412515062, 27, 171, 0, 10050.4, 6289.6, 27695.2, 17243.2, 17, 1
+1, 0, 286241, 7391519, 7352560, 28004, 7666987, 11002052604, 40469734590, 24, 90, 0, 10047.9, 6325.25, 27686.2, 17342.8, 17, 1
+1, 0, 287688, 7365414, 7328502, 28908, 7664078, 11004180631, 40492394466, 15, 102, 0, 10053.1, 6324.88, 27700.9, 17342.9, 17, 1
+couldn't open file: No such file or directory

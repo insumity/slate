@@ -1,0 +1,83 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 20 going to node: 0
+I'm about to pin!
+Core: 24 going to node: 0
+I'm about to pin!
+Core: 28 going to node: 0
+I'm about to pin!
+Core: 32 going to node: 0
+I'm about to pin!
+Core: 36 going to node: 0
+I'm about to pin!
+Core: 40 going to node: 0
+I'm about to pin!
+Core: 44 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 21 going to node: 1
+I'm about to pin!
+Core: 25 going to node: 1
+I'm about to pin!
+Core: 29 going to node: 1
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 7985, 1539, 1226, 171, 13701, 234301096, 618007305, 150, 1191, 175, 47.755, 37.79, 38.035, 39.205, 20, 1
+1, 0, 18690, 33319, 26819, 5938, 60446, 10540115011, 45843672410, 609, 1125, 0, 22752.8, 21302.3, 52.825, 63.11, 20, 1
+1, 0, 16993, 31138, 32304, 1862, 52389, 10668329982, 47363092665, 597, 963, 0, 36620.4, 34424.5, 58.73, 69.035, 20, 1
+1, 0, 16879, 35212, 33790, 1830, 49014, 10659048909, 47340487488, 444, 894, 0, 36587.1, 34392.4, 59.375, 69.77, 20, 1
+1, 0, 17629, 36137, 29880, 1310, 52615, 10582855434, 47264273709, 477, 975, 0, 36597.4, 34398, 59.54, 70.385, 20, 1
+1, 0, 17446, 33987, 31286, 1079, 55418, 10630994969, 47383381427, 432, 939, 0, 36618, 34415.8, 59.5, 71.625, 20, 1
+1, 0, 16232, 33269, 33549, 1441, 50019, 10596302637, 47053998369, 438, 816, 1, 36613.1, 34410.9, 59.29, 71.6, 20, 1
+1, 0, 16530, 35951, 32177, 1096, 49979, 10624946686, 47271384901, 504, 939, 0, 36618.1, 34409.1, 58.93, 71.435, 20, 1
+1, 0, 17559, 34004, 30585, 1046, 55478, 10630274352, 47379581059, 516, 957, 0, 36622.2, 34411.6, 59.735, 72.225, 20, 1
+1, 0, 17248, 34291, 32537, 1424, 54045, 10659675257, 47377280240, 471, 846, 0, 36617.7, 34413.9, 59.74, 72.34, 20, 1
+1, 0, 15951, 34593, 32795, 1723, 49862, 10633253881, 47255558916, 474, 945, 0, 36577.8, 34371.7, 59.265, 71.34, 20, 1
+1, 0, 16821, 34907, 30760, 1257, 51506, 10620494209, 47315566871, 522, 897, 0, 36620.1, 34407.4, 60.03, 74.49, 20, 1
+1, 0, 17825, 33496, 30246, 1137, 53434, 10619203432, 47358277373, 480, 765, 0, 36618.7, 34410.3, 61.125, 70.795, 20, 1
+1, 0, 16531, 33747, 32418, 1160, 53359, 10649222603, 47322093088, 525, 840, 2, 36617.2, 34410.6, 59.525, 70.515, 20, 1
+1, 0, 16748, 34522, 30813, 906, 50816, 10623742214, 47309141305, 552, 939, 0, 36618.6, 34415.1, 59.285, 70.87, 20, 1
+1, 0, 17574, 32568, 30028, 1132, 52344, 10539251257, 46998373257, 540, 714, 0, 36619.3, 34406.9, 59.265, 71.09, 20, 1
+1, 0, 16413, 31921, 29546, 1756, 51504, 10200366475, 45089160850, 459, 885, 2, 36580.8, 34373, 59.8, 71.695, 20, 1
+couldn't open file: No such file or directory

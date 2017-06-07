@@ -69,15 +69,11 @@ int main(int argc, char* argv[])
 {
   srand(time(NULL));
 
-
   if (signal(SIGINT, sig_handler) == SIG_ERR) {
     perror("couldn't set up signal");
   }
 
-
   int oc;
-
-  
   pin = 0;
   while ((oc = getopt(argc, argv, "t:s:p")) != -1) {
     switch (oc) {

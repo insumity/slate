@@ -1,0 +1,69 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 20 going to node: 0
+I'm about to pin!
+Core: 24 going to node: 0
+I'm about to pin!
+Core: 28 going to node: 0
+I'm about to pin!
+Core: 32 going to node: 0
+I'm about to pin!
+Core: 36 going to node: 0
+I'm about to pin!
+Core: 40 going to node: 0
+I'm about to pin!
+Core: 44 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 8536, 1693, 939, 4155145174, 15651, 83340129, 253650220, 45, 1125, 100, 56.17, 38.815, 38.69, 38.95, 13, 1
+1, 0, 17365, 25883, 21276, 918, 39867, 7726887566, 29796855373, 138, 942, 0, 23681.8, 57.07, 49.565, 59.635, 13, 1
+1, 0, 15962, 21130, 18868, 774, 36683, 7908565405, 31057049213, 123, 891, 0, 36586.3, 60.165, 56.115, 79.95, 13, 1
+1, 0, 16914, 19677, 17642, 142, 38707, 7933641055, 31151754625, 72, 846, 0, 36633.1, 59.285, 54.14, 63.795, 13, 1
+1, 0, 16114, 19299, 17035, 112, 37482, 7919018293, 31076642392, 99, 879, 0, 36594, 58.905, 52.93, 63.045, 13, 1
+1, 0, 15924, 18478, 17763, 203, 37466, 7857568781, 30945746901, 144, 999, 0, 36593.8, 58.2, 52.17, 63.825, 13, 1
+1, 0, 16924, 19214, 18792, 1079493, 37228, 7754101789, 30439582049, 135, 921, 0, 36587.3, 58.385, 52.295, 62.975, 13, 1
+1, 0, 15250, 19549, 17624, 434, 36363, 7870053547, 30866369224, 108, 822, 0, 36590.1, 58.605, 52.275, 63.4, 13, 1
+1, 0, 16519, 18760, 17326, 4155148015, 38028, 7925929477, 31103755358, 132, 822, 0, 36591.9, 57.03, 51.215, 62.245, 13, 1
+1, 0, 17866, 18877, 17060, 175, 36842, 7919954071, 31085696685, 117, 879, 0, 36625.1, 57.005, 52.615, 61.955, 13, 1
+1, 0, 15485, 19164, 18306, 229, 36808, 7878239680, 30960301417, 102, 891, 0, 36591.5, 57.205, 51.295, 61.98, 13, 1
+1, 0, 16639, 19489, 16623, 286, 38444, 7859221354, 31124613880, 129, 876, 0, 36593.6, 57.9, 51.8, 62.59, 13, 1
+1, 0, 15801, 18257, 16781, 311, 37453, 7940401473, 31167731113, 132, 783, 0, 36588.1, 57.235, 51.195, 61.885, 13, 1
+1, 0, 16826, 18531, 18399, 1079502, 36773, 7931923005, 31130212592, 72, 756, 0, 36588.8, 57.74, 51.845, 62.26, 13, 1
+1, 0, 15996, 19641, 17958, 802, 36270, 7904554213, 31003857682, 132, 813, 0, 36590.5, 57.455, 51.4, 61.625, 13, 1
+1, 0, 15878, 19344, 16736, 4155150752, 37045, 7878804283, 30971164216, 90, 756, 0, 36590.5, 57.67, 51.545, 62.695, 13, 1
+1, 0, 16631, 18416, 18245, 299, 36784, 7843616151, 30995052726, 81, 792, 0, 36626.4, 57.285, 51.64, 62.18, 13, 1
+couldn't open file: No such file or directory

@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 459532, 9678, 9125, 140, 463060, 66705259374, 16616527256, 15, 105, 40, 341.845, 38.495, 46.175, 47.52, 7, 0
+1, 0, 482207, 15504, 11683, 144, 471770, 67059491069, 16687859220, 9, 87, 0, 341.42, 38.055, 46.14, 47.75, 7, 0
+1, 0, 450415, 9472, 9850, 265, 471746, 67504338156, 16764484897, 24, 123, 0, 339.55, 37.775, 45.58, 47.265, 7, 0
+1, 0, 462950, 9606, 9737, 85, 493595, 67538772020, 16738476062, 27, 132, 0, 342.375, 38.525, 45.96, 47.665, 7, 0
+1, 0, 447293, 11010, 10179, 63, 484998, 67302396926, 16663502388, 3, 174, 5, 340.75, 37.455, 45.34, 47.035, 7, 0
+1, 0, 452533, 8590, 9393, 108, 460412, 67038970325, 16613366454, 3, 138, 0, 359.075, 38.155, 45.72, 47.48, 7, 0
+1, 0, 458731, 10984, 10554, 184, 475892, 67283514116, 16867638786, 12, 195, 0, 331.815, 37.9, 45.52, 47.29, 7, 0
+couldn't open file: No such file or directory

@@ -1,0 +1,43 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 98, 63, 499, 0, 1031, 163256, 1001547, 0, 0, 0, 3732.09, 41.43, 42.67, 42.72, 3, 0
+1, 0, 36, 777, 952, 257, 2862, 326128, 1104426, 0, 0, 0, 3736.69, 42.39, 43.36, 43.83, 3, 0
+1, 0, 319, 1463, 910, 1755, 1170, 121977, 485661, 0, 0, 0, 3734.38, 39.7, 40.715, 41.6, 3, 0
+1, 0, 3478332, 10166779, 10893543, 575, 20784055, 2197064206, 6262930386, 27, 126, 1, 3770.18, 41.45, 48.255, 48.5, 3, 0
+1, 0, 4200875, 11117932, 11161456, 711, 23258097, 2477346978, 7311719508, 45, 147, 0, 4038.97, 39.05, 48.72, 49.9, 3, 0
+1, 0, 4094722, 11227218, 11356159, 667, 22908150, 2479525043, 7370711007, 9, 72, 0, 4057.02, 39.435, 49.205, 50.195, 3, 0
+1, 0, 4185856, 11329541, 11238183, 670, 22986180, 2512563714, 7389983316, 3, 117, 0, 4045.83, 38.42, 48.07, 48.58, 3, 0
+1, 0, 4285388, 10803609, 10756654, 666, 22190188, 2424178877, 7298044278, 18, 96, 0, 4055.93, 38.96, 48.665, 49.635, 3, 0
+1, 0, 4139770, 11190099, 11284408, 752, 22506998, 2470241142, 7351520976, 0, 87, 0, 3963.03, 39.01, 48.725, 49.615, 3, 0
+1, 0, 4201028, 11294397, 11111691, 661, 22956881, 2510411121, 7417183359, 6, 153, 0, 4059.72, 38.61, 48.805, 49.14, 3, 0
+1, 0, 4145100, 11058790, 11182481, 9, 23171517, 2486025540, 7352285670, 21, 132, 0, 4049.93, 38.785, 48.44, 49.675, 3, 0
+1, 0, 4106995, 11285359, 11367359, 37, 22756810, 2477622015, 7375903605, 9, 102, 0, 4053.14, 38.89, 48.635, 49.165, 3, 0
+1, 0, 4191774, 11348084, 11269799, 39, 23019237, 2508125751, 7370923545, 3, 165, 0, 4057.26, 38.62, 47.97, 49.01, 3, 0
+1, 0, 4176625, 11204265, 11240250, 55, 23120244, 2456174934, 7314963303, 9, 78, 0, 4061.7, 39.345, 48.89, 50.15, 3, 0
+1, 0, 4140372, 11290419, 11360735, 94, 22601966, 2483375980, 7381614888, 6, 102, 0, 4053.32, 38.96, 48.455, 49.47, 3, 0
+1, 0, 4219595, 11275086, 11119770, 18, 23210087, 2503330758, 7377497946, 3, 171, 0, 4049.2, 38.87, 48.485, 49.725, 3, 0
+1, 0, 4140646, 11092034, 11247583, 41, 23039869, 2482095006, 7361144961, 15, 81, 0, 4048.57, 39.22, 48.695, 50.235, 3, 0
+1, 0, 4142227, 11337604, 11333237, 639, 22920453, 2478239244, 7349060295, 3, 138, 1, 4042.76, 38.855, 48.55, 49.53, 3, 0

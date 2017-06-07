@@ -1,0 +1,81 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 18 going to node: 2
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 5135, 2213, 892, 2640, 17971, 668522613, 67437792918581, 144, 1691, 153, 49.105, 38.07, 37.885, 39.315, 19, 1
+0, 1, 22131, 44041, 22121, 9283, 66037, 28343447707, 43198433884, 426, 9798, 0, 14241.1, 12814.5, 12839, 3702.38, 19, 1
+0, 1, 23655, 37017, 25117, 2099, 64481, 29453115539, 45239892475, 384, 8464, 0, 22554.1, 19974, 20083.8, 5837.35, 19, 1
+0, 1, 21938, 36737, 25322, 1899, 58750, 29248353648, 53249584728, 393, 8137, 0, 22590.8, 20010.6, 20103.6, 5800.45, 19, 1
+0, 1, 23550, 36783, 25439, 2130, 59956, 29133965883, 44937577031, 362, 8190, 0, 22563.5, 19984.8, 20081.1, 5803.1, 19, 1
+0, 1, 22236, 37556, 25204, 1931, 59597, 29332366798, 36735472388, 339, 8211, 0, 22595.1, 20000, 20107.6, 5799.67, 19, 1
+0, 1, 21882, 36695, 24416, 2050, 57719, 29298749036, 45168306919, 402, 8632, 0, 22568.1, 19981.6, 20077.1, 5828.52, 19, 1
+0, 1, 22225, 35776, 24452, 2010, 60683, 29441271683, 45275744980, 369, 8433, 0, 22580.6, 19978.6, 20063.8, 5847.61, 19, 1
+0, 1, 21356, 36968, 25984, 2153, 58893, 29478175567, 45168299799, 348, 8412, 0, 22588.5, 20005.7, 20098.8, 5867.48, 19, 1
+0, 1, 21937, 37731, 24796, 2009, 57845, 29145767267, 53274871890, 315, 8410, 0, 22564.8, 19969.8, 20068.4, 5848.6, 19, 1
+0, 1, 24409, 35623, 24438, 2021, 62177, 29210343661, 45018631058, 386, 8484, 0, 22589.1, 20014.2, 20087.7, 5847.28, 19, 1
+0, 1, 21786, 36788, 26525, 1894, 56753, 29425203775, 36640397898, 291, 8466, 0, 22564.4, 19899.9, 20070.9, 5835.95, 19, 1
+0, 1, 22547, 37090, 23779, 1922, 59380, 29392319650, 45122471456, 333, 8288, 0, 22603.1, 19930.5, 20095.4, 5846.09, 19, 1
+0, 1, 22224, 33476, 24578, 2144, 61237, 29612309400, 45354782951, 345, 8190, 0, 22562.8, 19889.6, 20057.1, 5848.27, 19, 1
+0, 1, 21743, 37754, 28212, 2154, 55915, 29551817622, 45084948102, 285, 8500, 0, 22579.3, 19920.2, 20092.6, 5855.8, 19, 1
+0, 1, 23034, 37122, 23134, 1758, 59037, 29233965518, 53355835505, 288, 8122, 0, 22596.7, 19913, 20090.7, 5850.13, 19, 1
+0, 1, 22121, 33864, 24699, 2665, 61665, 29404602093, 45050933053, 360, 8202, 0, 22560.4, 19902.9, 20052.6, 5840.19, 19, 1
+couldn't open file: No such file or directory

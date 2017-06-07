@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 409762, 7644, 7652, 63, 419328, 57667877555, 14331430252, 42, 159, 38, 281.805, 37.955, 45.85, 47.52, 6, 0
+1, 0, 405012, 8841, 8873, 86, 418336, 58047284623, 14378618263, 18, 126, 0, 269.64, 37.7, 45.985, 47.555, 6, 0
+1, 0, 401667, 6701, 6601, 161, 416418, 57550663851, 14324196535, 0, 63, 0, 266.755, 37.61, 45.38, 47.2, 6, 0
+1, 0, 407326, 6684, 7115, 135, 416698, 57612620146, 14261588308, 30, 87, 0, 267.465, 37.745, 45.855, 47.42, 6, 0
+1, 0, 403796, 6799, 6886, 5, 406423, 57309361942, 14242991501, 12, 56, 5, 269.81, 37.44, 45.385, 47.105, 6, 0
+1, 0, 408050, 7588, 7599, 49, 413005, 57499445047, 14304170530, 21, 129, 0, 288.405, 38.325, 46.185, 47.685, 6, 0
+1, 0, 409641, 7774, 6835, 143, 421080, 57963965465, 14376524347, 30, 156, 0, 267.385, 37.55, 45.34, 47.2, 6, 0
+couldn't open file: No such file or directory
