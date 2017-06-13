@@ -1,48 +1,11 @@
-
- Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
-
- This utility measures memory bandwidth per channel or per DIMM rank in real-time
-
-Number of physical cores: 48
-Number of logical cores: 96
-Number of online logical cores: 96
-Threads (logical cores) per physical core: 2
-Num sockets: 4
-Physical cores per socket: 12
-Core PMU (perfmon) version: 3
-Number of core PMU generic (programmable) counters: 4
-Width of generic (programmable) counters: 48 bits
-Number of core PMU fixed counters: 3
-Width of fixed counters: 48 bits
-Nominal core frequency: 2100000000 Hz
-Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
-Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-
-Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
-Update every 0.5 seconds
 0, 1, 14949300, 30882390, 17403090, 13381130, 46064460, 27806990940, 23260108400, 5290, 23250, 23020689350, 439796, 1393.31, 816.51, 286.65, 282.245, 10, -1
-What is the classification: 0
-Moved to LOC
 1, 0, 3991880, 13439110, 11836690, 1701010, 19996590, 8089629780, 9095148770, 18320, 93960, 6223175030, 334017, 1473.93, 492.955, 371.15, 368.135, 10, -1
-What is the classification: 0
 1, 0, 3772050, 13875740, 13473210, 34240, 19391600, 6804684290, 9104742840, 1140, 30540, 5504540590, 349382, 1620.55, 444.3, 313.075, 305.415, 10, -1
-What is the classification: 0
 1, 0, 5101690, 21453430, 21638570, 16160, 28397600, 10162385710, 13396476210, 830, 28370, 8328208480, 457810, 1973.42, 140.125, 107.865, 112.735, 10, -1
-What is the classification: 0
 1, 0, 15891700, 33563730, 31412940, 7240, 76692720, 13595788350, 22232420960, 490, 10720, 10322859910, 380642, 2642.05, 67.82, 59.38, 63.525, 10, -1
-What is the classification: 0
 1, 0, 21967910, 38792300, 35285640, 11320, 95023880, 10351212580, 21904880600, 130, 5200, 8519200710, 224454, 2514.45, 65.985, 61.895, 62.515, 10, -1
-What is the classification: 0
 1, 0, 11988510, 31411340, 32639630, 9330, 75932710, 8642881070, 17825512700, 200, 3540, 6837367960, 173190, 2526.94, 60.905, 56.46, 59.27, 10, -1
-What is the classification: 0
 1, 0, 19858450, 38516110, 42039910, 7180, 106718840, 12437265950, 25482383210, 300, 5880, 10045249850, 296793, 2692.72, 57.525, 52.045, 56.295, 10, -1
-What is the classification: 0
 1, 0, 11684780, 28976020, 27804290, 4740, 66983170, 6105444860, 13268987820, 190, 4170, 4938121720, 146463, 2438.6, 65.26, 61.79, 62.48, 10, -1
-What is the classification: 0
 1, 0, 85717970, 103653080, 106865890, 32200, 197269560, 54518854580, 64688316840, 310, 2100, 54984701900, 16704, 6616.48, 87.325, 76.195, 80.32, 10, -1
-What is the classification: 0
 1, 0, 37637890, 99943150, 101932780, 13780, 133932620, 72625237310, 68896391810, 270, 1370, 90909058410, 11, 12014.3, 116.075, 96.31, 100, 10, -1
-What is the classification: 0

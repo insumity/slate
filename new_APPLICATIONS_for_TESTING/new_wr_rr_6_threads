@@ -1,55 +1,15 @@
-
- Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
-
- This utility measures memory bandwidth per channel or per DIMM rank in real-time
-
-Number of physical cores: 48
-Number of logical cores: 96
-Number of online logical cores: 96
-Threads (logical cores) per physical core: 2
-Num sockets: 4
-Physical cores per socket: 12
-Core PMU (perfmon) version: 3
-Number of core PMU generic (programmable) counters: 4
-Width of generic (programmable) counters: 48 bits
-Number of core PMU fixed counters: 3
-Width of fixed counters: 48 bits
-Nominal core frequency: 2100000000 Hz
-Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
-Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-
-Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
-Update every 0.5 seconds
 0, 1, 12969570, 28064172, 19011390, 9170964, 41573628, 19587414132, 21783707520, 36150, 154386, 16201730658, 447067, 1840.61, 565.965, 287.29, 616.595, 6, -1
-What is the classification: 1
 0, 1, 15793650, 40460910, 34752870, 5129682, 56532378, 20302933974, 26370694626, 60798, 399690, 16481266788, 260914, 1866.84, 604.94, 318.485, 640.905, 6, -1
-What is the classification: 1
 0, 1, 18187698, 51137646, 50690994, 806520, 70882458, 21573810630, 30412364244, 65874, 411798, 17585090928, 252947, 1585.91, 901.87, 435.965, 751.555, 6, -1
-What is the classification: 1
 0, 1, 16599684, 69939126, 29245992, 12452202, 96491148, 17924271030, 44993729886, 6156216, 24340104, 13453594884, 146521, 1296.4, 1148.4, 505.24, 770.42, 6, -1
-What is the classification: 1
 0, 1, 15971298, 72466518, 19438218, 16957806, 92962116, 11068327926, 38270010540, 6377400, 29921118, 8756333394, 128529, 1206.91, 1177.01, 499.16, 856.14, 6, -1
-What is the classification: 1
 0, 1, 12104280, 69955770, 18379230, 17252478, 86785548, 10365456516, 36424311900, 6477516, 28083822, 8265355728, 147431, 1214.45, 1095.31, 590.21, 747.68, 6, -1
-What is the classification: 1
 0, 1, 12446970, 74767566, 16516974, 22445394, 95924142, 12996429150, 44785754808, 5223360, 31685862, 9784205610, 181413, 1428.35, 1284.15, 633.59, 873.265, 6, -1
-What is the classification: 1
 0, 1, 8361996, 52504902, 26914542, 9386784, 65472660, 5030504898, 19210906632, 1837956, 10567734, 4204499394, 56277, 1081.74, 967.715, 504.69, 497.055, 6, -1
-What is the classification: 1
 0, 1, 11012232, 70916430, 20597880, 19996212, 85827174, 10151676084, 35488937886, 4048536, 25668048, 8008940178, 168028, 1166.04, 1073.18, 592.815, 830.17, 6, -1
-What is the classification: 1
 0, 1, 11112354, 54259236, 22595124, 12977550, 72776988, 7322273886, 24029853492, 3777882, 17052090, 5397996918, 92318, 886.88, 796.785, 495.74, 572.08, 6, -1
-What is the classification: 1
 0, 1, 14177214, 65642268, 17188644, 18060672, 84864630, 9785696172, 34779778140, 5470794, 24902622, 7683332820, 142313, 1129.08, 1087.13, 540.08, 824.835, 6, -1
-What is the classification: 1
 0, 1, 91632276, 75306018, 22262286, 34927074, 170954712, 32272268196, 51680967060, 2801208, 14300142, 26934929910, 80601, 1418.45, 1135.18, 572.745, 772.98, 6, -1
-What is the classification: 1
 0, 1, 189755862, 98268654, 28433382, 64148250, 321823416, 62812963332, 87053732172, 600330, 707268, 53042499624, 0, 2228.33, 1989.98, 1001.36, 1068.61, 6, -1
-What is the classification: 1
 0, 1, 86925234, 96081384, 28097856, 65665740, 177981894, 77046076920, 89384669274, 551808, 417036, 95026935576, 4, 2012.76, 1795.45, 866.715, 954.355, 6, -1
-What is the classification: 1
 0, 1, 3224838, 61010706, 18866808, 40739100, 63763158, 107091536436, 88124469948, 467760, 672252, 141954757890, 0, 1139.13, 961.145, 477.475, 532.81, 6, -1
-What is the classification: 1

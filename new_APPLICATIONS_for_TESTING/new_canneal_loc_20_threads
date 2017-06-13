@@ -1,66 +1,10 @@
-
- Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
-
- This utility measures memory bandwidth per channel or per DIMM rank in real-time
-
-Number of physical cores: 48
-Number of logical cores: 96
-Number of online logical cores: 96
-Threads (logical cores) per physical core: 2
-Num sockets: 4
-Physical cores per socket: 12
-Core PMU (perfmon) version: 3
-Number of core PMU generic (programmable) counters: 4
-Width of generic (programmable) counters: 48 bits
-Number of core PMU fixed counters: 3
-Width of fixed counters: 48 bits
-Nominal core frequency: 2100000000 Hz
-Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
-Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-
-Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
-Update every 0.5 seconds
 0, 1, 1859349156, 429409659, 81287472, 230641320, 2281884591, 276896600190, 874577324145, 59569524, 55127100, 202509130467, 339, 6671.36, 408.045, 73.815, 155.95, 21, -1
-What is the classification: 0
-Moved to LOC
 1, 0, 1166346195, 296985444, 129358068, 140773038, 1463076930, 180001955889, 461458121922, 5853792, 20363343, 131611709754, 266, 11443.4, 897.66, 67.52, 239.775, 21, -1
-What is the classification: 0
 1, 0, 1141999152, 302149155, 136551429, 143621562, 1453228602, 182231002254, 465312323931, 3811584, 20274660, 131816878095, 270, 11893.5, 969.58, 68.44, 248.51, 21, -1
-What is the classification: 0
 1, 0, 1145558400, 302464302, 136319862, 141994524, 1448655978, 182866849158, 468589945089, 4140045, 20075097, 133693036974, 295, 11636.6, 1375.88, 71.185, 251.435, 21, -1
-What is the classification: 0
 1, 0, 1189611019, 315350293, 139645964, 150169355, 1513941324, 191588924905, 489510221727, 4095680, 21499891, 138681100429, 290, 10541.6, 2695.56, 73.24, 250.65, 21, -1
-What is the classification: 0
 1, 0, 1147085415, 302274252, 136232985, 141957543, 1467357171, 186697676340, 476392251678, 5105835, 20342532, 136250290260, 266, 10104.5, 3196.86, 74.9, 229.33, 21, -1
-What is the classification: 0
 1, 0, 1170071931, 309275400, 140833413, 143209605, 1491021399, 188604770781, 482211188340, 4310481, 20939247, 136580452827, 302, 9773.45, 3551.11, 90.88, 186.88, 21, -1
-What is the classification: 0
 1, 0, 1164518481, 310387014, 142044441, 141867033, 1480704330, 188471453667, 483687618981, 4245297, 21288561, 136364138001, 271, 9502.99, 4040.39, 77.635, 107.29, 21, -1
-What is the classification: 0
 1, 0, 1175271195, 310469922, 142213344, 143052630, 1491985215, 188824378680, 484931547660, 4571259, 21202167, 137775985158, 284, 9202.53, 4333.57, 76.57, 91.93, 21, -1
-What is the classification: 0
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
 1, 0, 319745685, 118163115, 72925923, 40709172, 422747304, 36060448494, 115816842120, 903273, 3275412, 26047634928, -2573, 5610.89, 2736.87, 65.405, 73.195, 21, -1
-What is the classification: 0

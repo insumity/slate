@@ -1,66 +1,12 @@
-
- Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
-
- This utility measures memory bandwidth per channel or per DIMM rank in real-time
-
-Number of physical cores: 48
-Number of logical cores: 96
-Number of online logical cores: 96
-Threads (logical cores) per physical core: 2
-Num sockets: 4
-Physical cores per socket: 12
-Core PMU (perfmon) version: 3
-Number of core PMU generic (programmable) counters: 4
-Width of generic (programmable) counters: 48 bits
-Number of core PMU fixed counters: 3
-Width of fixed counters: 48 bits
-Nominal core frequency: 2100000000 Hz
-Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
-Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
-
-Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
-Update every 0.5 seconds
 0, 1, 349874637, 97741500, 4442304, 12501902, 495145383, 947438456572, 483642179337, 6621653, 75665725, 916458708192, 5689, 4493.42, 177.785, 160.495, 125.28, 17, -1
-What is the classification: 0
-Moved to LOC
 1, 0, 127998035, 52740969, 16944900, 14690830, 193563813, 492211119069, 246827830023, 2976120, 16373268, 440702428614, 3201, 3839.61, 646.32, 621.425, 783.195, 17, -1
-What is the classification: 0
 1, 0, 95018899, 36981290, 11158783, 10427698, 140808263, 534061855216, 272133324676, 2583966, 13477294, 488632913367, 2904, 3261.9, 574.27, 568.44, 680.32, 17, -1
-What is the classification: 0
 1, 0, 82429838, 28771497, 6880580, 7861582, 118702075, 562571761979, 285538927007, 2307903, 11854984, 510138415309, 2676, 2613.52, 498.05, 475.715, 556.315, 17, -1
-What is the classification: 0
 1, 0, 81362323, 32199037, 12525498, 5138114, 119274465, 517421100083, 267284214909, 2318868, 11752967, 475486189824, 2800, 3023.01, 676.8, 402.065, 456.08, 17, -1
-What is the classification: 0
 1, 0, 95975608, 38149071, 14370423, 6004383, 150716305, 495406054064, 256824931589, 2626466, 14286664, 446972693868, 2745, 3260.56, 850.135, 266.855, 363.82, 17, -1
-What is the classification: 0
 1, 0, 131204946, 55119576, 24574741, 9033035, 192899068, 471789402022, 260001769716, 3156492, 16130688, 435140587312, 3181, 4365.51, 1113.9, 221.465, 277.56, 17, -1
-What is the classification: 0
 1, 0, 157809759, 67406037, 31060088, 11681567, 231918624, 486274895013, 274444801195, 3989815, 18471214, 423655426939, 3614, 5769.7, 1506.8, 177.915, 211.635, 17, -1
-What is the classification: 0
 1, 0, 161160238, 70989195, 38513602, 13844545, 244619154, 469123881939, 273436317437, 3515192, 18743639, 434800930100, 3402, 5974.87, 1802.25, 163.41, 206.125, 17, -1
-What is the classification: 0
 1, 0, 145452255, 61988834, 33784474, 10704628, 237853834, 466309129600, 270805908219, 3726111, 19307410, 442839624135, 3423, 5871.64, 1669.63, 129.955, 170.11, 17, -1
-What is the classification: 0
 1, 0, 137574404, 60292132, 29436350, 8735977, 200292283, 508549693399, 278328021129, 3330878, 17330990, 460230660634, 3254, 5429.19, 1377.44, 87.05, 97.6, 17, -1
-What is the classification: 0
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
-What happened: No such file or directory
 1, 0, 114849892, 48243416, 22391567, 6613238, 165779477, 491838265308, 265138219838, 2773261, 14782367, 445026532882, -36898, 4464.95, 1292.84, 78.255, 91.6, 17, -1
-What is the classification: 0
