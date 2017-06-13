@@ -1,0 +1,66 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 15537960, 31950650, 18064260, 13952840, 48088580, 28522710100, 24324119250, 6070, 23550, 23682623990, 445927, 1080.18, 806.055, 283.73, 626.165, 10, -1
+What is the classification: 1
+0, 1, 12994210, 31933600, 19253920, 12239360, 44372630, 21468517580, 21606007890, 26660, 217380, 17713626720, 285934, 1073.77, 848.34, 304.51, 647.815, 10, -1
+What is the classification: 1
+0, 1, 10681750, 28199730, 25725550, 1880040, 39000400, 16271099060, 18274427560, 50860, 502990, 13197351880, 313055, 679.33, 934.38, 293.93, 656.13, 10, -1
+What is the classification: 1
+0, 1, 11325440, 31846390, 29317660, 1897940, 42976210, 17139369560, 21092544830, 56540, 607720, 13781491330, 321427, 696.775, 979.87, 294.275, 677.34, 10, -1
+What is the classification: 1
+0, 1, 11330910, 33400210, 31277660, 1839270, 45666600, 17145735110, 21057216810, 50340, 553010, 13365152140, 314906, 660.14, 968, 314.415, 680.64, 10, -1
+What is the classification: 1
+0, 1, 15712000, 47770600, 44632120, 1845060, 64600280, 23504179780, 30320747710, 50180, 573020, 18543444770, 316134, 818.11, 1009.83, 332.755, 729.755, 10, -1
+What is the classification: 1
+0, 1, 38890080, 167884860, 36449500, 40644690, 211483280, 30348116370, 92251042910, 15887750, 72482990, 22423653140, 216255, 1690.91, 1340.7, 890.415, 1126.65, 10, -1
+What is the classification: 1
+0, 1, 35043500, 131574560, 40029580, 32963000, 188172020, 19364833460, 59852367770, 7187210, 48815240, 16284049490, 157855, 1559.02, 1230.79, 836.5, 1029.2, 10, -1
+What is the classification: 1
+0, 1, 34966670, 174085580, 42013740, 50332890, 230062050, 29518035110, 93435299010, 11428610, 72360930, 23000751880, 246383, 1968.39, 1424.21, 955.865, 1393.19, 10, -1
+What is the classification: 1
+0, 1, 31411650, 135991250, 46968290, 33615050, 187390130, 19104836200, 58401354680, 9069350, 46445210, 15196354700, 160156, 1079.5, 909.93, 626.375, 824.375, 10, -1
+What is the classification: 1
+0, 1, 28840150, 136901190, 45710630, 34930090, 177612310, 18434708200, 61675734010, 9102520, 46217110, 14508381100, 178706, 1515.06, 1099.74, 797.09, 1025.63, 10, -1
+What is the classification: 1
+0, 1, 33020471, 157763451, 41452490, 48494000, 206741613, 25677973158, 80318173824, 8065857, 61397686, 20202711299, 243524, 1798.89, 1522.65, 935.375, 1306.66, 10, -1
+What is the classification: 1
+0, 1, 27397460, 121196070, 45254410, 28995410, 155036040, 15507566100, 49285214170, 7379770, 37179820, 11907947140, 138750, 1110.8, 884.845, 729.515, 955.535, 10, -1
+What is the classification: 1
+0, 1, 351858900, 210556680, 62882510, 133390930, 575729700, 197372206440, 210963328450, 2356060, 9233500, 226876062320, 16273, 2839.74, 2302.49, 1419.76, 1681.23, 10, -1
+What is the classification: 1
+0, 1, 172459200, 194416380, 54365810, 137116670, 372720310, 274237909050, 239288891970, 700100, 1348340, 376227560930, 11, 2359.55, 2162.01, 1356.17, 1551.04, 10, -1
+What is the classification: 1
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+0, 1, 5945660, 144444210, 40810010, 109164330, 170121270, 288785262880, 239761953380, 829730, 1272160, 366070392010, -3015540, 1292.28, 1100.45, 698.715, 843.62, 10, -1
+What is the classification: 1

@@ -1,0 +1,37 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 26960238, 26142858, 1559226, 2500008, 56591730, 290684220996, 94407327834, 5773200, 16819032, 250277851038, 55, 532.225, 300.125, 94.405, 117.3, 6, -1
+What is the classification: 1
+0, 1, 33747132, 22207086, 1301850, 3555108, 56409024, 291142016406, 94890014580, 2321196, 15336204, 250460159574, 2, 111.175, 363.895, 71.435, 377.29, 6, -1
+What is the classification: 1
+0, 1, 34414176, 19261062, 1385376, 4068636, 57003306, 294007680372, 94532966244, 1012410, 12796242, 253327005750, 5, 156.63, 543.785, 60.695, 73.855, 6, -1
+What is the classification: 1
+0, 1, 34892856, 18698382, 1323648, 3963996, 56834568, 293089444920, 94513810026, 501480, 12746826, 253529808060, 0, 370.675, 65.93, 56.54, 284.945, 6, -1
+What is the classification: 1
+0, 1, 34141128, 20436150, 1543134, 4732074, 56581938, 292075127544, 94750040460, 264120, 14111232, 251664972528, 0, 425.955, 71.205, 255.57, 103.195, 6, -1
+What is the classification: 1
+0, 1, 34289748, 20871774, 1831692, 4924320, 56573694, 293753478858, 95425068180, 177858, 13781214, 255496211454, 6, 108.28, 499.085, 180.98, 75.58, 6, -1
+What is the classification: 1

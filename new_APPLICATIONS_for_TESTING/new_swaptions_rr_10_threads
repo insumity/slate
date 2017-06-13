@@ -1,0 +1,103 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 2053018, 25542, 5588, 8074, 2335520, 742214182611, 276169748129, 1672, 9097, 632201011002, 73, 55.18, 48.015, 48.495, 52.175, 11, -1
+What is the classification: 1
+0, 1, 1837803, 17611, 4389, 6259, 2277374, 745758357300, 276807086105, 1507, 7315, 635641704192, 0, 122.5, 53.675, 55.055, 69.58, 11, -1
+What is the classification: 1
+0, 1, 1935318, 18183, 5665, 6677, 2421012, 744613085150, 276545748941, 1540, 10208, 634214526979, 0, 62.62, 50.305, 51.06, 52.99, 11, -1
+What is the classification: 1
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+0, 1, 1578742, 33825, 2013, 3674, 2063589, 622384178669, 231006707162, 1485, 6963, 524238036850, -55, 53.965, 48.86, 49.565, 52.485, 11, -1
+What is the classification: 1
+Swaption 0: [SwaptionPrice: 6.9309892993 StdError: 0.0002030082] 
+Swaption 1: [SwaptionPrice: 3.2381852078 StdError: 0.0001399983] 
+Swaption 2: [SwaptionPrice: 0.8539396526 StdError: 0.0000526070] 
+Swaption 3: [SwaptionPrice: 6.4806629903 StdError: 0.0002683072] 
+Swaption 4: [SwaptionPrice: 79.7596695545 StdError: 0.0030936965] 
+Swaption 5: [SwaptionPrice: 6.8630057216 StdError: 0.0003674603] 
+Swaption 6: [SwaptionPrice: 81.2932349406 StdError: 0.0026474843] 
+Swaption 7: [SwaptionPrice: 3.0597131405 StdError: 0.0000976964] 
+Swaption 8: [SwaptionPrice: 112.3576727563 StdError: 0.0031146251] 
+Swaption 9: [SwaptionPrice: 3.0596072062 StdError: 0.0000976880] 
+Swaption 10: [SwaptionPrice: 12.0723372536 StdError: 0.0004554270] 
+Swaption 11: [SwaptionPrice: 24.0296970199 StdError: 0.0006783373] 
+Swaption 12: [SwaptionPrice: 96.6747272254 StdError: 0.0039231622] 
+Swaption 13: [SwaptionPrice: 1.1506947952 StdError: 0.0000617758] 
+Swaption 14: [SwaptionPrice: 9.2845101306 StdError: 0.0003376519] 
+Swaption 15: [SwaptionPrice: 9.6492185745 StdError: 0.0003239096] 
+Swaption 16: [SwaptionPrice: 22.3089009716 StdError: 0.0011038833] 
+Swaption 17: [SwaptionPrice: 191.6909623976 StdError: 0.0080934967] 
+Swaption 18: [SwaptionPrice: 1.7116998689 StdError: 0.0001238203] 
+Swaption 19: [SwaptionPrice: 122.2885630185 StdError: 0.0037444255] 
+Swaption 20: [SwaptionPrice: 1.6307534877 StdError: 0.0000979228] 
+Swaption 21: [SwaptionPrice: 3.4227548282 StdError: 0.0001951522] 
+Swaption 22: [SwaptionPrice: 0.0000203494 StdError: 0.0000008392] 
+Swaption 23: [SwaptionPrice: 20.6021901598 StdError: 0.0009198928] 
+Swaption 24: [SwaptionPrice: 60.5871064358 StdError: 0.0020441159] 
+Swaption 25: [SwaptionPrice: 23.2905247456 StdError: 0.0007835521] 
+Swaption 26: [SwaptionPrice: 197.2887302505 StdError: 0.0069285634] 
+Swaption 27: [SwaptionPrice: 86.7921666671 StdError: 0.0033869676] 
+Swaption 28: [SwaptionPrice: 5.7417403720 StdError: 0.0002352944] 
+Swaption 29: [SwaptionPrice: 2.6781953104 StdError: 0.0001546425] 
+Swaption 30: [SwaptionPrice: 59.0513870214 StdError: 0.0020625879] 
+Swaption 31: [SwaptionPrice: 23.8800664385 StdError: 0.0006998566] 
+Swaption 32: [SwaptionPrice: 46.0222789510 StdError: 0.0019765951] 
+Swaption 33: [SwaptionPrice: 30.4905487704 StdError: 0.0012913206] 
+Swaption 34: [SwaptionPrice: 61.7934405977 StdError: 0.0030381074] 
+Swaption 35: [SwaptionPrice: 10.2640096389 StdError: 0.0003023871] 
+Swaption 36: [SwaptionPrice: 8.3992191315 StdError: 0.0003167424] 
+Swaption 37: [SwaptionPrice: 0.4072532603 StdError: 0.0000408482] 
+Swaption 38: [SwaptionPrice: 0.0000000000 StdError: 0.0000000000] 
+Swaption 39: [SwaptionPrice: 5.9836692219 StdError: 0.0001990636] 
+Swaption 40: [SwaptionPrice: 8.8582322989 StdError: 0.0004129581] 
+Swaption 41: [SwaptionPrice: 3.8130596184 StdError: 0.0001695196] 
+Swaption 42: [SwaptionPrice: 94.8410610990 StdError: 0.0042049839] 
+Swaption 43: [SwaptionPrice: 140.7187830323 StdError: 0.0061191032] 
+Swaption 44: [SwaptionPrice: 16.3912361207 StdError: 0.0006371713] 
+Swaption 45: [SwaptionPrice: 61.4307120804 StdError: 0.0015699444] 
+Swaption 46: [SwaptionPrice: 38.9810871622 StdError: 0.0015658856] 
+Swaption 47: [SwaptionPrice: 26.3861544653 StdError: 0.0006617817] 
+Swaption 48: [SwaptionPrice: 188.6747174638 StdError: 0.0051100800] 
+Swaption 49: [SwaptionPrice: 5.5585149415 StdError: 0.0002422387] 
+Swaption 50: [SwaptionPrice: 9.5287408115 StdError: 0.0003179435] 
+Swaption 51: [SwaptionPrice: 1.2650652869 StdError: 0.0000982083] 
+Swaption 52: [SwaptionPrice: 190.9818110368 StdError: 0.0047838876] 
+Swaption 53: [SwaptionPrice: 44.1133970785 StdError: 0.0014023775] 
+Swaption 54: [SwaptionPrice: 38.5476892308 StdError: 0.0014425452] 
+Swaption 55: [SwaptionPrice: 8.6994330316 StdError: 0.0004268482] 
+Swaption 56: [SwaptionPrice: 12.4023888130 StdError: 0.0005201351] 
+Swaption 57: [SwaptionPrice: 2.0634296200 StdError: 0.0000965249] 
+Swaption 58: [SwaptionPrice: 10.4059512740 StdError: 0.0003969294] 
+Swaption 59: [SwaptionPrice: 0.0000000000 StdError: 0.0000000000] 
+Swaption 60: [SwaptionPrice: 150.4508654855 StdError: 0.0047006054] 
+Swaption 61: [SwaptionPrice: 1.0714047276 StdError: 0.0000877206] 
+Swaption 62: [SwaptionPrice: 0.3539734485 StdError: 0.0000446841] 
+Swaption 63: [SwaptionPrice: 96.6791906913 StdError: 0.0039186106] 

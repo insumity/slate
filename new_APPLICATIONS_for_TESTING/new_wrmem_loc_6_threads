@@ -1,0 +1,60 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 758186298, 8421348, 8136558, 142122, 767051484, 100298645874, 86286335082, 10884, 119070, 84418618602, 44786, 917.405, 557.02, 255.045, 263.725, 6, -1
+What is the classification: 0
+Moved to LOC
+1, 0, 253442364, 3103596, 1931424, 1217478, 270191232, 33454576194, 30213329322, 1698, 71142, 28625695776, 16261, 1045.09, 532.53, 286.915, 294.205, 6, -1
+What is the classification: 0
+1, 0, 228685686, 2313306, 2434962, 3654, 230002650, 29117513622, 25984477920, 162, 6546, 25209012432, 18904, 844.655, 140.825, 98, 111.265, 6, -1
+What is the classification: 0
+1, 0, 236869710, 1958604, 2025468, 10896, 238540920, 30571325430, 26871189060, 78, 1176, 26343071742, 6269, 1294.54, 107.14, 76.38, 78.5, 6, -1
+What is the classification: 0
+1, 0, 245617806, 145932, 155628, 1440, 245477490, 32407995804, 28116718500, 102, 1464, 28099429278, 0, 872.02, 50.005, 50.75, 55.495, 6, -1
+What is the classification: 0
+1, 0, 245494140, 205194, 144342, 684, 246096690, 32363973528, 28044894660, 360, 13020, 28023879876, 10, 842.29, 45.53, 48.92, 53.65, 6, -1
+What is the classification: 0
+1, 0, 210033756, 11622828, 12081690, 20688, 223341978, 24473110062, 23573882682, 216, 1176, 21589904826, 26258, 3885.68, 92.52, 65.345, 70.425, 6, -1
+What is the classification: 0
+1, 0, 245367684, 165648, 146916, 1794, 245160246, 32524119756, 28154547426, 180, 1062, 28238706612, 0, 849.625, 42.485, 48.56, 53.28, 6, -1
+What is the classification: 0
+1, 0, 245394888, 149298, 172242, 480, 245561532, 32394210594, 28102974918, 444, 1254, 28134005340, 0, 877.115, 42.28, 48.55, 53.075, 6, -1
+What is the classification: 0
+1, 0, 245466684, 149922, 155178, 420, 245919618, 32495588472, 27987652860, 126, 1122, 27909333588, 0, 871.585, 42.33, 48.175, 52.9, 6, -1
+What is the classification: 0
+1, 0, 244375032, 154410, 145248, 2424, 245145486, 32462377728, 28123082136, 78, 1578, 28011485934, 0, 866.955, 42.38, 47.81, 52.935, 6, -1
+What is the classification: 0
+1, 0, 244641012, 143934, 142782, 2070, 244851684, 32392452024, 28123699614, 180, 1734, 28046494890, 0, 852.26, 42.005, 47.945, 52.945, 6, -1
+What is the classification: 0
+1, 0, 230558832, 2196426, 2484294, 3444, 232990026, 30456015396, 27189309102, 132, 12024, 26481959562, 13855, 1087.9, 42.88, 47.9, 52.61, 6, -1
+What is the classification: 0
+1, 0, 200932008, 19533420, 19548510, 6132, 219620682, 22764394572, 22982345682, 180, 1302, 19287066468, 12354, 3815.19, 51.955, 46.745, 52.085, 6, -1
+What is the classification: 0
+1, 0, 243631590, 132450, 132996, 780, 242999208, 32419239192, 28222118712, 102, 1458, 28066209354, 0, 867, 43.445, 48.75, 53.51, 6, -1
+What is the classification: 0
+1, 0, 244131270, 132984, 128526, 480, 243281022, 32420245350, 28228427694, 96, 1398, 28079460552, 0, 844.015, 43.085, 47.995, 52.695, 6, -1
+What is the classification: 0
+1, 0, 193485942, 13029042, 11749116, 5214, 203799312, 23420353188, 22824182754, 60, 450, 19557360024, 9051, 2970.62, 47.18, 49.145, 54.755, 6, -1
+What is the classification: 0
