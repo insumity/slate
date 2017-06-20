@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 33534974, 832, 648, 30, 57937827, 27508299956, 19093504153, 39, 575, 15219808562, 41, 53.83, 39.1, 47, 48.665, 8, 0
+1, 0, 33354268, 926, 255, 45, 57903544, 27673839329, 19209923817, 42, 243, 15214846841, 0, 53.715, 39.175, 47.035, 48.68, 8, 0
+1, 0, 33251963, 1142, 372, 30, 57470101, 27567998590, 19098958410, 26, 275, 15202588800, 0, 52.975, 38.15, 46.24, 47.41, 8, 0
+1, 0, 33468345, 1071, 455, 45, 57809913, 27457742121, 19090627796, 24, 341, 15184245249, 0, 62.87, 38.23, 46.695, 48.025, 8, 0
+1, 0, 33247539, 1100, 759, 30, 59088706, 27433635068, 19081455835, 23, 396, 15187010895, 0, 53.03, 38.115, 46.325, 47.995, 8, 0
+1, 0, 32635785, 1300, 1068, 83, 58769120, 27456477489, 19079221350, 44, 410, 15236498495, 0, 52.785, 38.015, 46.305, 47.41, 8, 0
+1, 0, 32924924, 1249, 409, 30, 57950372, 27549967273, 19082211708, 37, 329, 15228299808, 0, 53.21, 38.825, 46.73, 47.98, 8, 0
+couldn't open file: No such file or directory

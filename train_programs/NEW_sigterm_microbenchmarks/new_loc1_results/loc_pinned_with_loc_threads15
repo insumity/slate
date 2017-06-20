@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 1753161, 12359320, 1906324, 1251102, 39148381, 1544962462, 36025105071, 1603827, 7706030, 998737395, 1, 8632.88, 46.91, 38.435, 48.505, 15, 0
+1, 0, 1760097, 12253665, 1848077, 1234008, 39043018, 1557987575, 36029584490, 1611422, 7583730, 1001644277, 0, 8523.11, 46.295, 37.68, 47.41, 15, 0
+1, 0, 1761336, 12555586, 1919627, 1247578, 39315884, 1556577228, 36144636524, 1616908, 7703233, 1007123036, 10, 8623.08, 47.225, 38.895, 48.28, 15, 0
+1, 0, 1630647, 12186683, 1399609, 1780582, 37518065, 1500111649, 36024692342, 1530531, 7529371, 968510149, 0, 2613.3, 5681.55, 38.585, 48.365, 15, 0
+1, 0, 1600891, 12064645, 1380823, 1784302, 38024269, 1514511500, 36014464899, 1488919, 7429227, 976732325, 0, 54.9, 8000.84, 37.815, 47.655, 15, 0
+1, 0, 1603506, 12062076, 1344761, 1781349, 37800327, 1510081067, 36025201620, 1513366, 7407379, 975686198, 0, 55.77, 7973.19, 38.19, 48, 15, 0
+1, 0, 1593430, 12133023, 1365493, 1769019, 37695152, 1509491209, 36027908973, 1530671, 7460992, 974535501, 0, 55.505, 7994.64, 38.04, 48.025, 15, 0
+couldn't open file: No such file or directory

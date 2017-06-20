@@ -1,0 +1,71 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 18 going to node: 2
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 5929, 2975, 535, 179, 19532, 263351937, 304432922, 959, 4397, 197267427, 157, 54.44, 39.105, 39.425, 53.655, 19, 1
+0, 1, 23753, 37794, 20201, 7912, 63165, 28363059638, 42758237358, 604, 9238, 20879961631, 0, 12782, 13603.4, 12476, 2509.54, 19, 1
+0, 1, 23994, 32972, 24669, 2099, 58016, 29649524480, 45037092933, 404, 8269, 21862450979, 0, 20324.1, 22247, 20014.3, 4019.41, 19, 1
+0, 1, 23767, 32610, 21956, 2266, 57990, 29653168795, 45033969956, 328, 8257, 21849207405, 0, 20349.6, 22233.7, 20004.1, 4038.23, 19, 1
+0, 1, 23449, 33383, 23155, 1999, 58706, 29635016428, 45023970253, 301, 8431, 21846291171, 0, 20382.2, 22250.3, 20025.9, 4026.69, 19, 1
+0, 1, 23775, 33190, 22240, 1834, 57416, 29623493082, 45022542711, 403, 8347, 21886715868, 0, 20314.7, 22224.4, 20006.6, 4024.02, 19, 1
+0, 1, 23141, 32366, 22624, 2411, 61212, 29814582069, 45234732209, 461, 8282, 21856918947, 0, 20352.8, 22258.8, 20026, 4033.68, 19, 1
+couldn't open file: No such file or directory

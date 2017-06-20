@@ -1,0 +1,73 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 18 going to node: 2
+I'm about to pin!
+Core: 19 going to node: 3
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 6938, 3606, 664, 1440, 15190, 418382601, 533287192, 96, 483, 386131403, 190, 47.37, 37.625, 37.595, 38.925, 20, 1
+0, 1, 22018, 48060, 24470, 7330, 68640, 29662030431, 45769914254, 759, 10981, 21680835425, 0, 12561.8, 12100.5, 12326.1, 12558.5, 20, 1
+0, 1, 21551, 42947, 29112, 2917, 64592, 30595768721, 47381091742, 612, 10476, 22522872224, 0, 19893.7, 19318.9, 19478.2, 19414, 20, 1
+0, 1, 20407, 40671, 26465, 2611, 63430, 30607800579, 47340514600, 556, 10520, 22545227851, 0, 19868.2, 19339.2, 19483.5, 19433.4, 20, 1
+0, 1, 20898, 40493, 27287, 2434, 62727, 30573968427, 47338733450, 553, 10313, 22533258614, 0, 19899.8, 19319.6, 19470.7, 19419.5, 20, 1
+0, 1, 20302, 40000, 26413, 2793, 64439, 30559872024, 47345689392, 625, 10450, 22544874333, 0, 19921.9, 19344.7, 19486.2, 19452.2, 20, 1
+0, 1, 20597, 40527, 27810, 2571, 62751, 30602058381, 47361919719, 622, 10144, 22557218613, 0, 19898.3, 19324.8, 19457.6, 19416.7, 20, 1
+couldn't open file: No such file or directory

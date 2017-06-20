@@ -1,0 +1,29 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 3334013, 2524100, 50099, 258711, 6951039, 389172248, 42928498190, 677939, 1539414, 279296343, 10, 57.545, 335.845, 38.51, 1232.07, 18, 0
+0, 1, 3251585, 2480506, 49257, 237502, 6824086, 387982059, 42599536823, 668593, 1518927, 278389428, 0, 59.575, 294.6, 40.105, 1234.47, 18, 0
+0, 1, 3301104, 2515789, 50299, 247270, 6950247, 388883660, 42934005466, 680070, 1537454, 279584186, 0, 59.93, 315.34, 42.6, 1235.32, 18, 0
+couldn't open file: No such file or directory

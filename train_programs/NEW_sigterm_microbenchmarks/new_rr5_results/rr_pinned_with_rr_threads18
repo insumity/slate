@@ -1,0 +1,70 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+I'm about to pin!
+Core: 0 going to node: 0
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+0, 1, 123486, 13286429, 489520, 1709956, 16065007, 14473828102, 19097878249, 658598, 10805402, 9376916054, 31, 2547.07, 56.995, 62.14, 57.995, 18, 1
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+0, 1, 200713, 23108874, 892281, 3142633, 27631781, 16396731541, 26328340477, 884761, 18183245, 10851449070, 3, 5399.73, 147.8, 58.385, 56.595, 18, 1
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+0, 1, 232934, 28269866, 1151083, 3774325, 34086571, 17521273944, 32161302463, 924754, 22271373, 11833395375, 0, 7733.02, 521.18, 85.37, 83.725, 18, 1
+I'm about to pin!
+Core: 17 going to node: 1
+0, 1, 239847, 29066266, 1212926, 4071001, 35205602, 15598422249, 37882387757, 954340, 22873906, 11278065712, 1, 10008.4, 3185.84, 1366.79, 887.02, 18, 1
+0, 1, 250496, 28914203, 1260043, 4082448, 35553320, 15707349116, 42636889401, 968330, 22936055, 11513379007, 0, 18290.3, 8567.92, 2235.7, 2644.01, 18, 1
+0, 1, 249207, 28415401, 1197940, 4000006, 35473545, 15739205169, 42799901951, 963668, 22448271, 11418083217, 0, 18069.7, 12390.6, 2281.05, 2666.15, 18, 1
+0, 1, 248722, 28639626, 1230207, 4051546, 35591889, 15734875264, 42780421614, 957803, 22279370, 11438330536, 0, 18032.2, 12229.9, 2262.52, 2608.55, 18, 1
+0, 1, 249536, 28751051, 1160651, 4175508, 35529514, 15746393509, 42756954954, 973385, 22446039, 11469290482, 53, 18308.8, 12400.4, 2313.27, 2674.72, 18, 1
+couldn't open file: No such file or directory

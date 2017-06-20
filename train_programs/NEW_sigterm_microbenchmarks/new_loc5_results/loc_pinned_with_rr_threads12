@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 4546, 658, 638, 54, 23797, 23786795, 22810366, 0, 51, 32312371, 0, 6541.02, 59.845, 38.485, 39.015, 12, 0
+0, 1, 3418, 682, 499, 5, 3664, 429093, 1112223, 0, 40, 139638, 0, 6551.59, 61.51, 40.28, 40.84, 12, 0
+0, 1, 215658, 644, 429, 15, 12232, 22731512, 12053949, 0, 33, 43780530, 0, 6547.2, 60.095, 39.12, 39.775, 12, 0
+0, 1, 72304, 2982, 2411, 634, 62447, 27066965, 23011393, 0, 2477, 84662269, 0, 6556.27, 61.195, 39.925, 43.75, 12, 0
+0, 1, 3578, 633, 428, 5, 4009, 330906, 954320, 0, 4, 133439, 0, 6543.55, 61.415, 40.05, 40.805, 12, 0
+0, 1, 14311, 510, 638, 75, 318842, 56295481, 17709667, 0, 13, 10450698, 0, 6539.57, 61.295, 39.87, 40.09, 12, 0
+0, 1, 8739424, 7506253, 1250354, 2350306, 16874911, 1410233591, 22171807352, 942821, 2778908, 1174506101, 1, 3724.15, 867.68, 57.28, 61.44, 12, 0
+0, 1, 10820575, 8376119, 1244172, 2590113, 20981446, 1287347423, 29194794800, 1223232, 3313045, 1072570218, 1, 1334.76, 1728.53, 88.725, 91.415, 12, 0

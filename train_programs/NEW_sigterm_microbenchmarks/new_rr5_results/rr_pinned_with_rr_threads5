@@ -1,0 +1,44 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+0, 1, 47005, 2147817, 67370, 208710, 1982113, 11551320282, 13212347484, 129751, 1511400, 8461899691, 7, 501.79, 41.575, 49.55, 327.005, 5, 1
+0, 1, 49617, 2206644, 71416, 259017, 2679889, 11518250118, 13215935363, 140077, 1886348, 8296614652, 0, 236.835, 40.745, 48.61, 657.38, 5, 1
+0, 1, 51287, 2233975, 72500, 270962, 3073023, 11386523936, 13225781681, 140539, 1728127, 8353071173, 0, 235.515, 38.915, 46.38, 680.185, 5, 1
+0, 1, 50935, 1773186, 67141, 250463, 3172990, 11425493791, 13218147935, 144467, 1803916, 8358939904, 0, 239.015, 40.135, 48.19, 691.955, 5, 1
+0, 1, 50875, 1929102, 64366, 235678, 3197318, 11278468921, 13218466518, 134763, 1718322, 8397617692, 0, 240.38, 40.385, 195.325, 528.95, 5, 1
+0, 1, 51099, 2111835, 59361, 280113, 3183060, 11466003223, 13216119310, 130433, 1676614, 8395981851, 0, 238.2, 39.005, 627.21, 47.98, 5, 1
+0, 1, 50201, 1986212, 46692, 175278, 2724845, 11572688465, 13224487816, 118631, 1682902, 8422344620, 0, 237.84, 39.845, 618.05, 49.31, 5, 1
+0, 1, 51514, 1982454, 66521, 250225, 3010373, 11337876897, 13220729992, 147421, 1835298, 8379728149, 0, 242.085, 39.995, 670.385, 49.66, 5, 1
+couldn't open file: No such file or directory

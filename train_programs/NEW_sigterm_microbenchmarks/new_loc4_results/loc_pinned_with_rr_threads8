@@ -1,0 +1,33 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 1545, 352, 549, 20, 3484, 243065, 763625, 0, 20, 105545, 0, 6536.86, 43.395, 46.755, 63.915, 8, 0
+0, 1, 7970, 643, 659, 25, 21705, 47409718, 25431528, 4, 37, 22008444, 0, 6539.25, 41.045, 41.19, 61.805, 8, 0
+0, 1, 225753, 383, 524, 15, 13544, 21903781, 11826137, 3, 80, 41032527, 0, 6533.43, 39.08, 37.39, 59.445, 8, 0
+0, 1, 2042, 403, 239, 15, 2599, 242952, 759648, 10, 3, 110079, 0, 6529.39, 40.14, 39.25, 61.265, 8, 0
+0, 1, 18498, 370, 489, 20, 86446, 220869, 2612290, 0, 7, 16778087, 0, 6532.16, 40.76, 39.6, 61.35, 8, 0
+0, 1, 10413, 772, 279, 10, 32866, 75562732, 24974546, 0, 7, 16947466, 0, 6532.69, 39.96, 38.95, 60.3, 8, 0
+0, 1, 5676769, 3997722, 19086, 1249062, 9789332, 975892849, 15919632745, 807325, 2126938, 739471886, 1, 3553.06, 54.07, 55.17, 721.705, 8, 0
+0, 1, 7203472, 4641138, 43428, 892384, 12137955, 862226858, 20890683249, 1023200, 2677630, 720212727, 1, 1093.65, 67.545, 77.16, 1407.68, 8, 0

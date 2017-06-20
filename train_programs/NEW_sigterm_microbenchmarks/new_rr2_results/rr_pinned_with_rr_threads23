@@ -1,0 +1,79 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 17 going to node: 1
+I'm about to pin!
+Core: 18 going to node: 2
+I'm about to pin!
+Core: 19 going to node: 3
+I'm about to pin!
+Core: 20 going to node: 0
+I'm about to pin!
+Core: 21 going to node: 1
+I'm about to pin!
+Core: 22 going to node: 2
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 10840, 8994, 2153, 1193, 12970, 761516520, 1126153393, 20, 4255, 509525395, 209, 48.24, 37.9, 37.62, 39.725, 23, 1
+0, 1, 21036, 47592, 32027, 7560, 70259, 23494177620, 52822095628, 700, 10760, 17321129376, 0, 18018.2, 17590.9, 17694.6, 11571.6, 23, 1
+0, 1, 19507, 43631, 32190, 3019, 66739, 23928245111, 54425966368, 456, 8713, 17566608638, 0, 28808.2, 28203.1, 28303.4, 18281.6, 23, 1
+0, 1, 20290, 45463, 33761, 3003, 65978, 23948956108, 54462016497, 446, 8688, 17592458314, 0, 28843.2, 28240.6, 28354.5, 18292.7, 23, 1
+0, 1, 19385, 43672, 31656, 2953, 66830, 23949237783, 54440307119, 440, 8512, 17592315758, 0, 28813.9, 28215, 28325.4, 18257.3, 23, 1
+0, 1, 20363, 45768, 33119, 2536, 67428, 23966693797, 54435514601, 449, 8473, 17588805088, 0, 28838.9, 28228.2, 28329.3, 18261.4, 23, 1
+0, 1, 20107, 43600, 32338, 2761, 65604, 23953423642, 54448993736, 380, 8557, 17601551318, 0, 28820.3, 28213, 28331, 18253.1, 23, 1
+couldn't open file: No such file or directory

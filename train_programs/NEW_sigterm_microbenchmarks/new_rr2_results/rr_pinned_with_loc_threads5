@@ -1,0 +1,43 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 16 going to node: 0
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 2666, 1027, 1752, 25, 4512, 90910149, 125487216, 0, 3, 33386904, 35, 47.62, 38.44, 38.59, 39.925, 5, 1
+1, 0, 4556, 7702, 8383, 369, 13533, 4308391880, 11506790050, 53, 52, 3158217142, 0, 18356.4, 46.67, 45.55, 53.635, 5, 1
+1, 0, 4494, 7151, 7365, 30, 12898, 4327942594, 11873419068, 3, 44, 3172962502, 0, 29069, 51.14, 49.135, 57.04, 5, 1
+1, 0, 4616, 7831, 7788, 10, 12914, 4356130043, 11928751364, 0, 40, 3174804204, 0, 29041, 51.4, 49.225, 57.205, 5, 1
+1, 0, 4486, 7555, 7470, 20, 12485, 4339045561, 11896513018, 14, 43, 3175618893, 0, 29046.8, 49.98, 48.22, 56.715, 5, 1
+1, 0, 4405, 7739, 7836, 10, 11867, 4326898054, 11889057159, 13, 34, 3180521131, 0, 29053.4, 51.275, 49.12, 57.935, 5, 1
+1, 0, 4356, 7576, 7530, 345, 12525, 4320520201, 11886656625, 20, 39, 3183001937, 0, 29082, 50.79, 48.57, 57.65, 5, 1
+couldn't open file: No such file or directory

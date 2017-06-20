@@ -1,0 +1,69 @@
+I'm about to pin!
+Core: 0 going to node: 0
+I'm about to pin!
+Core: 1 going to node: 1
+I'm about to pin!
+Core: 2 going to node: 2
+I'm about to pin!
+Core: 3 going to node: 3
+I'm about to pin!
+Core: 4 going to node: 0
+I'm about to pin!
+Core: 5 going to node: 1
+I'm about to pin!
+Core: 6 going to node: 2
+I'm about to pin!
+Core: 7 going to node: 3
+I'm about to pin!
+Core: 8 going to node: 0
+I'm about to pin!
+Core: 9 going to node: 1
+I'm about to pin!
+Core: 10 going to node: 2
+I'm about to pin!
+Core: 11 going to node: 3
+I'm about to pin!
+Core: 12 going to node: 0
+I'm about to pin!
+Core: 13 going to node: 1
+I'm about to pin!
+Core: 14 going to node: 2
+I'm about to pin!
+Core: 15 going to node: 3
+I'm about to pin!
+Core: 16 going to node: 0
+I'm about to pin!
+Core: 17 going to node: 1
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+0, 1, 23758, 1513, 229, 1033, 92759, 206709190, 231196262, 104, 1636, 150248174, 177, 50.115, 38.085, 37.77, 39.23, 18, 1
+0, 1, 23958, 31926, 16638, 6079, 65284, 28351904596, 40612333026, 573, 11911, 20850656329, 0, 13074.3, 14296.6, 3363.59, 3047.54, 18, 1
+0, 1, 24497, 30851, 18514, 1487, 56637, 29583933204, 42810549495, 271, 10085, 21751222021, 0, 21037.2, 23220.1, 5397.66, 4859.41, 18, 1
+0, 1, 24095, 30431, 18129, 1745, 56017, 29593723563, 42871906171, 212, 10171, 21768800735, 0, 21017.6, 23198.1, 5407.53, 4853.9, 18, 1
+0, 1, 23817, 30301, 18011, 1549, 56857, 29758442872, 42965286463, 318, 10179, 21818876927, 0, 21026.3, 23209, 5378.15, 4829.55, 18, 1
+0, 1, 23371, 30553, 19143, 1926, 55923, 29482637414, 42758743751, 252, 10017, 21689356908, 0, 21062, 23193.8, 5717.87, 5151.46, 18, 1
+0, 1, 23293, 30533, 17839, 1387, 55859, 29533615493, 42767997582, 211, 10185, 21779738914, 0, 21038.6, 23214.5, 5381.53, 4876.52, 18, 1
+couldn't open file: No such file or directory
