@@ -48,23 +48,20 @@ PARSEC
 Waits 3 seconds before it starts classifying since threads haven't spawned yet. This might explain why although it
 classifies correctly for 6 and 10 threads performance is not as good.
 
-4. **facesim** [results]()
+4. **facesim** [results](https://pastebin.com/Dcb8xKEn)
 
 This application only work with a specific number of threads (only 1, 2, 3, 4, 6, 8, 16, 32, 64)
 ```diff
 + Classifies 77%  as loc for threads 4. Classifies 94% as mem for threads 8. Classifies 94% as mem for threads 16.
-- Execution time is 10s slower than the loc placement. Occurs because first second is placed under mem.
-- Even if the 3rd second is the only one classifies as mem and we start with loc it takes 10s more!
-+ Classifies mem for threads 8 and 16 (except the first second).
 ```
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 4       |
-| 8      |  
-| 16      |  
+| 4       |  40.5 |  29.08|  30.3 |  30.2 | 32      |
+| 8      |  24.9  |   19.12| 22.3 | 22.0  | 22.1  |
+| 16      |  16.9 |  18.3 |  18.5 | 18.6 |    21 |
 
 
-5. **ferret** [results]()
+5. **ferret** [results](https://pastebin.com/C0mgMbwf)
 Generates more threads than the ones provided: for n = 1 ->6, n=2 -> 10, n = 5 -> 22.
 ```diff
 - Classifies 6 and 10 threads as loc 100%.
@@ -72,9 +69,9 @@ Generates more threads than the ones provided: for n = 1 ->6, n=2 -> 10, n = 5 -
 ```
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       |  
-| 10      | 
-| 22      |  
+| 6       |  84   |  73   |  70   |  73   |   71.5 |
+| 10      | 49.5  |  38.5 |   36 |   38.4 |  36.5  |
+| 22      |  19.5 |  16.1 |  15.6 |  15.7 |   15.6 |
 
 
 6. **fluidanimate** [results]()
