@@ -126,13 +126,17 @@ Number of threads must be a power of 2.
 | 20      |   6.7| 4.5    | 4.4   |  4.38   |  4.25   |  
 
 
-10. **vips**
+10. **vips** [results](https://pastebin.com/i05jMjLr)
+
+```diff
++ Classifies everything as mem.
+```
 
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       |    |       |       |       |        |  
-| 10      |       |       |       |       |        |
-| 20      |       |       |       |       |        |
+| 6       |    28 |   20    |  19     |  19     |    20.2   |  
+| 10      |    19   |  12.8|  12.7  |    12.8 |   13  |
+| 20      |   10.5 |  7.5     | 7.4   |  7.3     |  7.6      |
 
 
 
