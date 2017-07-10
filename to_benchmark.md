@@ -17,7 +17,7 @@ Metis
 
 *has high std.
 
-2. **matrixmult** [results] (https://pastebin.com/fB4aVzb6)
+2. **matrixmult** [results](https://pastebin.com/fB4aVzb6)
 ```diff
 Classsifies as mem 100% for 6, 10, and 20 threads.
 
@@ -28,7 +28,7 @@ Classsifies as mem 100% for 6, 10, and 20 threads.
 | 10      |  8.74 |  5.02 |  5.04 |  5.04 | 5.02 |
 | 20      |  4.63 |  2.85 | 2.99 | 3.05 |  2.80 |
 
-3. **wr** [results] (https://pastebin.com/0FQ89u4i  )
+3. **wr** [results](https://pastebin.com/0FQ89u4i  )
 ```diff
 + Classifies as loc 100% for 6 threads.
 + Classifies 82% as loc for 10 threads.
@@ -41,14 +41,16 @@ Classsifies as mem 100% for 6, 10, and 20 threads.
 | 20      |  11.6 |  16.2 | 19.5 |  17.2 | 13 |
 
 
-4. **wrmem** 
+4. **wrmem** [results](https://pastebin.com/Ue49qjfZ)
 ```diff
++ Classified as loc 100% for 6 threads.
++ Classified 16% as loc for 10 threads and 22% as loc for 20 threads.
 ```
 | threads       | loc+          |  loc |      mem | Slate | Linux |
 | ------------- |:-------------:| -----:| -----:| -----:|-----:|
-| 6      | 
-| 10      |  
-| 20      |  
+| 6      |  29.6 |  22.14  | 22.3 | 22.5 |  24.5 | 
+| 10      |  20.3 | 15.7 |  16.7 | 16.6 |  17.5 |
+| 20      |  13.8 |  12. 4| 13.1 | 13.8 | 15 |
 
 
 
