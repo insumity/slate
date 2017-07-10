@@ -88,13 +88,15 @@ Number of threads must be a power of 2.
 | 16      |  18.7  |  13.4|  13.5 |  13.5   |  17.9    |  
 
 
-7. **raytrace** 
-
+7. **raytrace** [results](https://pastebin.com/Ti6sZh8s)
+```diff
++ Classifies everything as mem (100%).
+```
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       | 5    |       |       |       |        |  
-| 10      |       |       |       |       |        |
-| 20      |       |       |       |       |        |  
+| 6       | 102.4 |    92   |  91   |  91.1     |  89      |  
+| 10      |   87   |   79.7 |    80   |   80.2    |    77   |
+| 20      |   74.9   |  69   |   70.5    |  70.5     |   65     |  
 
 
 8. **streamcluster**
