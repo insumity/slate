@@ -99,20 +99,26 @@ Number of threads must be a power of 2.
 | 20      |   74.9   |  69   |   70.5    |  70.5     |   65     |  
 
 
-8. **streamcluster**
+8. **streamcluster** [results](https://pastebin.com/MEaAFwLH)
+
+*is part of the validation set ... doesn't count.*
+```diff
+For 6 and 10 threads classifies 100% as loc.
+For 20 threads classifies 100% as mem.
+```
 
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       | 5    |       |       |       |        |  
-| 10      |       |       |       |       |        |
-| 20      |       |       |       |       |        |  
+| 6       | 29.49|   24.7 |   33  |  26.5 |  32   |  
+| 10      |  18.5 | 15.7  |   18.6  | 17.1    |  21.      |
+| 20      |  11.2 |    14  |   11    |  10.8     |  14.5      |  
 
 
-9. **swaptions** 
+9. **swaptions** [results](
 
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       | 5    |       |       |       |        |  
+| 6       |    |       |       |       |        |  
 | 10      |       |       |       |       |        |
 | 20      |       |       |       |       |        |  
 
