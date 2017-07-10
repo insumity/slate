@@ -103,8 +103,8 @@ Number of threads must be a power of 2.
 
 *is part of the validation set ... doesn't count.*
 ```diff
-For 6 and 10 threads classifies 100% as loc.
-For 20 threads classifies 100% as mem.
++For 6 and 10 threads classifies 100% as loc.
++For 20 threads classifies 100% as mem.
 ```
 
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
@@ -114,13 +114,16 @@ For 20 threads classifies 100% as mem.
 | 20      |  11.2 |    14  |   11    |  10.8     |  14.5      |  
 
 
-9. **swaptions** [results](
+9. **swaptions** [results](https://pastebin.com/HQpS7Bdw)
+```diff
++ Classifies everything (100%) as mem.
+```
 
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       |    |       |       |       |        |  
-| 10      |       |       |       |       |        |
-| 20      |       |       |       |       |        |  
+| 6       |  17.6 |  11.68|  10.8 |   10.6 | 10.9       |  
+| 10      |  11.48| 7.5   | 7.2  |   7.2    |  7.1    |
+| 20      |   6.7| 4.5    | 4.4   |  4.38   |  4.25   |  
 
 
 10. **vips**
