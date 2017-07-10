@@ -1,11 +1,55 @@
 
 Metis
 -------
-1. **wc** (word count) *Used in part of the validation set.* 
-+sfafdsdaa -sdaffdsa
+1. **wc** [results](https://pastebin.com/6cPfZkkd)
+
+*Used in part of the validation set, so it doesn't count.*
+
+```diff
++ Correctly classified loc 100% for 6 threads.
+- Classified 87.5% as loc for 10 threads and and 86% as loc for 20 threads.
+```
+| threads       | loc+          |  loc |      mem | Slate | Linux |
+| ------------- |:-------------:| -----:| -----:| -----:|-----:|
+| 6      |  9.57 |  8.36 |  10.6 |  9.85 |  11.8 |
+| 10      |  9.15 |  8.32 |  12.8 |  9.63 | 10 |
+| 20      |  10.8 | 15.7 |  19 | 16.9 |  12* |
+
+*has high std.
+
 2. **matrixmult** 
+```diff
+Classsifies as mem 100% for 6, 10, and 20 threads.
+
+```
+| threads       | loc+          |  loc |      mem | Slate | Linux |
+| ------------- |:-------------:| -----:| -----:| -----:|-----:|
+| 6      |  13.98 |  8.15 |  8 |  8.01 |  7.99|
+| 10      |  8.74 |  5.02 |  5.04 |  5.04 | 5.02 |
+| 20      |  4.63 |  2.85 | 2.99 | 3.05 |  2.80 |
+
 3. **wr** 
+```diff
++ Classifies as loc 100% for 6 threads.
++ Classifies 82% as loc for 10 threads.
++ Classifies 86% as loc for 20 threads.
+```
+| threads       | loc+          |  loc |      mem | Slate | Linux |
+| ------------- |:-------------:| -----:| -----:| -----:|-----:|
+| 6      |    13.56   | 11.02 |   17 | 13.11 |   14 | 
+| 10      |  12.34 | 11.19 | 17.6 | 13.4 | 12.8 |
+| 20      |  11.6 |  16.2 | 19.5 |  17.2 | 13 |
+
+
 4. **wrmem** 
+```diff
+```
+| threads       | loc+          |  loc |      mem | Slate | Linux |
+| ------------- |:-------------:| -----:| -----:| -----:|-----:|
+| 6      | 
+| 10      |  
+| 20      |  
+
 
 
 PARSEC
