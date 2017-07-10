@@ -17,7 +17,7 @@ Metis
 
 *has high std.
 
-2. **matrixmult** 
+2. **matrixmult** [results] (https://pastebin.com/fB4aVzb6)
 ```diff
 Classsifies as mem 100% for 6, 10, and 20 threads.
 
@@ -28,7 +28,7 @@ Classsifies as mem 100% for 6, 10, and 20 threads.
 | 10      |  8.74 |  5.02 |  5.04 |  5.04 | 5.02 |
 | 20      |  4.63 |  2.85 | 2.99 | 3.05 |  2.80 |
 
-3. **wr** 
+3. **wr** [results] (https://pastebin.com/0FQ89u4i  )
 ```diff
 + Classifies as loc 100% for 6 threads.
 + Classifies 82% as loc for 10 threads.
