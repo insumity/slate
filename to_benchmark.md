@@ -37,7 +37,7 @@ PARSEC
 3. **canneal** [results](https://pastebin.com/0tYbJsUg)
 ```diff
 + Classifies loc for threads 6 and 10.  
-- Classifies about 70% as loc for 20 threads.
+- Classifies about 22% as mem for 20 threads.
 ```
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
@@ -48,24 +48,23 @@ PARSEC
 Waits 3 seconds before it starts classifying since threads haven't spawned yet. This might explain why although it
 classifies correctly for 6 and 10 threads performance is not as good.
 
-4. **facesim** [results](https://pastebin.com/5R0ce20u)
+4. **facesim** [results]()
 
 This application only work with a specific number of threads (only 1, 2, 3, 4, 6, 8, 16, 32, 64)
 ```diff
-+ Classifies loc for threads 4. 
++ Classifies 77%  as loc for threads 4. Classifies 94% as mem for threads 8. Classifies 94% as mem for threads 16.
 - Execution time is 10s slower than the loc placement. Occurs because first second is placed under mem.
 - Even if the 3rd second is the only one classifies as mem and we start with loc it takes 10s more!
 + Classifies mem for threads 8 and 16 (except the first second).
 ```
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 4       | 40.8   |  29.06 |  30.14 |  40.83  | 32.6 |  
-| 8      |  25    |  19.14   |  21.95  | 22.06  |  22.4 |
-| 16      |  16.79     | 18.25  |  18.75 | 18.37 |  20.8   |  
+| 4       |
+| 8      |  
+| 16      |  
 
 
-5. **ferret** [results](https://pastebin.com/jmBNtSt4)
-
+5. **ferret** [results]()
 Generates more threads than the ones provided: for n = 1 ->6, n=2 -> 10, n = 5 -> 22.
 ```diff
 - Classifies 6 and 10 threads as loc 100%.
@@ -73,9 +72,9 @@ Generates more threads than the ones provided: for n = 1 ->6, n=2 -> 10, n = 5 -
 ```
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       |  96.8 |  73.23|  69.89|  97.07|  70.8 |  
-| 10      | 44.05 |  38.58|  35.95 | 55.82  | 36.7    |
-| 22      |   20  |  15.5  |   15.5 |  15.5   | 15.5   |  
+| 6       |  
+| 10      | 
+| 22      |  
 
 
 6. **fluidanimate** [results]()
