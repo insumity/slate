@@ -14,6 +14,7 @@
     10, for n = 3 12 and for n = 4 18, and for n = 5 it generates 22 threads]
 
     fluidanimate - Fluid dynamics for animation purposes with Smoothed Particle Hydrodynamics (SPH) method
+     number of threads must be a power fo2 
     
     raytrace - Real-time raytracing [it takes 50seconds to actually spawn the real threads!! cray cray]]]
     
@@ -29,7 +30,7 @@
     
     freqmine - Frequent itemset mining  [X   -> doesn't support pthreads]
     x264 - H.264 video encoding [throws *** Error in `/localhome/kantonia/slate/benchmarks/parsec-3.0/bin/../pkgs/apps/x264/inst/amd64-linux.gcc-pthreads/bin/x264': double free or corruption (!prev): 0x0000000000d37020 ***
-when it starts running]
+when it starts running
 
 
 Have a look here: http://lists.cslab.ece.ntua.gr/pipermail/advcomparch/2017-April/001467.html for problems with ferret & facesim.
