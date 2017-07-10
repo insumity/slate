@@ -74,13 +74,18 @@ Generates more threads than the ones provided: for n = 1 ->6, n=2 -> 10, n = 5 -
 | 22      |  19.5 |  16.1 |  15.6 |  15.7 |   15.6 |
 
 
-6. **fluidanimate** [results]()
+6. **fluidanimate** [results](https://pastebin.com/ShcJWji2)
+Number of threads must be a power of 2.
+```diff
++ 37% are classified as mem for 4 threads.
++ 100% are classified as mem for 8 and 16 threads.
+```
 
 | threads | loc+  |  loc  |   mem | Slate | Linux  |
 | --------|:-----:| -----:| -----:| -----:|-------:|
-| 6       |     |       |       |       |        |  
-| 10      |       |       |       |       |        |
-| 20      |       |       |       |       |        |  
+| 4      |   55.55  | 38.26   |  35. |   37.5 | 48 |  
+| 8      |   32.5  |   22.1 |  21.2  |  21.6  |   29     |
+| 16      |  18.7  |  13.4|  13.5 |  13.5   |  17.9    |  
 
 
 7. **raytrace** 
