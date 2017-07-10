@@ -15,7 +15,7 @@ Metis
 | 10      |  9.15 |  8.32 |  12.8 |  9.63 | 10 |
 | 20      |  10.8 | 15.7 |  19 | 16.9 |  12* |
 
-*has high std.
+*has high variance.
 
 2. **matrixmult** [results](https://pastebin.com/fB4aVzb6)
 ```diff
