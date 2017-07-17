@@ -43,7 +43,7 @@ def read_file(filename):
 def print_list(l):
     result = ""
     for elem_index in range(0, len(l) - 1):
-        result = result + l[elem_index] + ", "
+        result = result + l[elem_index] + ","
     result = result + l[len(l) - 1]
     return result
 
