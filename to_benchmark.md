@@ -64,6 +64,28 @@ Classsifies as mem 100% for 6, 10, and 20 threads.
 
 
 
+5. **pca** 
+```diff
+foo
+```
+| threads       | loc+          |  loc |      mem | Slate | Linux |
+| ------------- |:-------------:| -----:| -----:| -----:|-----:|
+| 6      |  x |  x  | x | x | 5  | 
+| 10      |  x | x |  x | x| 5  |
+| 20      |  x |  x| x | x | 5.4 |
+  
+  
+  
+6. **stringmatch** 
+```diff
+foo
+```
+| threads       | loc+          |  loc |      mem | Slate | Linux |
+| ------------- |:-------------:| -----:| -----:| -----:|-----:|
+| 6      |  x |  x  | x | x | 27  | 
+| 10      |  x | x |  x | x| X  |
+| 20      |  x |  x| x | x | X|
+
 PARSEC
 -------
 
