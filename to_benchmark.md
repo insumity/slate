@@ -1,4 +1,14 @@
 
+
+The actual execution times (from the average of 5 runs as well as the standard deviation) can be found
+in the "execution_times" file (root directory on github).
+
+Furthermore, we introduce the remaining Metis benchmarks (pca, linear_regression, string_match, kmeans, and hist).
+pca and linear_regression (I think) were taken from the newest Metis benchmark suite, while all the others are from the old.
+I started using the Metis (from MCTOP) which was the old version, but then when running pca and kmeans I was getting seg. faults.
+Only the new version worked. Also, I was getting messed up results with the new metis benchmark suite. E.g., wc was better under "mem" than with "loc" etc.
+
+
 Metis
 -------
 1. **wc** [results](https://pastebin.com/6cPfZkkd)
