@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/parsec-3.0/bin/../pkgs/apps/facesim/inst/amd64-linux.gcc-pthreads/bin/facesim -timing -threads 8 -lastframe 20

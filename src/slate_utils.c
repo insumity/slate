@@ -16,10 +16,13 @@ void pin(pid_t pid, int core, int node)
   CPU_ZERO(&set);
   CPU_SET(core, &set);
 
-  if (sched_setaffinity(pid, sizeof(cpu_set_t), &set) != 0) {
+  int res = sched_setaffinity(pid, sizeof(cpu_set_t), &set);
+  if (res != 0) {
+
     perror("sched affinity inside pin didn't work. Coudld be that process has " \
 	   "already terminated.");
-    exit(1);
+    fprintf(stderr, "the pid was: %lld\n", (long long) pid);
+    //exit(1);
   }
 }
 

@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/metis/obj/app/wc /localhome/kantonia/slate/benchmarks/metis/data/wc/300MB_1M_Keys.txt -p 20

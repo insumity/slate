@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/experiments/../benchmarks/parsec-3.0/pkgs/apps/blackscholes/inst/amd64-linux.gcc/bin/blackscholes 20 /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/apps/blackscholes/run/in_2MB.txt /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/apps/blackscholes/run/prices.txt

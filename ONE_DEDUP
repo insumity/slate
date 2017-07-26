@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/parsec-3.0/bin/../pkgs/kernels/dedup/inst/amd64-linux.gcc-pthreads/bin/dedup -c -p -v -t 6 -i /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/kernels/dedup/run/FC-6-x86_64-disc1.iso -o output.dat.ddp

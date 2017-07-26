@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/mman.h>
+#include <assert.h>
 
 #include <iostream>
 #include <vector>
@@ -41,12 +42,17 @@ long long* subtract(long long* ar1, long long* ar2, int length) {
   return result;
 }
 
-void print_perf_counters(bool is_rr, int result, long long values[], long long context_switches, double sockets_bw[], int number_of_threads) {
+// policy is 0 for LAT_CORES, 1 for BW_CORES, 2 for LAT_HWCS
+void print_perf_counters(int policy, int result, long long values[], long long context_switches, double sockets_bw[], int number_of_threads) {
 
-  if (is_rr) {
+  if (policy == 1) {
     std::cerr << "0, 1, ";
   }
+  else if (policy == 2) {
+    std::cerr << "2, 0, ";
+  }
   else {
+    assert(policy == 0);
     std::cerr << "1, 0, ";
   }
 
@@ -151,11 +157,14 @@ pid_t execute_program(char* program[]) {
 int main(int argc, char* argv[])
 {
   int final_result = atoi(argv[1]);
-  int result = atoi(argv[2]);
-  bool is_rr = result == 1;
+  int policy = atoi(argv[2]);
 
   int number_of_threads = atoi(argv[3]);
 
+  int cores_loc_hwcs[48] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84, 40, 88, 44, 92,
+			    1, 49, 5, 53, 9, 57, 13, 61, 17, 65, 21, 69, 25, 73, 29, 77, 33, 81, 37, 85, 41, 89, 45, 93};
+
+  
   int cores_loc_cores[48] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44,
 			     1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45,
 			     2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46,
@@ -170,7 +179,18 @@ int main(int argc, char* argv[])
 
   std::vector<int> hwcs;
   for (int i = 0; i < number_of_threads; ++i) {
-    int core = is_rr? cores_rr[i]: cores_loc_cores[i];
+    int core;
+    switch (policy) {
+    case 0:
+      core = cores_loc_cores[i];
+      break;
+    case 1:
+      core = cores_rr[i];
+      break;
+    case 2:
+      core = cores_loc_hwcs[i];
+      break;
+    }
     printf("(%d) ", core);
     hwcs.push_back(core);
   }
@@ -233,7 +253,7 @@ int main(int argc, char* argv[])
     prev_counters = read_perf_counters(cur_counters, hwcs);
 
     long long* actual_values = subtract(prev_counters, cur_counters, COUNTERS_NUMBER);
-    print_perf_counters(is_rr, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw, actual_number_of_threads);
+    print_perf_counters(policy, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw, actual_number_of_threads);
     free(actual_values);
     
     prev_context_switches = cur_context_switches;

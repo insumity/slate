@@ -5,7 +5,7 @@ extern "C" {
 #ifndef __READ_COUNTERS_H
 #define __READ_COUNTERS_H
   typedef struct {
-    volatile long long values[9];
+    volatile long long values[10];
     pthread_mutex_t lock;
   } core_data;
   

@@ -34,6 +34,7 @@ int classify(classifier_data* data, classifier_data input) {
   data->unhalted_cycles = input.unhalted_cycles;
   data->remote_fwd = input.remote_fwd;
   data->remote_hitm = input.remote_hitm;
+  data->instructions = input.instructions;
   data->context_switches = input.context_switches;
 
   for (int i = 0; i < 4; ++i) {
@@ -43,13 +44,15 @@ int classify(classifier_data* data, classifier_data input) {
   data->number_of_threads = input.number_of_threads;
   data->response = REQUEST_UNANSWERED;
 
-  printf("RESPONSE before classification: %d\n", data->response);
+  //printf("RESPONSE before classification: %d\n", data->response);
   usleep(50 * 1000);
   int res = data->response;
+  printf("RESPONSE after classification: %d\n", res);
+
   return res;
 }
 
-classifier_data create_data(int LOC, int RR, long long l3_hit, long long l3_miss, long long local_dram, long long remote_dram, long long l2_miss, long long uops_retired, long long unhalted_cycles, long long remote_fwd, long long remote_hitm, long long context_switches, double sockets_bw1, double sockets_bw2, double sockets_bw3, double sockets_bw4, int number_of_threads) {
+classifier_data create_data(int LOC, int RR, long long l3_hit, long long l3_miss, long long local_dram, long long remote_dram, long long l2_miss, long long uops_retired, long long unhalted_cycles, long long remote_fwd, long long remote_hitm, long long instructions, long long context_switches, double sockets_bw1, double sockets_bw2, double sockets_bw3, double sockets_bw4, int number_of_threads) {
 
   classifier_data input;
   input.LOC = LOC;
@@ -63,6 +66,7 @@ classifier_data create_data(int LOC, int RR, long long l3_hit, long long l3_miss
   input.unhalted_cycles = unhalted_cycles;
   input.remote_fwd = remote_fwd;
   input.remote_hitm = remote_hitm;
+  input.instructions = instructions;
   input.context_switches = context_switches;
 
   input.sockets_bw[0] = sockets_bw1;

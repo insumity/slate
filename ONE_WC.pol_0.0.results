@@ -1,0 +1,59 @@
+
+ Processor Counter Monitor: Memory Bandwidth Monitoring Utility  ($Format:%ci ID=%h$)
+
+ This utility measures memory bandwidth per channel or per DIMM rank in real-time
+
+Number of physical cores: 48
+Number of logical cores: 96
+Number of online logical cores: 96
+Threads (logical cores) per physical core: 2
+Num sockets: 4
+Physical cores per socket: 12
+Core PMU (perfmon) version: 3
+Number of core PMU generic (programmable) counters: 4
+Width of generic (programmable) counters: 48 bits
+Number of core PMU fixed counters: 3
+Width of fixed counters: 48 bits
+Nominal core frequency: 2100000000 Hz
+Package thermal spec power: 115 Watt; Package minimum power: 62 Watt; Package maximum power: 253 Watt; 
+Socket 0: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 1: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 2: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+Socket 3: 2 memory controllers detected with total number of 8 channels. 3 QPI ports detected.
+
+Detected Intel(R) Xeon(R) CPU E7-4830 v3 @ 2.10GHz "Intel(r) microarchitecture codename Haswell-EP/EN/EX"
+Update every 0.5 seconds
+1, 0, 12181, 15889, 14061, 1603, 41453, 35794841053, 46381953343, 111, 371, 18265504893, 125535, 2843.8, 439.335, 52.535, 81.79, 20, -1
+1, 0, 224966, 1889075, 1526135, 1194447, 2183569, 15522671974, 19861181134, 2770, 8570, 8135727263, 189643, 2547.49, 315.545, 49.965, 83.8, 20, -1
+1, 0, 1070139, 3322257, 2694530, 2124140, 4446593, 1438126796, 1366026705, 373, 1912, 1127760801, 213762, 1559.53, 581.96, 41.825, 139.76, 20, -1
+1, 0, 1126434, 2695661, 2279329, 1692770, 3832876, 1575550317, 1316287249, 212, 976, 1295097366, 177503, 1636.71, 786.125, 44.59, 110.86, 20, -1
+1, 0, 1056283, 3358642, 3115420, 1893765, 4463924, 1655131586, 1474417368, 287, 1933, 1368859075, 178268, 1786.03, 898.565, 49.43, 115.415, 20, -1
+1, 0, 503004, 5356068, 5220688, 2607067, 5919667, 2137277210, 2194011738, 3374, 11671, 1767271122, 299407, 1601.8, 604.105, 49.375, 155.435, 20, -1
+1, 0, 483828, 7154051, 7022861, 3078099, 7707866, 2348193499, 2842414694, 3759, 13603, 1911728665, 335386, 1712.16, 743.3, 47.1, 172.02, 20, -1
+1, 0, 491289, 8542602, 8424509, 3508521, 9115732, 2562803377, 3224701278, 2877, 10161, 2118008714, 328608, 1743.74, 839, 50.69, 172.445, 20, -1
+1, 0, 618678, 12424983, 12322968, 4667020, 13186504, 3068223425, 4565826943, 3259, 9286, 2567601042, 346516, 2178.31, 865.27, 52.41, 178.95, 20, -1
+1, 0, 995095, 23237917, 23133787, 7935481, 24227544, 4682580215, 8997866061, 2516, 5452, 3950053188, 358237, 2445.55, 1572.74, 49.44, 183.715, 20, -1
+1, 0, 3198801, 67748725, 66337185, 20246447, 71551149, 12050315401, 29954577250, 134621, 568098, 9757404527, 318008, 5258.37, 3158.29, 65.575, 196.3, 20, -1
+1, 0, 35588487, 41975284, 13555926, 1739, 96932199, 9845886782, 25592662712, 2779456, 13686826, 7686930697, 940458, 7400.05, 5014.72, 82.57, 311.4, 20, -1
+1, 0, 33572243, 41588732, 13602406, 1727, 93268645, 8985118099, 24185666139, 2522140, 13306828, 6964398191, 982228, 7735.8, 5212.27, 94.91, 416.485, 20, -1
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+What happened: No such file or directory
+1, 0, 10010455, 11576563, 4853511, 3286, 26845231, 61575132746, 28592159584, 439189, 1991911, 63573323601, -4568593, 2929.67, 1592.36, 57.795, 113.15, 20, -1
+couldn't open the directory!: No such file or directory

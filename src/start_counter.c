@@ -20,7 +20,7 @@
 #define B_PAPI_MULTIPLEX
 
 typedef struct {
-  volatile long long values[9];
+  volatile long long values[10];
   pthread_mutex_t lock;
 } core_data;
 
@@ -48,7 +48,7 @@ int add_events(int event_set) {
     exit(1);
   }
 
-  retval = PAPI_add_named_event(event_set, "MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_DRAM");
+  retval = PAPI_add_named_event(event_set, "ARITH:DIVIDER_UOPS");
   if (retval != PAPI_OK ) {
     printf("couldn't add remote dram event: %d\n", retval);
     exit(1);
@@ -67,7 +67,8 @@ int add_events(int event_set) {
     perror("couldn't add retired l2 miss\n");
     exit(1);
   }
-  
+
+  // should be a fixed-counter event
   retval = PAPI_add_named_event(event_set, "UNHALTED_CORE_CYCLES");
   if (retval != PAPI_OK) {
     perror("couldn't add unhalted core cycles\n");
@@ -85,6 +86,14 @@ int add_events(int event_set) {
     perror("couldn't add remote_hitm llc miss\n");
     exit(1);
   }
+
+  // should be a fixed-counter event
+  retval = PAPI_add_named_event(event_set, "INSTRUCTIONS_RETIRED");
+  if (retval != PAPI_OK) {
+    perror("couldn't add instructions retired\n");
+    exit(1);
+  }
+
 
 #endif
 
@@ -105,7 +114,7 @@ void start_counters(int event_set) {
 
 core_data* data;
 void read_counters(int event_set) {
-  long long results[9] = {0, 0, 0, 0, 0, 0, 0, 0};
+  long long results[10] = {0, 0, 0, 0, 0, 0, 0, 0};
   int retval;
 
   retval = PAPI_read(event_set, results);
@@ -115,11 +124,8 @@ void read_counters(int event_set) {
 
   pthread_mutex_lock(&(data->lock));
 
-  
-  //printf(">>>\t\t");
-  for (int i = 0; i < 9; ++i) {
+  for (int i = 0; i < 10; ++i) {
     data->values[i] = results[i];
-    //i < 8? printf("%lld\t\t", results[i]): printf("%lld\n", results[i]);
   }
   
   msync(data, sizeof(core_data), MS_SYNC);

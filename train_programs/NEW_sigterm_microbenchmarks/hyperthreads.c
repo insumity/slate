@@ -1,20 +1,18 @@
-/* Used to produce training data on whether to use hyperthreads or not. */
 #define _GNU_SOURCE
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <signal.h>
 #include <unistd.h>
-#include <stdatomic.h>
 #include <time.h>
+#include <signal.h>
+#include <stdatomic.h>
 
 #define ATOMIC_INTS_PER_CACHE_LINE 16
-#define MAX_NUM_THREADS 48
-#define KB 1024
-#define MB (1024 * KB)
 
-atomic_int shared_memory[16 * (1 * KB)];
+int number_of_counters = 20;
+atomic_int counters[20 * ATOMIC_INTS_PER_CACHE_LINE];
+
 
 int number_of_threads, pin, pol;
 #define MAX_NUMBER_OF_THREADS 50
@@ -22,30 +20,16 @@ int number_of_threads, pin, pol;
 #define LONG_LONGS_PER_CACHE_LINE 8
 long long int loops_per_thread[LONG_LONGS_PER_CACHE_LINE * MAX_NUMBER_OF_THREADS];
 
-
 int LOOPS_OF_FP_OPERATIONS = 0;
 
-void *thread_fn(void *v)
+
+void *inc(void *v)
 {
   int index = *((int *) v);
   long long int loops = 0;
-  long offset = 1L << 15;
-
-  long long s = 0;
-  double x = 0.12323;
-
+  long offset = 1L << 14;
+  double x = 03.3431;
   while (true) {
-    // 1 * KB is good best for CORES
-    // 512 isxiei kai edo , 256 even better
-    // 128 stil holds better for CORES
-
-    // 16 is better for CORES
-    // 4 is better for CORES
-    
-
-    // 2 is better for HWCS
-    // 1 is better for HWCS
-    // 0 is best for ??? HWCS is better ... 
 
     for (int i = 0; i < LOOPS_OF_FP_OPERATIONS; ++i) {
       x = x + 2423.847123123123;
@@ -58,17 +42,13 @@ void *thread_fn(void *v)
       x = x / 7182387213 + 712387213. / x;
     }
 
-    for (int i = 0; i < 1 * KB; ++i) {
-      atomic_fetch_add(&shared_memory[i * ATOMIC_INTS_PER_CACHE_LINE], 1);
-    }
+    atomic_fetch_add(&counters[(loops % 20) * ATOMIC_INTS_PER_CACHE_LINE], 1);
     loops++;
-
+    
     if (loops & offset == offset) {
       loops_per_thread[LONG_LONGS_PER_CACHE_LINE * index]++;
     }
   }
-
-  printf("%lf\n", x);
 
   return NULL;
 }
@@ -98,7 +78,6 @@ void sig_handler(int signo)
   exit(1);
 }
 
-
 int main(int argc, char* argv[])
 {
   srand(time(NULL));
@@ -107,9 +86,10 @@ int main(int argc, char* argv[])
     perror("couldn't set up signal");
   }
 
-
   
   int oc;
+
+
   pin = 0;
   while ((oc = getopt(argc, argv, "t:s:l:p")) != -1) {
     switch (oc) {
@@ -117,6 +97,7 @@ int main(int argc, char* argv[])
       number_of_threads = atoi(optarg);
       break;
     case 's':
+      printf("P input: (%s)\n", optarg);
       pol = atoi(optarg);
       break;
     case 'l':
@@ -130,18 +111,15 @@ int main(int argc, char* argv[])
     }
   }
 
-
   pthread_t threads[number_of_threads];
 
   int cores_loc_hwcs[48] = {0, 48, 4, 52, 8, 56, 12, 60, 16, 64, 20, 68, 24, 72, 28, 76, 32, 80, 36, 84, 40, 88, 44, 92,
 			    1, 49, 5, 53, 9, 57, 13, 61, 17, 65, 21, 69, 25, 73, 29, 77, 33, 81, 37, 85, 41, 89, 45, 93};
 
-  
   int cores_loc_cores[48] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44,
 			     1, 5, 9, 13, 17, 21, 25, 29, 33, 37, 41, 45,
 			     2, 6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46,
 			     3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47};
-  
   int cores_rr[48];
   for (int i = 0; i < 48; ++i) {
     cores_rr[i] = i;
@@ -161,7 +139,6 @@ int main(int argc, char* argv[])
     }
   }
 
-
   if (pin) {
     printf("I'm about to pin!\n");
     cpu_set_t st;
@@ -178,8 +155,7 @@ int main(int argc, char* argv[])
   for (int i = 0; i < number_of_threads; ++i) {
     int* pa = malloc(sizeof(int));
     *pa = i;
-
-    if (pthread_create(&threads[i], NULL, thread_fn, pa)) {
+    if (pthread_create(&threads[i], NULL, inc, pa)) {
       fprintf(stderr, "Error creating thread\n");
       return EXIT_FAILURE;
     }
@@ -194,6 +170,7 @@ int main(int argc, char* argv[])
 	return EXIT_FAILURE;
       }
     }
+    
   }
   printf("\n");
 

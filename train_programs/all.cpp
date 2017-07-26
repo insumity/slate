@@ -476,31 +476,32 @@ int main(int argc, char* argv[]) {
   int KB = 1024 / sizeof(int);
   int MB = (1024 * 1024) / sizeof(int);
 
-  int threads_a[] = {4, 8, 12, 20};
+  int threads_a[] = {20};
+  int num_threads = 1;
 
-  float memory_percentage[5][2] = {{0.1, 0.1}, {0.5, 0.5}, {0, 1}, {1, 0}, {0.3, 0.7}}; // first is local ... the other is remote
-  for (float operations_percentage = 0.; operations_percentage <= 1.1; operations_percentage += 1.) {
+  float memory_percentage[6][2] = {{0.2, 0.2}, {0.1, 0.1}, {0.5, 0.5}, {0, 1}, {1, 0}, {0.3, 0.7}}; // first is local ... the other is remote
+  for (float operations_percentage = 0.; operations_percentage <= 1.1; operations_percentage += 0.30) {
     fprintf(stderr, "Operations: %lf\n", operations_percentage);
 
-    for (int memory_percentage_index = 0; memory_percentage_index < 5; ++memory_percentage_index) {
+    for (int memory_percentage_index = 0; memory_percentage_index < 6; ++memory_percentage_index) {
       fprintf(stderr, "\tMemory percentage: (local: %lf, remote: %lf)\n", memory_percentage[memory_percentage_index][0],
 	      memory_percentage[memory_percentage_index][1]);
       float local_memory_percentage = memory_percentage[memory_percentage_index][0];
       float remote_memory_percentage = memory_percentage[memory_percentage_index][1];
       
-      for (int context_every_loop = 20; context_every_loop <= 110; context_every_loop += 90) {
+      for (int context_every_loop = 20; context_every_loop <= 200; context_every_loop += 90) {
 	fprintf(stderr, "\t\tContext every loop: %d\n", context_every_loop);
 	
 	for (int to_communicate = 0; to_communicate < 2; ++to_communicate) {
 	  fprintf(stderr, "\t\t\tTo communicate: %d\n", to_communicate);
 	  
-	  for (int communicate_every_loop = 2; communicate_every_loop <= 5000; communicate_every_loop += 4998) {
+	  for (int communicate_every_loop = 2; communicate_every_loop <= 5002; communicate_every_loop += 2500) {
 
-	    for (int memory_size = 1 * KB; memory_size <= 2 * 5 * MB + 1 * KB; memory_size += 5 * MB) { // start with 1 * KB
+	    for (int memory_size = 1 * KB; memory_size <= 4 * 5 * MB + 1 * KB; memory_size += 5 * MB) { // start with 1 * KB
 	      fprintf(stderr, "\t\t\t\tMemory size in KB: %d\n", (int) (memory_size / 1024.0));
 
 	      // FIXME threads
-	      loop_internal(threads_a, 4, operations_percentage, local_memory_percentage, remote_memory_percentage, context_every_loop, to_communicate, communicate_every_loop, memory_size);
+	      loop_internal(threads_a, num_threads, operations_percentage, local_memory_percentage, remote_memory_percentage, context_every_loop, to_communicate, communicate_every_loop, memory_size);
 	    }
 	  }
 	}

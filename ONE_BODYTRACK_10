@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/apps/bodytrack/inst/amd64-linux.gcc/bin/bodytrack /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/apps/bodytrack/run/sequenceB_4 4 4 40000 40 0 10

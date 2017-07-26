@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_MIN_LAT_CORES experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /usr/bin/mpiexec --allow-run-as-root -np 10 /localhome/kantonia/slate/benchmarks/NPB3.3.1/NPB3.3-OMP/bin/bt.A.x

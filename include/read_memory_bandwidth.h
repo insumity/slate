@@ -5,9 +5,11 @@ extern "C" {
 #ifndef __READ_MEMORY_BANDWIDTH_H
 #define __READ_MEMORY_BANDWIDTH_H
 
-  void start_reading_memory_bandwidth();
+  FILE* start_reading_memory_bandwidth();
 
-  double read_memory_bandwidth(int socket);
+  double read_memory_bandwidth(int socket, FILE* bw_file);
+
+  void close_memory_bandwidth();
   
 #endif
 

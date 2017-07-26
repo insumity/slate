@@ -22,6 +22,10 @@ FILE* start_reading_memory_bandwidth() {
   return fp;
 }
 
+void close_memory_bandwidth() {
+  system("sudo pkill -9 pcm-memory.x");
+}
+
 double read_memory_bandwidth(int socket, FILE* fp) {
 
   char last_line1[MAX_LINE_SIZE], last_line2[MAX_LINE_SIZE];

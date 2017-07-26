@@ -23,6 +23,7 @@
 
 #include "read_counters.h"
 #include "read_context_switches.h"
+#include "read_memory_bandwidth.h"
 #include "get_tids.h"
 
 
@@ -178,6 +179,8 @@ pid_t execute_program(char* program[]) {
 
 int main(int argc, char* argv[])
 {
+  start_reading_memory_bandwidth();
+  
   int result = atoi(argv[1]);
   bool pin, loc_hwcs, loc_cores, rr;
   pin = loc_hwcs = loc_cores = rr = false;

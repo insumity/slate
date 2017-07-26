@@ -57,14 +57,19 @@ int HGREEDY_release_hwc_extra(pid_t pid, pid_t tid) {
   sem_wait(stateGREEDY.lock);
   int *hwc_pt = ((int *) list_get_value(stateGREEDY.hwcs_per_pid, &tid, compare_pids));
   
-  if (*hwc_pt == -1) {
+  if (hwc_pt == NULL) {
     sem_post(stateGREEDY.lock);
     return -1;
   }
 
   int hwc = *hwc_pt;
+  printf(">>>\t\t >>> Read hwc: %d\n", hwc);
 
-
+  if (hwc >= stateGREEDY.total_hwcs || hwc < 0) {
+    printf("\n\n\n\n\n\t\t\t\HWC went ababove total : %d\n", stateGREEDY.total_hwcs);
+    sem_post(stateGREEDY.lock);
+    return 0; // FIXME
+  }
   stateGREEDY.used_hwcs[hwc] = false;
   
   list_remove(stateGREEDY.hwcs_per_pid, &tid, compare_pids);
@@ -83,7 +88,9 @@ int HGREEDY_release_hwc_extra(pid_t pid, pid_t tid) {
 std::vector<int> HGREEDY_reschedule(pid_t pid, int new_policy) {
   printf("\n\n\n\n\nABOUT TO RESCHEDULE\n\n\n\n\n\n\n\n");
   int elems = 0;
+  printf("About to get all the tids in reschedule.\n");
   void** values = list_get_all_values(stateGREEDY.tids_per_pid, &pid, compare_pids, &elems);
+  printf("Received all tids in reschedule.\n");
 
   std::vector<int> result;
 
@@ -116,12 +123,15 @@ std::vector<int> HGREEDY_reschedule(pid_t pid, int new_policy) {
   int node;
   int core = HGREEDY_get_hwc(pid, pid, &node);
   pin(pid, core, node);
+  printf("Pinned pid %lld process to %d\n", pid, core);
   result.push_back(core);
 
   for (int i = 0; i < elems; ++i) {
     pid_t tid = *((pid_t *) values[i]);
     int core = HGREEDY_get_hwc(pid, tid, &node);
     pin(tid, core, node);
+    printf("Pinned tid %lld process to %d\n", tid, core);
+
     result.push_back(core);
   }
 
@@ -292,13 +302,16 @@ int HGREEDY_get_hwc(pid_t pid, pid_t tid, int* ret_node) {
 
 void HGREEDY_release_hwc(pid_t pid) {
   sem_wait(stateGREEDY.lock);
-  int hwc = *((int *) list_get_value(stateGREEDY.hwcs_per_pid, &pid, compare_pids));
+  int* hwc_pt = (int *) list_get_value(stateGREEDY.hwcs_per_pid, &pid, compare_pids);
   
-  if (hwc == -1) {
+  if (hwc_pt == NULL) {
     sem_post(stateGREEDY.lock);
     return;
   }
-  
+
+  int hwc = *hwc_pt;
+
+  fprintf(stderr, "Hwc inside HGREEDY_release_hwc that is about to be released %d\n", hwc);
   stateGREEDY.used_hwcs[hwc] = false;
   
   list_remove(stateGREEDY.hwcs_per_pid, &pid, compare_pids);

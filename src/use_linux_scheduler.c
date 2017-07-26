@@ -19,7 +19,6 @@
 //#define PAPI_ENABLED
 //#define PAPI_MULTIPLEX
 
-
 typedef struct {
   int program;
   int time;
@@ -45,7 +44,7 @@ void* execute_process(void* arg)
   usleep(a->start_time_ms * 1000); // important to sleep before getting start time
   clock_gettime(CLOCK_MONOTONIC, &start);
 
-  #ifdef PAPI_ENABLED
+#ifdef PAPI_ENABLED
   int retval;
   int event_set = PAPI_NULL;
   retval = PAPI_create_eventset(&event_set);
@@ -98,12 +97,11 @@ void* execute_process(void* arg)
     perror("Couldn't run execv\n");
   }
 
-  #ifdef PAPI_ENABLED
+#ifdef PAPI_ENABLED
   retval = PAPI_start(event_set);
   retval = PAPI_attach(event_set, ( unsigned long ) pid);
 #endif
 
-  
   int status;
   waitpid(pid, &status, 0);
 
@@ -163,8 +161,6 @@ int main(int argc, char* argv[])
   
 #endif
   
-
-
   
   if (argc != 3) {
     fprintf(stderr, "./use_linux_scheduler input_file output_file");

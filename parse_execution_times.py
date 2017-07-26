@@ -9,7 +9,7 @@ def remove_last_two_chars(s):
     return s[0:len(s) - 2]
 
 
-with open("execution_times") as f:
+with open("execution_times_slate") as f:
     content = f.readlines()
 
     for line in content:
@@ -21,11 +21,14 @@ with open("execution_times") as f:
         avg = float(remove_last_char(l[7]))
         std = float(remove_last_two_chars(l[10]))
 
-        pol = "mem"
         if policy == 0:
             pol = "loc"
+        elif policy == 1:
+            pol = "mem"
+        else:
+            pol = "slate"
 
-#        print(line)
+
         print(app.lower() + "_times[" + str(threads) + "][\"" + str(pol) + "\"] = " + str(avg))
-        print(app.lower() + "_times[" + str(threads) + "][\"" + str(pol) + "\"][\"std\"] = " + str(std))
+        print(app.lower() + "_times[" + str(threads) + "][\"" + str(pol) + "_std\"] = " + str(std))
 

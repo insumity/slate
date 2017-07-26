@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/parsec-3.0/bin/../pkgs/apps/raytrace/inst/amd64-linux.gcc-pthreads/bin/rtview /localhome/kantonia/slate/benchmarks/parsec-3.0/bin/../pkgs/apps/raytrace/run/thai_statue.obj -automove -nthreads 6 -frames 200 -res 1920 1080

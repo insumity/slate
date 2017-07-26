@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/upscaledb-2.2.1/tools/ups_bench/ups_bench --inmemorydb --keysize-fixed=20 --recsize=10 --num-threads=10 --find-pct=10 --no-progress --metrics=all --stop-ops=150000

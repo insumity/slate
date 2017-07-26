@@ -22,6 +22,10 @@ void* foo_fn(void *x) {
     for (int i = 0; i < 1000000; ++i) {
       long x = syscall(SYS_gettid);
       sum += x;
+      if (i % 1000 == 0) {
+	int*x = malloc(sizeof(4));
+	*x = 0;
+      }
     }
   }
   

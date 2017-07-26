@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_BW_ROUND_ROBIN_CORES experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/upscaledb-2.2.1/tools/ups_bench/ups_bench --use-transactions=500 --stop-ops=100000 --flush-txn-immediately --num-threads=6

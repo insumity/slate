@@ -51,9 +51,11 @@
 #include <set>
 #include <ctime>
 
-#define COUNTERS_NUMBER 9
+#define COUNTERS_NUMBER 10
 
 volatile classifier_data* classify_data; // communication with python classifier (scikitlearn)
+
+int initial_policy = 1; // WITH what policy should we start the scheduler, 0 for MIN_LAT_CORES, 1 for BW_ROUND_ROBIN_CORES, can be changed through command line
 
 // returns the old value if new_value - old_value < 00
 long long get_difference(long long new_value, long long old_value) {
@@ -95,7 +97,7 @@ void print_perf_counters(bool is_rr, int result, long long values[], long long c
 }
 
 // returns the current values of the read performance counters
-long long* read_perf_counters(long long values[], std::vector<int> hwcs) {
+long long* read_perf_counters(std::vector<int> hwcs) {
 
 
   // Events being read by start_counter in this order
@@ -108,6 +110,7 @@ long long* read_perf_counters(long long values[], std::vector<int> hwcs) {
   // UNHALTED_CORE_CYCLES
   // MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_FWD
   // MEM_LOAD_UOPS_LLC_MISS_RETIRED:REMOTE_HITM
+  // INSTRUCTIONS_RETIRED
 
   long long* results = (long long *) malloc(sizeof(long long) * COUNTERS_NUMBER);
   long long L3_HIT = 0; 
@@ -119,6 +122,7 @@ long long* read_perf_counters(long long values[], std::vector<int> hwcs) {
   long long UNHALTED_CORE_CYCLES = 0;
   long long REMOTE_FWD = 0;
   long long REMOTE_HITM = 0;
+  long long INSTRUCTIONS_RETIRED = 0;
   
 
   for (std::vector<int>::iterator it = hwcs.begin(); it != hwcs.end(); it++) {
@@ -134,6 +138,8 @@ long long* read_perf_counters(long long values[], std::vector<int> hwcs) {
     UNHALTED_CORE_CYCLES += cd.values[6];
     REMOTE_FWD += cd.values[7];
     REMOTE_HITM += cd.values[8];
+    INSTRUCTIONS_RETIRED += cd.values[9];
+
   }
 
   results[0] = L3_HIT;
@@ -145,6 +151,7 @@ long long* read_perf_counters(long long values[], std::vector<int> hwcs) {
   results[6] = UNHALTED_CORE_CYCLES;
   results[7] = REMOTE_FWD;
   results[8] = REMOTE_HITM;
+  results[9] = INSTRUCTIONS_RETIRED;
   
   return results;
 }
@@ -270,7 +277,6 @@ void* check_slots(void* dt) {
 	int* pt_core = (pid_t*) malloc(sizeof(int));
 	*pt_core = core;
 
-
 	std::map< pid_t, std::vector<pid_t> >::iterator it = tids_per_pid.find(pid);
 	if (it == tids_per_pid.end()) {
 	  tids_per_pid.insert(std::pair<pid_t, std::vector<pid_t> >(pid, std::vector<pid_t>()));
@@ -281,6 +287,7 @@ void* check_slots(void* dt) {
 	slot->used = SCHEDULER;
       }
       else if (slot->used == END_PTHREADS) {
+	fprintf(stderr, "About to release: %d\n", slot->tid);
 	release_hwc(h, slot->tid);
 	slot->used = NONE;
       }
@@ -341,7 +348,9 @@ int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int
   sem_wait(h.get_lock());
 
   int hwc = h.get_hwc(pid, tid, node);
+  printf("Got ... HWC: %d\n", hwc);
 
+  
   std::map< pid_t, std::vector<int> >::iterator it = cores_per_pid.find(pid);
   if (it == cores_per_pid.end()) {
     cores_per_pid.insert(std::pair<pid_t, std::vector<int> >(pid, std::vector<int>()));
@@ -373,7 +382,7 @@ int get_hwc_and_schedule(heuristic_t h, pid_t pid, pid_t tid, bool schedule, int
   return hwc;
 }
 
-void reschedule(heuristic_t h, pid_t pid, int new_policy) {
+std::vector<int> reschedule(heuristic_t h, pid_t pid, int new_policy) {
   printf("\n\n\n-----------\n\nreschedule()\n\n---------");
   for (std::vector<int>::iterator it = cores_per_pid[pid].begin() ; it != cores_per_pid[pid].end(); ++it) {
     printf("%d\n", *it);
@@ -390,6 +399,7 @@ void reschedule(heuristic_t h, pid_t pid, int new_policy) {
   }
 
   printf("-----\n");
+  return tmp;
 }
 
 void release_hwc(heuristic_t h, pid_t pid) {
@@ -540,23 +550,36 @@ void* slate_bg(void* dt) {
   int* tids = get_thread_ids(pid, &number_of_threads);
 
   std::vector<int> hwcs;
-  for (int i = 0; i < number_of_threads; ++i) {
+
+  std::map< pid_t, std::vector<int> >::iterator it = cores_per_pid.find(pid);
+  it = cores_per_pid.find(pid);
+
+  std::vector<int> cores_used = it->second;
+  for (std::vector<int>::iterator it2 = cores_used.begin(); it2 != cores_used.end(); ++it2) {
+    hwcs.push_back(*it2);
+  }
+
+
+  int policy_before = initial_policy;
+  int status;
+  while (true) {
+
+    // re-check if new threads were spawned by the process
+    tids = get_thread_ids(pid, &number_of_threads);
+
+    hwcs.clear();
 
     std::map< pid_t, std::vector<int> >::iterator it = cores_per_pid.find(pid);
     it = cores_per_pid.find(pid);
 
-    std::vector<int> cores_used = it->second;
+    cores_used = it->second;
     for (std::vector<int>::iterator it2 = cores_used.begin(); it2 != cores_used.end(); ++it2) {
       hwcs.push_back(*it2);
     }
-  }
-  
+    //
 
 
-  int policy_before = 1;
-  int status;
-  while (true) {
-    cur_counters = read_perf_counters(prev_counters, hwcs);
+    cur_counters = read_perf_counters(hwcs);
     sleep(1);
 
     pid_t w = waitpid(pid, &status, WNOHANG);
@@ -587,17 +610,19 @@ void* slate_bg(void* dt) {
     }
 
 
-    prev_counters = read_perf_counters(cur_counters, hwcs);
+    std::cout << "Used @ hwcs: " << std::endl;
+    for (int i = 0; i < hwcs.size(); ++i) {
+      std::cout << hwcs[i] << " ";
+    }
+    std::cout << endl;
+    
+    prev_counters = read_perf_counters(hwcs);
 
     long long* actual_values = subtract(prev_counters, cur_counters, COUNTERS_NUMBER);
+
     int final_result = -1;
-    print_perf_counters(policy_before == 1, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw, number_of_threads); // fIXME +-1 for the thread
-    free(actual_values);
+    print_perf_counters(policy_before == 1, final_result, actual_values, cur_context_switches - prev_context_switches, sockets_bw, number_of_threads); // FIXME +-1 for the thread
 
-
-    
-
-    
     w = waitpid(pid, &status, WNOHANG);
     if (w == pid) {
       cerr << "What's this?" << endl;
@@ -610,29 +635,54 @@ void* slate_bg(void* dt) {
     int loc = policy_before == 0? 1: 0;
     int rr = 1 - loc;
 
-
     classifier_data input =  create_data(loc, rr, actual_values[0], actual_values[1], actual_values[2], actual_values[3],
 					 actual_values[4], actual_values[5], actual_values[6], actual_values[7], actual_values[8],
+					 actual_values[9], 
 					 cur_context_switches - prev_context_switches,
-					 sockets_bw[1], sockets_bw[2], sockets_bw[3], sockets_bw[4], number_of_threads);
+					 sockets_bw[0], sockets_bw[1], sockets_bw[2], sockets_bw[3], number_of_threads);
 
 
+    free(actual_values);
     prev_context_switches = cur_context_switches;
     
     int classification_result = classify(classify_data, input);
-    fprintf(stderr, "What is the classification: %d\n", classification_result);
     if (policy_before == 1 && classification_result == 0) {
-      int new_policy = MCTOP_ALLOC_MIN_LAT_HWCS;
+      int new_policy = MCTOP_ALLOC_MIN_LAT_CORES; // FIXME
       policy_before = 0;
-      reschedule(h, pid, new_policy);
+      std::vector<int> new_cores = reschedule(h, pid, new_policy);
+      hwcs.clear();
+      for (int i = 0; i < new_cores.size(); ++i) {
+	hwcs.push_back(new_cores[i]);
+      }
+      
       fprintf(stderr, "Moved to LOC\n");
     }
     else if (policy_before == 0 && classification_result == 1) {
       int new_policy = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
       policy_before = 1;
-      reschedule(h, pid, new_policy);
+      hwcs.clear();
+      std::vector<int> new_cores = reschedule(h, pid, new_policy);
+      for (int i = 0; i < new_cores.size(); ++i) {
+	hwcs.push_back(new_cores[i]);
+      }
+
       fprintf(stderr, "Moved to RR\n");
     }
+    else if (classification_result == 2 && policy_before == 0) {
+      int new_policy = MCTOP_ALLOC_MIN_LAT_CORES;
+      policy_before = 0;
+      hwcs.clear();
+      std::vector<int> new_cores = reschedule(h, pid, new_policy);
+      for (int i = 0; i < new_cores.size(); ++i) {
+	hwcs.push_back(new_cores[i]);
+      }
+
+      fprintf(stderr, "Moved to RR\n");
+    }
+    else {
+      // stay with current policy
+    }
+      
     
     times++;
   }
@@ -641,7 +691,6 @@ void* slate_bg(void* dt) {
 
 void* execute_process(void* dt) {
   execute_process_args* args = (execute_process_args*) dt;
-  
   usleep(args->start_time_ms * 1000);
 
   char**program = args->program;
@@ -651,6 +700,15 @@ void* execute_process(void* dt) {
 
   if (pid == 0) {
     //char* envp[1] = {NULL};
+
+    printf("-----------------------------------\n");
+    int i = 0;
+    while (program[i] != NULL) {
+      printf("(%s)\n", program[i]);
+      i++;
+    }
+    printf("-----------------------------------\n");
+
     execv(program[0], program);
     printf("== %s\n", program[0]);
     perror("execve didn't work");
@@ -666,7 +724,17 @@ void* execute_process(void* dt) {
 
   bool was_slate = false;
   if (pol == MCTOP_ALLOC_SLATE) {
-    pol = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
+
+    if (initial_policy == 0) {
+      pol = MCTOP_ALLOC_MIN_LAT_CORES;
+    }
+    else if (initial_policy == 1) {
+      pol = MCTOP_ALLOC_BW_ROUND_ROBIN_CORES;
+    }
+    else {
+      fprintf(stderr, "NOT supported yet. What kind of initial policy is this?\n");
+    }
+    
     was_slate = true;
   }
 
@@ -693,7 +761,7 @@ void* execute_process(void* dt) {
     dt->pid = pid;
     dt->memory_bandwidth_file = args->memory_bandwidth_file;
     
-    sleep(3);
+    sleep(1); // threads might take some time to be created ... canneal needs 3 seconds, 2 for blackscholes, for dedup, 60 for raytrace, 4 for wrmem
     pthread_t slate_th;
     pthread_create(&slate_th, NULL, slate_bg, dt);
   }
@@ -706,7 +774,7 @@ void* execute_process(void* dt) {
 
     printf("Waiting for the process to terminate ...\n");
     waitpid(*pid, &status, 0);
-    printf("The process just terminated.\n");
+    printf("The process just terminated. Did it exit? %d %d\n", WIFSIGNALED(status), WTERMSIG(status));
 
     h.process_exit(*pid);
     release_hwc(h, *pid);
@@ -743,12 +811,19 @@ int main(int argc, char* argv[]) {
       start_reading();
     }
   }
+  else if (argc == 6) {
+    initial_policy = atoi(argv[5]);
+    if (!(initial_policy == 0 || initial_policy == 1)) {
+      perror("Initial policy can onlyl be 0 or 1 ... \n");
+      return EXIT_FAILURE;
+    }
+  }
   
   srand(time(NULL));
   char* heuristic = (char *) malloc(100);
   
-  if (argc != 4 && argc != 5) {
-    perror("Call schedule like this: ./schedule input_file output_file_for_results heuristic COUNTERS_OR_NOT?\n");
+  if (argc != 4 && argc != 5 && argc != 6) {
+    perror("Call schedule like this: ./schedule input_file output_file_for_results heuristic COUNTERS_OR_NOT? initial_policy\n");
     return EXIT_FAILURE;
   }
 
@@ -792,7 +867,6 @@ int main(int argc, char* argv[]) {
     copy_heuristic(&h, GREEDY_h);
     printf("%p\n", h.init);
     h.init(pin, topo);
-
   }
   else if (strcmp(heuristic, "SPLIT") == 0) {
     copy_heuristic(&h, SPLIT_h);
@@ -881,6 +955,8 @@ int main(int argc, char* argv[]) {
   }
 
   mctop_free(topo);
+
+  close_memory_bandwidth();
   
   return 0;
 }

@@ -20,15 +20,16 @@ for row in reader:
     rr = int(row[13])
 
     result = 0
+    treshold = 100000
     
     is_loc = int(row[0]) == 1
     if (is_loc):
-        if (rr - loc >= 2000):
+        if (rr - loc >= treshold):
             result = 1
         else:
             result = 0
     else:
-        if (loc - rr >= 2000):
+        if (loc - rr >= treshold):
             result = 0
         else:
             result = 1

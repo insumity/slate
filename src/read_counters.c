@@ -17,6 +17,8 @@
 
 #include "../include/read_counters.h"
 
+#define NUMBER_OF_COUNTERS 10
+
 volatile core_data all_cores[96];
 
 static void read_counters_no_lock(int cpu);
@@ -46,7 +48,7 @@ static void read_counters_no_lock(int cpu) {
     exit(EXIT_FAILURE);
   }
 
-  for (int i = 0; i < 9; ++i) {
+  for (int i = 0; i < NUMBER_OF_COUNTERS; ++i) {
     all_cores[cpu].values[i] = data->values[i];
   }
   close(fd);
@@ -69,7 +71,7 @@ static void* read_counters_fn(void* dt) {
   }
 
   pthread_mutex_lock(&(data->lock));
-  for (int i = 0; i < 9; ++i) {
+  for (int i = 0; i < NUMBER_OF_COUNTERS; ++i) {
     all_cores[cpu].values[i] = data->values[i];
   }
   pthread_mutex_unlock(&(data->lock));

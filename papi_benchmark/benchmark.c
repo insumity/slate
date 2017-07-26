@@ -301,12 +301,13 @@ int main(int argc, char* argv[]) {
   
 #ifdef B_PAPI_ENABLED
   PAPI_option_t opt;
-  memset(&opt, 0x0, sizeof (PAPI_option_t) );
-  opt.inherit.inherit = PAPI_INHERIT_ALL;
-  opt.inherit.eventset = event_set;
-  if ((retval = PAPI_set_opt(PAPI_INHERIT, &opt)) != PAPI_OK) {
-    perror("no!\n");
-    exit(1);
+  options.cpu.eventset = event_set;
+  options.cpu.cpu_num = 5;
+  int retval = PAPI_set_opt(PAPI_CPU_ATTACH, &options);
+  if(retval != PAPI_OK) {
+    std::cerr << "Error: unable to CPU_ATTACH core " << cpu_num << ": ";
+    PAPI_perror(NULL);
+    exit(-1);
   }
 #endif
 

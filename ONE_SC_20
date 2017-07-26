@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/parsec-3.0/bin/../pkgs/kernels/streamcluster/inst/amd64-linux.gcc/bin/streamcluster 10 20 128 200000 200000 5000 none output.txt 20

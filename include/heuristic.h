@@ -1,11 +1,12 @@
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <mctop.h>
 #include <semaphore.h>
 #include "slate_utils.h"
 
+#ifdef __cplusplus
+#include <vector>
+#endif
+
+  
 void H_init(pin_data** pin, mctop_t* topo);
 sem_t* H_get_lock();
 
@@ -15,8 +16,7 @@ void H_process_exit(pid_t pid);
 int H_get_hwc(pid_t pid, pid_t tid, int* ret_node);
 void H_release_hwc(pid_t pid);
 
-void H_reschedule(pid_t pid, int new_policy);
-
 #ifdef __cplusplus
-}
+std::vector<int> H_reschedule(pid_t pid, int new_policy);
 #endif
+

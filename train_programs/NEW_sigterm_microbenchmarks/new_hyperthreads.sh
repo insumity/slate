@@ -1,12 +1,15 @@
 #!/bin/bash
 
-execution_time=10
-minimum_number_of_threads=12
-increment=1
-maximum_number_of_threads=12
+execution_time=7
+minimum_number_of_threads=2
+increment=2
+maximum_number_of_threads=24
 
-loops_of_fp_operations=(0 1 2 4 128 256 512 1024)
-loops_of_fp_operations=(0)
+#loops_of_fp_operations=(0 256 1024 4096 8192 16384)
+#loops_of_fp_operations=(0 1 2 4 128 256 512 1024 2048)
+loops_of_fp_operations=(8 16 32 64)
+
+#loops_of_fp_operations=(0 1 2 4 8 16 32 64 128 256 512 1024)
 
 for threads in $(seq $minimum_number_of_threads $increment $maximum_number_of_threads)
 do
