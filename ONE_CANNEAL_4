@@ -1,0 +1,1 @@
+0 0 MCTOP_ALLOC_SLATE experiments/link.sh /home/kantonia/GLIBC/glibc-build/ /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/kernels/canneal/inst/amd64-linux.gcc/bin/canneal 4 1000000 2000 /localhome/kantonia/slate/benchmarks/parsec-3.0/pkgs/kernels/canneal/run/400000.nets 128
