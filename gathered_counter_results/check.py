@@ -182,10 +182,14 @@ classifiers = [qda, LogisticRegression(random_state=42), BaggingClassifier(rando
                dtc, NearestCentroid(), neighbors.KNeighborsClassifier(), SGDClassifier(random_state=42),
                rfc, eclf]
 
-classifier_names = ["Application", "#threads", "(executed with) Policy", "Time (s) loc", "Time (s) mem", "Time (s) Linux", "Time (s) Slate",
-                    "loc vs mem?", 
-                    "QuadraticDiscriminantAnalysis", "LogisticRegressin", "Bagging", "AdaBoost", "PassiveAggressive", "Dummy", "Ridge", "MLP", "DecisionTree",
-                    "NearestCentroid", "KNeighbors", "SGD", "RandomForest", "VotingClassifier"]
+real_classifier_names = ["Quadratic", "Logistic", "Bagging", "adaboost", "Passive", "Dummy", "Ridge", "MLPClassifier", "decision tree", "nearest centroid", "kneighbours", "sgd", "random forest classifier",
+                                             "voting classif"]
+
+classifier_names = ["Application", "#threads", "(executed with) Policy", "Time (s) loc", "Time (s) mem", "Difference between loc and mem (perc)?", "Perc >= 0%",
+                                        "Time (s) Linux", "Time(s) Random -Hwcs", "Time (s) Random - Cores", "loc vs mem?",
+                                        "QuadraticDiscriminantAnalysis", "temp", "LogisticRegressin", "temp", "Bagging", "temp", "AdaBoost", "temp", "PassiveAggressive", "temp",
+                                        "Dummy", "temp", "Ridge", "temp", "MLP", "temp", "DecisionTree", "temp",
+                                        "NearestCentroid", "temp", "KNeighbors", "temp", "SGD", "temp", "RandomForest", "temp", "VotingClassifier", "temp"]
 
 
 
@@ -696,128 +700,269 @@ linearregression_times[20]["linux"] = 3.3066764
 linearregression_times[20]["linux_std"] = 0.05415650583484869
 
 
+wc_times[6]["random"] = 10.046343363636364
+wc_times[6]["random_std"] = 0.24265303298116567
+wc_times[10]["random"] = 12.391975454545454
+wc_times[10]["random_std"] = 0.42688554701494397
+wc_times[20]["random"] = 18.512985909090908
+wc_times[20]["random_std"] = 0.5660183179787888
+matrixmult_times[6]["random"] = 8.152913181818182
+matrixmult_times[6]["random_std"] = 0.32677352571991125
+matrixmult_times[10]["random"] = 5.203840181818181
+matrixmult_times[10]["random_std"] = 0.19219419458445394
+matrixmult_times[20]["random"] = 3.0049563636363636
+matrixmult_times[20]["random_std"] = 0.13316201114382348
+wr_times[6]["random"] = 16.575892
+wr_times[6]["random_std"] = 0.8182265711136272
+wr_times[10]["random"] = 17.842336272727273
+wr_times[10]["random_std"] = 0.6757735784608886
+wr_times[20]["random"] = 19.50078218181818
+wr_times[20]["random_std"] = 0.669345708639254
+wrmem_times[6]["random"] = 22.655082272727274
+wrmem_times[6]["random_std"] = 0.700442472462565
+wrmem_times[10]["random"] = 16.78011890909091
+wrmem_times[10]["random_std"] = 0.3419430614105365
+wrmem_times[20]["random"] = 12.843933363636364
+wrmem_times[20]["random_std"] = 0.17327080953512822
+blackscholes_times[6]["random"] = 5.185326727272727
+blackscholes_times[6]["random_std"] = 0.38036128643605316
+blackscholes_times[10]["random"] = 4.125766909090909
+blackscholes_times[10]["random_std"] = 0.24046523398591496
+blackscholes_times[20]["random"] = 3.267917909090909
+blackscholes_times[20]["random_std"] = 0.023579301159566916
+bodytrack_times[6]["random"] = 48.00290954545454
+bodytrack_times[6]["random_std"] = 2.427605325506126
+bodytrack_times[10]["random"] = 37.249970363636365
+bodytrack_times[10]["random_std"] = 1.3928691609020094
+bodytrack_times[20]["random"] = 25.990452363636365
+bodytrack_times[20]["random_std"] = 2.212203822878578
+canneal_times[6]["random"] = 41.22898818181818
+canneal_times[6]["random_std"] = 1.8202630885625406
+canneal_times[10]["random"] = 27.714904
+canneal_times[10]["random_std"] = 1.5872799438915506
+canneal_times[20]["random"] = 17.73901990909091
+canneal_times[20]["random_std"] = 0.8558343036788939
+facesim_times[4]["random"] = 32.43340190909091
+facesim_times[4]["random_std"] = 5.083460802080114
+facesim_times[8]["random"] = 22.60031472727273
+facesim_times[8]["random_std"] = 1.4044419480119037
+facesim_times[16]["random"] = 20.092948363636363
+facesim_times[16]["random_std"] = 1.1197850022993678
+ferret_times[6]["random"] = 70.22656136363636
+ferret_times[6]["random_std"] = 0.6538721604410664
+ferret_times[10]["random"] = 36.30379290909091
+ferret_times[10]["random_std"] = 0.7869379586758996
+ferret_times[22]["random"] = 16.41513781818182
+ferret_times[22]["random_std"] = 0.9769420889009485
+fluidanimate_times[4]["random"] = 37.571130272727274
+fluidanimate_times[4]["random_std"] = 2.3900607343830136
+fluidanimate_times[8]["random"] = 26.79879181818182
+fluidanimate_times[8]["random_std"] = 4.908020161488574
+fluidanimate_times[16]["random"] = 17.10959290909091
+fluidanimate_times[16]["random_std"] = 1.805418457059972
+raytrace_times[6]["random"] = 85.76967336363636
+raytrace_times[6]["random_std"] = 0.9502695692462766
+raytrace_times[10]["random"] = 75.13976727272727
+raytrace_times[10]["random_std"] = 1.4733346925386697
+raytrace_times[20]["random"] = 65.43283872727272
+raytrace_times[20]["random_std"] = 1.1673202829339973
+sc_times[6]["random"] = 33.15732890909091
+sc_times[6]["random_std"] = 3.4589139504476742
+sc_times[10]["random"] = 20.095459454545455
+sc_times[10]["random_std"] = 2.3504384052061966
+sc_times[20]["random"] = 12.347241454545454
+sc_times[20]["random_std"] = 1.2378109818018084
+sw_times[6]["random"] = 10.046645636363637
+sw_times[6]["random_std"] = 1.7803563281245018
+sw_times[10]["random"] = 6.340803090909091
+sw_times[10]["random_std"] = 0.9645738469976785
+sw_times[20]["random"] = 4.4237127272727275
+sw_times[20]["random_std"] = 0.38194118077313965
+vips_times[6]["random"] = 20.536540090909092
+vips_times[6]["random_std"] = 1.3242890337875952
+vips_times[10]["random"] = 13.281809727272726
+vips_times[10]["random_std"] = 0.6850208395581302
+vips_times[20]["random"] = 7.958526
+vips_times[20]["random_std"] = 0.6006418803183504
+pca_times[6]["random"] = 5.773093
+pca_times[6]["random_std"] = 0.6105900419040288
+pca_times[10]["random"] = 6.050585636363636
+pca_times[10]["random_std"] = 0.8831356487753553
+pca_times[20]["random"] = 8.159469
+pca_times[20]["random_std"] = 0.5228842989742742
+hist_times[6]["random"] = 18.313184
+hist_times[6]["random_std"] = 0.9023656657270881
+hist_times[10]["random"] = 12.889814272727273
+hist_times[10]["random_std"] = 0.6001088787722518
+hist_times[20]["random"] = 7.433361909090909
+hist_times[20]["random_std"] = 0.5418128764466155
+kmeans_times[6]["random"] = 26.61453390909091
+kmeans_times[6]["random_std"] = 3.6479210800838446
+kmeans_times[10]["random"] = 18.199039090909093
+kmeans_times[10]["random_std"] = 2.3554110536014905
+kmeans_times[20]["random"] = 9.710131454545454
+kmeans_times[20]["random_std"] = 0.638992663607816
+stringmatch_times[6]["random"] = 27.26881618181818
+stringmatch_times[6]["random_std"] = 0.9208006063714158
+stringmatch_times[10]["random"] = 17.85587409090909
+stringmatch_times[10]["random_std"] = 1.682241343560076
+stringmatch_times[20]["random"] = 10.043285909090908
+stringmatch_times[20]["random_std"] = 0.6533085229817748
+linearregression_times[6]["random"] = 7.855553818181818
+linearregression_times[6]["random_std"] = 0.20186856026624586
+linearregression_times[10]["random"] = 5.408579727272727
+linearregression_times[10]["random_std"] = 0.3323761838120642
+linearregression_times[20]["random"] = 3.5502789090909093
+linearregression_times[20]["random_std"] = 0.22394064394000582
+kyotocabinet_times[6]["random"] = 7.971731636363637
+kyotocabinet_times[6]["random_std"] = 0.7391660872735724
+kyotocabinet_times[10]["random"] = 14.875235454545454
+kyotocabinet_times[10]["random_std"] = 0.2621801348963112
+kyotocabinet_times[20]["random"] = 41.10676836363636
+kyotocabinet_times[20]["random_std"] = 1.5561276139199611
+upscaledb_times[6]["random"] = 10.654676545454546
+upscaledb_times[6]["random_std"] = 0.5778642727016225
+upscaledb_times[10]["random"] = 14.757568272727273
+upscaledb_times[10]["random_std"] = 0.27168893955708406
+upscaledb_times[20]["random"] = 17.321144363636364
+upscaledb_times[20]["random_std"] = 0.2297712079297668
 
 
 
-wc_times[6]["slate"] = 9.8292352
-wc_times[6]["slate_std"] = 0.07440658267760991
-wc_times[10]["slate"] = 9.8189966
-wc_times[10]["slate_std"] = 0.05071490722696829
-wc_times[20]["slate"] = 16.5823506
-wc_times[20]["slate_std"] = 0.541201420482467
-matrixmult_times[6]["slate"] = 8.0389402
-matrixmult_times[6]["slate_std"] = 0.027553873944692425
-matrixmult_times[10]["slate"] = 5.033755
-matrixmult_times[10]["slate_std"] = 0.01661323704760755
-matrixmult_times[20]["slate"] = 2.982185
-matrixmult_times[20]["slate_std"] = 0.02902846728988632
-wr_times[6]["slate"] = 13.2477334
-wr_times[6]["slate_std"] = 0.08557135723967454
-wr_times[10]["slate"] = 13.5014482
-wr_times[10]["slate_std"] = 0.1700316149172265
-wr_times[20]["slate"] = 17.7869482
-wr_times[20]["slate_std"] = 0.30459173842794884
-wrmem_times[6]["slate"] = 22.2017134
-wrmem_times[6]["slate_std"] = 0.08760603181425353
-wrmem_times[10]["slate"] = 17.2038202
-wrmem_times[10]["slate_std"] = 0.12053739202156316
-wrmem_times[20]["slate"] = 13.837424
-wrmem_times[20]["slate_std"] = 0.1308103839150394
-blackscholes_times[6]["slate"] = 4.9427452
-blackscholes_times[6]["slate_std"] = 0.02233823664840177
-blackscholes_times[10]["slate"] = 3.9288994
-blackscholes_times[10]["slate_std"] = 0.014000806471057302
-blackscholes_times[20]["slate"] = 3.2250546
-blackscholes_times[20]["slate_std"] = 0.024901542623701048
-bodytrack_times[6]["slate"] = 47.9038216
-bodytrack_times[6]["slate_std"] = 0.26846857499945875
-bodytrack_times[10]["slate"] = 36.5498102
-bodytrack_times[10]["slate_std"] = 0.1520475051836103
-bodytrack_times[20]["slate"] = 26.1089224
-bodytrack_times[20]["slate_std"] = 0.27248863156073133
-canneal_times[6]["slate"] = 27.7698492
-canneal_times[6]["slate_std"] = 0.47515955003278637
-canneal_times[10]["slate"] = 18.1566138
-canneal_times[10]["slate_std"] = 0.09373087214872163
-canneal_times[20]["slate"] = 14.7241036
-canneal_times[20]["slate_std"] = 0.13877679601230172
-facesim_times[4]["slate"] = 30.1137828
-facesim_times[4]["slate_std"] = 0.16483142749293897
-facesim_times[8]["slate"] = 21.9746628
-facesim_times[8]["slate_std"] = 0.29520379321370516
-facesim_times[16]["slate"] = 18.6867024
-facesim_times[16]["slate_std"] = 0.04394032201793701
-ferret_times[6]["slate"] = 73.2646234
-ferret_times[6]["slate_std"] = 0.05106774134656829
-ferret_times[10]["slate"] = 38.5705792
-ferret_times[10]["slate_std"] = 0.07149097898728203
-ferret_times[22]["slate"] = 15.655029
-ferret_times[22]["slate_std"] = 0.0810007277917921
-fluidanimate_times[4]["slate"] = 38.7157196
-fluidanimate_times[4]["slate_std"] = 0.7851255183295471
-fluidanimate_times[8]["slate"] = 21.0164214
-fluidanimate_times[8]["slate_std"] = 0.04489179377391819
-fluidanimate_times[16]["slate"] = 13.491652
-fluidanimate_times[16]["slate_std"] = 0.06599098735433498
-raytrace_times[6]["slate"] = 86.4484214
-raytrace_times[6]["slate_std"] = 0.7528898628045406
-raytrace_times[10]["slate"] = 74.4337218
-raytrace_times[10]["slate_std"] = 0.377629075727704
-raytrace_times[20]["slate"] = 65.8025756
-raytrace_times[20]["slate_std"] = 0.5381610211535577
-sc_times[6]["slate"] = 26.6987514
-sc_times[6]["slate_std"] = 0.3877561372154411
-sc_times[10]["slate"] = 17.5343316
-sc_times[10]["slate_std"] = 0.25919871008290146
-sc_times[20]["slate"] = 10.0871104
-sc_times[20]["slate_std"] = 0.30291327543546187
-sw_times[6]["slate"] = 8.5056152
-sw_times[6]["slate_std"] = 0.017737960315662
-sw_times[10]["slate"] = 5.8487516
-sw_times[10]["slate_std"] = 0.13804862117761263
-sw_times[20]["slate"] = 3.571515
-sw_times[20]["slate_std"] = 0.025985252548320556
-vips_times[6]["slate"] = 19.040498
-vips_times[6]["slate_std"] = 0.39392262589244603
-vips_times[10]["slate"] = 12.5707646
-vips_times[10]["slate_std"] = 0.2571600942305007
-vips_times[20]["slate"] = 7.5922826
-vips_times[20]["slate_std"] = 0.06244391553578299
-pca_times[6]["slate"] = 5.1699742
-pca_times[6]["slate_std"] = 0.08377376967619399
-pca_times[10]["slate"] = 4.7565756
-pca_times[10]["slate_std"] = 0.23329176536740426
-pca_times[20]["slate"] = 6.3183458
-pca_times[20]["slate_std"] = 0.30651614397705057
-hist_times[6]["slate"] = 17.4050376
-hist_times[6]["slate_std"] = 0.06428874150455895
-hist_times[10]["slate"] = 11.647465
-hist_times[10]["slate_std"] = 0.01710647741646421
-hist_times[20]["slate"] = 7.1348414
-hist_times[20]["slate_std"] = 0.23325891561661688
-kmeans_times[6]["slate"] = 24.9056648
-kmeans_times[6]["slate_std"] = 0.14532502989285775
-kmeans_times[10]["slate"] = 16.0214062
-kmeans_times[10]["slate_std"] = 0.05300723253443817
-kmeans_times[20]["slate"] = 8.837748
-kmeans_times[20]["slate_std"] = 0.005851562047863801
-stringmatch_times[6]["slate"] = 26.4579852
-stringmatch_times[6]["slate_std"] = 0.03421626895147979
-stringmatch_times[10]["slate"] = 16.5298104
-stringmatch_times[10]["slate_std"] = 0.028705299661212387
-stringmatch_times[20]["slate"] = 9.5367426
-stringmatch_times[20]["slate_std"] = 0.03517287869708705
-linearregression_times[6]["slate"] = 7.7413224
-linearregression_times[6]["slate_std"] = 0.01762435193248251
-linearregression_times[10]["slate"] = 5.2124198
-linearregression_times[10]["slate_std"] = 0.014581908961449458
-linearregression_times[20]["slate"] = 3.4486742
-linearregression_times[20]["slate_std"] = 0.11825338889926157
 
 
 
-mem_times = {10: {'linux': 2, 'slate': 3, 'mem': -1.00, 'loc': 0.00}, 20: {'linux': 2, 'slate': 3, 'mem': -1.00, 'loc': 0.00}, 6: {'linux': 2, 'slate': 3, 'mem': -1.00, 'loc': 0.00}}
-loc_times = {10: {'linux': 2, 'slate': 3, 'mem': 0.00, 'loc': -1.00}, 20: {'linux': 2, 'slate': 3, 'mem': 0.00, 'loc': -1.00}, 6: {'linux': 2, 'slate': 3, 'mem': 0.00, 'loc': -1.00}}
+wc_times[6]["random_cores"] = 10.307645818181818
+wc_times[6]["random_cores_std"] = 0.26693274728454736
+wc_times[10]["random_cores"] = 11.925529272727273
+wc_times[10]["random_cores_std"] = 0.35283220674914456
+wc_times[20]["random_cores"] = 19.289208545454546
+wc_times[20]["random_cores_std"] = 0.43378873555879993
+matrixmult_times[6]["random_cores"] = 7.996559
+matrixmult_times[6]["random_cores_std"] = 0.08225817178084663
+matrixmult_times[10]["random_cores"] = 5.134958090909091
+matrixmult_times[10]["random_cores_std"] = 0.04008993956424059
+matrixmult_times[20]["random_cores"] = 2.869581181818182
+matrixmult_times[20]["random_cores_std"] = 0.020021679117751708
+wr_times[6]["random_cores"] = 15.973533181818182
+wr_times[6]["random_cores_std"] = 1.0497752754876826
+wr_times[10]["random_cores"] = 17.477661545454545
+wr_times[10]["random_cores_std"] = 0.5381190200235976
+wr_times[20]["random_cores"] = 20.099757
+wr_times[20]["random_cores_std"] = 0.3791913106311665
+wrmem_times[6]["random_cores"] = 22.34504909090909
+wrmem_times[6]["random_cores_std"] = 0.3395636071423691
+wrmem_times[10]["random_cores"] = 16.37278790909091
+wrmem_times[10]["random_cores_std"] = 0.11949432413866096
+wrmem_times[20]["random_cores"] = 12.946739909090908
+wrmem_times[20]["random_cores_std"] = 0.21484488611234873
+blackscholes_times[6]["random_cores"] = 4.867581
+blackscholes_times[6]["random_cores_std"] = 0.08510138569751002
+blackscholes_times[10]["random_cores"] = 3.851484818181818
+blackscholes_times[10]["random_cores_std"] = 0.015163915977910322
+blackscholes_times[20]["random_cores"] = 3.016485090909091
+blackscholes_times[20]["random_cores_std"] = 0.013679059925531468
+bodytrack_times[6]["random_cores"] = 47.07950781818182
+bodytrack_times[6]["random_cores_std"] = 0.2808463169978194
+bodytrack_times[10]["random_cores"] = 35.656518636363636
+bodytrack_times[10]["random_cores_std"] = 0.6041985733902199
+bodytrack_times[20]["random_cores"] = 25.961315090909093
+bodytrack_times[20]["random_cores_std"] = 0.29444826640359534
+canneal_times[6]["random_cores"] = 39.619904636363636
+canneal_times[6]["random_cores_std"] = 2.1616813665974024
+canneal_times[10]["random_cores"] = 26.520362272727272
+canneal_times[10]["random_cores_std"] = 0.6874181253953204
+canneal_times[20]["random_cores"] = 15.576300909090909
+canneal_times[20]["random_cores_std"] = 0.15890891261660478
+facesim_times[4]["random_cores"] = 29.46689209090909
+facesim_times[4]["random_cores_std"] = 0.5249532782291555
+facesim_times[8]["random_cores"] = 22.219076454545455
+facesim_times[8]["random_cores_std"] = 0.23155112759088772
+facesim_times[16]["random_cores"] = 18.564400636363636
+facesim_times[16]["random_cores_std"] = 0.10980036083255226
+ferret_times[6]["random_cores"] = 70.59088963636364
+ferret_times[6]["random_cores_std"] = 0.9291478794840389
+ferret_times[10]["random_cores"] = 35.67401354545454
+ferret_times[10]["random_cores_std"] = 0.27078989362548683
+ferret_times[22]["random_cores"] = 15.489979636363636
+ferret_times[22]["random_cores_std"] = 0.12484107920892701
+fluidanimate_times[4]["random_cores"] = 39.02158881818182
+fluidanimate_times[4]["random_cores_std"] = 2.8106129141171268
+fluidanimate_times[8]["random_cores"] = 22.896067363636362
+fluidanimate_times[8]["random_cores_std"] = 0.7024247403574503
+fluidanimate_times[16]["random_cores"] = 13.552247545454545
+fluidanimate_times[16]["random_cores_std"] = 0.1381877991097383
+raytrace_times[6]["random_cores"] = 86.66710645454546
+raytrace_times[6]["random_cores_std"] = 0.9012768623555809
+raytrace_times[10]["random_cores"] = 75.024352
+raytrace_times[10]["random_cores_std"] = 0.6520985749654725
+raytrace_times[20]["random_cores"] = 65.20554436363636
+raytrace_times[20]["random_cores_std"] = 0.7203063648037388
+sc_times[6]["random_cores"] = 31.209278
+sc_times[6]["random_cores_std"] = 2.8527595083456236
+sc_times[10]["random_cores"] = 19.040342636363636
+sc_times[10]["random_cores_std"] = 1.4764640208092548
+sc_times[20]["random_cores"] = 11.463490818181818
+sc_times[20]["random_cores_std"] = 0.9276981907101447
+sw_times[6]["random_cores"] = 8.865730090909091
+sw_times[6]["random_cores_std"] = 0.3504041602117746
+sw_times[10]["random_cores"] = 5.863836454545455
+sw_times[10]["random_cores_std"] = 0.05659210457517845
+sw_times[20]["random_cores"] = 3.436687181818182
+sw_times[20]["random_cores_std"] = 0.035089603284936335
+vips_times[6]["random_cores"] = 19.705032181818183
+vips_times[6]["random_cores_std"] = 0.5785823894744524
+vips_times[10]["random_cores"] = 12.821242909090909
+vips_times[10]["random_cores_std"] = 0.33269892877698803
+vips_times[20]["random_cores"] = 7.456996545454546
+vips_times[20]["random_cores_std"] = 0.039148432081371434
+pca_times[6]["random_cores"] = 5.526907545454545
+pca_times[6]["random_cores_std"] = 0.2895742330232012
+pca_times[10]["random_cores"] = 5.695685909090909
+pca_times[10]["random_cores_std"] = 0.5652274753923824
+pca_times[20]["random_cores"] = 7.402023545454545
+pca_times[20]["random_cores_std"] = 0.8250014394765804
+hist_times[6]["random_cores"] = 18.18750127272727
+hist_times[6]["random_cores_std"] = 0.7801213683352669
+hist_times[10]["random_cores"] = 11.72297409090909
+hist_times[10]["random_cores_std"] = 0.11485640244271385
+hist_times[20]["random_cores"] = 6.925602181818181
+hist_times[20]["random_cores_std"] = 0.2694826614172281
+kmeans_times[6]["random_cores"] = 25.821928545454547
+kmeans_times[6]["random_cores_std"] = 0.5881454758963456
+kmeans_times[10]["random_cores"] = 15.961637090909091
+kmeans_times[10]["random_cores_std"] = 0.16487172157410718
+kmeans_times[20]["random_cores"] = 8.537603272727273
+kmeans_times[20]["random_cores_std"] = 0.0813673474559453
+stringmatch_times[6]["random_cores"] = 26.72349381818182
+stringmatch_times[6]["random_cores_std"] = 0.23230275012414225
+stringmatch_times[10]["random_cores"] = 16.815687363636364
+stringmatch_times[10]["random_cores_std"] = 0.23548295690743262
+stringmatch_times[20]["random_cores"] = 9.383685636363637
+stringmatch_times[20]["random_cores_std"] = 0.06955944007076738
+linearregression_times[6]["random_cores"] = 7.999591727272727
+linearregression_times[6]["random_cores_std"] = 0.18661974471786735
+linearregression_times[10]["random_cores"] = 5.218334545454545
+linearregression_times[10]["random_cores_std"] = 0.07128768212016796
+linearregression_times[20]["random_cores"] = 3.115819090909091
+linearregression_times[20]["random_cores_std"] = 0.03601741081112286
+kyotocabinet_times[6]["random_cores"] = 7.868462909090909
+kyotocabinet_times[6]["random_cores_std"] = 0.5023501379641774
+kyotocabinet_times[10]["random_cores"] = 14.676685363636363
+kyotocabinet_times[10]["random_cores_std"] = 0.5753668037822438
+kyotocabinet_times[20]["random_cores"] = 42.47700690909091
+kyotocabinet_times[20]["random_cores_std"] = 0.8840041064169796
+upscaledb_times[6]["random_cores"] = 10.488457363636364
+upscaledb_times[6]["random_cores_std"] = 0.4169230337796769
+upscaledb_times[10]["random_cores"] = 14.684194272727273
+upscaledb_times[10]["random_cores_std"] = 0.14273007742594596
+upscaledb_times[20]["random_cores"] = 17.549481363636364
+upscaledb_times[20]["random_cores_std"] = 0.1196794751692071
+
+
+
+mem_times = {10: {'linux': 2, 'random': 3, 'random_cores': 4, 'mem': -1.00, 'loc': 0.00}, 20: {'linux': 2, 'random': 3, 'random_cores': 4, 'mem': -1.00, 'loc': 0.00}, 6: {'linux': 2, 'random': 3, 'random_cores': 4, 'mem': -1.00, 'loc': 0.00}}
+loc_times = {10: {'linux': 2, 'random': 3, 'random_cores': 4, 'mem': 0.00, 'loc': -1.00}, 20: {'linux': 2, 'random': 3, 'random_cores': 4, 'mem': 0.00, 'loc': -1.00}, 6: {'linux': 2, 'random': 3, 'random_cores': 4, 'mem': 0.00, 'loc': -1.00}}
 
 
 execution_times = {"KYOTOCABINET": kyotocabinet_times, "UPSCALEDB": upscaledb_times, "WC": wc_times, "MATRIXMULT": matrixmult_times, "WR": wr_times, "WRMEM": wrmem_times,
@@ -849,6 +994,15 @@ def get_policy(name):
     else:
         return "mem"
 
+
+for i in range(0, len(classifiers)):
+    clf = classifiers[i]
+    clf_name = real_classifier_names[i]
+    scores = cross_val_score(clf, actual_train_data, labels, cv=20)
+    print("CROSS VALIDATION SCORE (" + clf_name + "): " + str(scores.mean()) + " " + str(scores.std()))
+    
+
+    
 it = iter(test_filenames)
 to_print = []
 for fn in it:
@@ -864,8 +1018,24 @@ for fn in it:
 
     data.append(execution_times[app_name][int(threads_number)]["loc"])
     data.append(execution_times[app_name][int(threads_number)]["mem"])
+    loc_time = float(execution_times[app_name][int(threads_number)]["loc"])
+    mem_time = float(execution_times[app_name][int(threads_number)]["mem"])
+    loc_is_better = loc_time < mem_time
+
+    if (loc_time == 0 or mem_time == 0):
+        data.append("-199")
+    else:
+        if (loc_time < mem_time):
+            data.append(str(1 - loc_time / mem_time))
+        else:
+            data.append(str(1 - mem_time / loc_time))
+
+    data.append("1") # always >= 0% 
+
+    
     data.append(execution_times[app_name][int(threads_number)]["linux"])
-    data.append(execution_times[app_name][int(threads_number)]["slate"])
+    data.append(execution_times[app_name][int(threads_number)]["random"])
+    data.append(execution_times[app_name][int(threads_number)]["random_cores"])
 
     if (float(execution_times[app_name][int(threads_number)]["loc"]) < float(execution_times[app_name][int(threads_number)]["mem"])):
         data.append("loc")
@@ -879,7 +1049,7 @@ for fn in it:
     confidence = 0.0
 
     for fil in [fn1, fn2, fn3]:
-        os.system("./get_input_data.py " +  fil + " > " + "/tmp/foo")
+        os.system("./get_input_data.py " +  fil + "| head -n 2 > " + "/tmp/foo")
         fil = "/tmp/foo"
 
         test_data = np.loadtxt(fil, delimiter=',')
@@ -908,22 +1078,32 @@ for fn in it:
             #rint("Ones: " + str(ones) + ", zeros: " + str(zeros))
             k = k + 1
 
-            if (clf == abc): # or clf == rfc):
+            #if (clf == abc): # or clf == rfc):
                 #print(fn1)
-                probabilities = clf.predict_proba(test_data)
-                predictions = clf.predict(test_data)
+               # probabilities = clf.predict_proba(test_data)
+              #  predictions = clf.predict(test_data)
                 #print(probabilities)
                 #print(predictions)
                 #print("====")
-                confidence = confidence + np.mean(np.choose(predictions.astype(int), probabilities.T))
+             #   confidence = confidence + np.mean(np.choose(predictions.astype(int), probabilities.T))
                 
             
-    print(app_name + " " + threads_number + " " + policy + ": " + str(confidence / 3.))
+    print(app_name + " " + threads_number + " " + policy) # + ": " + str(confidence / 3.))
 
 
     for k in range(0, len(avg)):
         avg[k] = avg[k] / 3.
         data.append("{0:.2f}".format(avg[k]))
+        if (avg[k] >= 0.5):
+            if loc_is_better:
+                data.append("1")
+            else:
+                data.append("0")
+        else:
+            if loc_is_better:
+                data.append("0")
+            else:
+                data.append("1")
 
     to_print.append(data)
     #print("===")
